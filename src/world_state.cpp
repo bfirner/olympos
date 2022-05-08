@@ -12,13 +12,13 @@
 using std::vector;
 
 // TODO This may not be the way, but it will work out for now.
-void setPassable(const std::list<Entity>& entities, vector<vector<bool>>& passable) {
+void updatePassable(const std::list<Entity>& entities, vector<vector<bool>>& passable) {
     // Set everything passable and then update things that are not.
     for (auto& row : passable) {
         row.assign(true, row.size());
     }
     for (auto& entity : entities) {
-        if (entity.traits.contains("impassible")) {
+        if (entity.traits.contains("impassable")) {
             passable[entity.y][entity.x] = false;
         }
         else if (entity.traits.contains("mob") and
@@ -57,9 +57,9 @@ void WorldState::initialize() {
         addEntity(y, field_width-1, "Wall", {"wall", "impassable"});
     }
 
-    setPassable(entities, passable);
+    updatePassable(entities, passable);
 }
 
 void WorldState::update() {
-    setPassable(entities, passable);
+    updatePassable(entities, passable);
 }

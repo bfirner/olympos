@@ -9,8 +9,10 @@
 
 // C++ headers
 #include <algorithm>
+#include <chrono>
 #include <list>
 
+#include "command_handler.hpp"
 #include "entity.hpp"
 #include "formatting.hpp"
 #include "world_state.hpp"
@@ -31,6 +33,12 @@ void clearInput(size_t field_height, size_t field_width) {
 }
 
 int main(int argc, char** argv) {
+    // The tick rate for the game
+    double tick_rate = 0.25;
+    if (2 == argc) {
+        tick_rate = std::stod(argv[1]);
+    }
+
     // Set up an ncurses screen and turn off echoing what the user writes.
     // TODO Pass the window around to everything using it so that we can manage multiple windows.
     WINDOW* window = initscr();
@@ -41,20 +49,25 @@ int main(int argc, char** argv) {
     // TODO all of the curses stuff should go into a renderer. The formatter could be expanded into
     // that.
 
+    // Our generic command handler
+    CommandHandler comham;
 
     // Initialize the world state with the desired size.
     WorldState ws(40, 80);
 
     // Make some mobs
     ws.addEntity(10, 1, "Bob", {"player", "mob"});
-    ws.addEntity(10, 10, "Spider", {"small", "mob", "aggro"});
-    ws.addEntity(10, 12, "Spider", {"small", "mob", "aggro"});
-    ws.addEntity(8, 10, "Spider", {"small", "mob", "aggro"});
-    ws.addEntity(10, 14, "Spider", {"mob", "aggro"});
-    ws.addEntity(4, 6, "Bat", {"small", "flying", "mob", "aggro"});
-    ws.addEntity(17, 14, "Bat", {"small", "flying", "mob", "aggro"});
+    ws.addEntity(10, 10, "Spider", {"spider", "small", "mob", "aggro"});
+    ws.addEntity(10, 12, "Spider", {"spider", "small", "mob", "aggro"});
+    ws.addEntity(8, 10, "Spider", {"spider", "small", "mob", "aggro"});
+    ws.addEntity(10, 14, "Spider", {"spider", "mob", "aggro"});
+    ws.addEntity(4, 6, "Bat", {"bat", "small", "flying", "mob", "aggro"});
+    ws.addEntity(17, 14, "Bat", {"bat", "small", "flying", "mob", "aggro"});
 
     ws.initialize();
+
+    // Initialize time stuff for the ticks
+    auto last_update = std::chrono::steady_clock::now();
 
     // Turn cursor visibility to normal.
     curs_set(1);
@@ -62,6 +75,9 @@ int main(int argc, char** argv) {
     // Update the display and put the user input outside of the field.
     updateDisplay(ws.entities);
     move(ws.field_height, 0);
+    // Wait 50 ms for user input and then handle any of the background game stuff that should be
+    // happening.
+    wtimeout(window, 50);
 
     bool quit = false;
     std::string command = "";
@@ -70,50 +86,41 @@ int main(int argc, char** argv) {
         // Process a command on a new line.
         if ('\n' == in_c) {
             // Accept any abbreviation of quit
-            if (std::string("quit").starts_with(command)) {
+            if (0 < command.size() and std::string("quit").starts_with(command)) {
                 quit = true;
             }
             // TODO Set up command handlers
             // TODO Check if numeric modifier was used
             // TODO Queue actions and take them all at every tick of the clock
-            auto player = ws.named_entities["player"];
-            if (std::string("north").starts_with(command)) {
-                if (ws.passable[player->y-1][player->x]) {
-                    player->y -= 1;
-                }
-            }
-            if (std::string("east").starts_with(command)) {
-                if (ws.passable[player->y][player->x+1]) {
-                    player->x += 1;
-                }
-            }
-            if (std::string("south").starts_with(command)) {
-                if (ws.passable[player->y+1][player->x]) {
-                    player->y += 1;
-                }
-            }
-            if (std::string("west").starts_with(command)) {
-                if (ws.passable[player->y][player->x-1]) {
-                    player->x -= 1;
-                }
-            }
+            comham.enqueueEntityCommand("player", command);
             //Update the cursor and clear the input field
             move(ws.field_height, 0);
             clearInput(ws.field_height, ws.field_width);
             command = "";
         }
-        else {
+        else if (in_c != ERR) {
             command.push_back(in_c);
         }
-        // Erase the window before redrawing.
-        werase(window);
-        updateDisplay(ws.entities);
-        move(ws.field_height, 0);
-        // Need to redraw the command since we've just erased the window.
-        for (char c : command) {
-            addch(c);
+        auto cur_time = std::chrono::steady_clock::now();
+        std::chrono::duration<double> time_diff = cur_time - last_update;
+        if (tick_rate <= time_diff.count()) {
+            comham.enqueueTraitCommand({"small", "aggro"}, "west");
+            comham.enqueueTraitCommand({"spider"}, "east");
+            comham.enqueueTraitCommand({"bat"}, "south");
+            last_update = cur_time;
+            // execute all commands every tick
+            comham.executeCommands(ws);
+            ws.update();
+            // erase the window before redrawing.
+            werase(window);
+            updateDisplay(ws.entities);
+            // Move the cursor
+            move(ws.field_height, 0);
+            // Need to redraw the command since we've just erased the window.
+            for (char c : command) {
+                addch(c);
+            }
         }
-        ws.update();
     }
 
     endwin();
