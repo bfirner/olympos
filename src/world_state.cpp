@@ -5,8 +5,13 @@
  */
 
 #include <algorithm>
+#include <cmath>
+#include <set>
+#include <optional>
 #include <vector>
 
+#include "entity.hpp"
+#include "lore.hpp"
 #include "world_state.hpp"
 
 using std::vector;
@@ -35,7 +40,15 @@ WorldState::WorldState(size_t field_height, size_t field_width) : passable{field
 }
 
 void WorldState::addEntity(size_t y, size_t x, const std::string& name, const std::set<std::string>& traits) {
-    entities.push_back({y, x, name, traits});
+    entities.push_back({y, x, name, traits, {}});
+    // Fetch the traits from the game lore if some exist for this entity.
+    std::set<std::string> base_traits = OlymposLore::getNamedEntry(entities.back(), "is a");
+    entities.back().traits.insert(base_traits.begin(), base_traits.end());
+    // Calculate starting stats for this entity (if it has any)
+    std::optional<Stats> stats = OlymposLore::getStats(entities.back());
+    if (stats) {
+        entities.back().stats = stats.value();
+    }
 }
 
 void WorldState::initialize() {
@@ -55,6 +68,15 @@ void WorldState::initialize() {
     for (size_t y = 1; y < field_height-1; ++y) {
         addEntity(y, 0, "Wall", {"wall", "impassable"});
         addEntity(y, field_width-1, "Wall", {"wall", "impassable"});
+    }
+
+    // Initialize HP and Mana
+    for (Entity& entity : entities) {
+        if (entity.stats) {
+            Stats& stats = entity.stats.value();
+            stats.health = std::floor(stats.vitality*0.8 + stats.domain*0.2);
+            stats.mana = stats.pool_volume;
+        }
     }
 
     updatePassable(entities, passable);

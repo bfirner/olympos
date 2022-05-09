@@ -1,0 +1,194 @@
+{
+    "octoped": {
+        "has a": ["leg"]
+    },
+    "biped": {
+        "has a": ["leg", "foot", "toes"]
+    },
+    "arthropod": {
+        "has a": ["eye", "mouth", "exoskeleton", "blood"]
+    },
+    "mammal": {
+        "has a": ["eye", "ear", "nose", "mouth", "tooth", "hair", "skeleton", "heart", "lung", "blood"],
+        "innate": ["thermoregulation"]
+    },
+    "human": {
+        "base physique": {
+            "size": "medium",
+            "intelligence": "high"
+        },
+        "senses": {
+            "vision": "high",
+            "vibration": "low",
+            "taste": "medium",
+            "smell": "medium",
+            "inertial": "medium",
+            "proprioception": "medium"
+        },
+        "starting attributes": {
+            "mana pool": 1,
+            "channel rate": 1,
+            "power": 1,
+            "dexterity": 1,
+            "vitality": 1,
+            "aura": 1,
+            "domain": 1
+        },
+        "attribute growth": {
+            "mana pool": 0.1,
+            "channel rate": 0.01,
+            "power": 1,
+            "dexterity": 1,
+            "vitality": 1,
+            "aura": 0.15,
+            "domain": 1
+        },
+        "has a": ["arm", "hand", "finger"],
+        "is a": ["medium", "omnivore", "mammal", "biped"],
+        "likes": ["caffeine", "sleep", "throwing", "art", "entertainment", "sunset", "sunrise", "tool", "fire"],
+        "hates": ["poop", "corpse", "mosquito", "leech"]
+    },
+    "elf": {
+        "base physique": {
+            "size": "medium",
+            "intelligence": "high"
+        },
+        "senses": {
+            "vision": "high",
+            "vibration": "low",
+            "taste": "low",
+            "smell": "high",
+            "inertial": "medium",
+            "proprioception": "high"
+        },
+        "starting attributes": {
+            "mana pool": 1,
+            "channel rate": 1,
+            "power": 1,
+            "dexterity": 1,
+            "vitality": 1,
+            "aura": 1,
+            "domain": 1
+        },
+        "attribute growth": {
+            "mana pool": 0.1,
+            "channel rate": 0.1,
+            "power": 1,
+            "dexterity": 1.5,
+            "vitality": 0.5,
+            "aura": 0.5,
+            "domain": 0.5
+        },
+        "has a": ["arm", "hand", "finger"],
+        "is a": ["medium", "vegetarian", "mammal", "biped"],
+        "likes": ["plant", "meditation", "art", "flower", "sunset", "sunrise"],
+        "hates": ["poop", "corpse", "concrete", "iron", "mine", "fire"]
+    },
+    "arachnid": {
+        "base physique": {
+            "size": "small",
+            "intelligence": "low"
+        },
+        "senses": {
+            "vision": "high",
+            "vibration": "high",
+            "taste": "medium",
+            "smell": "medium",
+            "inertial": "none",
+            "proprioception": "medium"
+        },
+        "starting attributes": {
+            "mana pool": 0,
+            "channel rate": 0,
+            "power": 0.5,
+            "dexterity": 1.5,
+            "vitality": 0.5,
+            "aura": 0.5,
+            "domain": 0.5
+        },
+        "attribute growth": {
+            "mana pool": 0.01,
+            "channel rate": 0.01,
+            "power": 0.5,
+            "dexterity": 2.0,
+            "vitality": 0.5,
+            "aura": 0.25,
+            "domain": 0.25
+        },
+        "has a": ["fang", "spineret", "carapace"],
+        "is a": ["small", "octoped", "carnivore", "arthropod", "bidentate", "venomous"],
+        "likes": ["ambush", "sneak", "hide", "lasso", "bolas", "silk", "web"],
+        "hates": ["bird", "bat"]
+    },
+    "bat": {
+        "base physique": {
+            "size": "small",
+            "intelligence": "medium"
+        },
+        "senses": {
+            "vision": "low",
+            "taste": "medium",
+            "smell": "medium",
+            "echolocation": "high",
+            "inertial": "medium",
+            "proprioception": "medium",
+            "magnetoreception": "medium"
+        },
+        "starting attributes": {
+            "mana pool": 0,
+            "channel rate": 0,
+            "power": 0.5,
+            "dexterity": 1.5,
+            "vitality": 0.5,
+            "aura": 0.5,
+            "domain": 0.5
+        },
+        "attribute growth": {
+            "mana pool": 0.01,
+            "channel rate": 0.01,
+            "power": 0.5,
+            "dexterity": 2.0,
+            "vitality": 0.5,
+            "aura": 0.25,
+            "domain": 0.5
+        },
+        "has a": ["wing"],
+        "is a": ["small", "flying", "biped", "mammal", "insectivore", "frugivore"],
+        "likes": ["flying", "fruit"],
+        "hates": ["cat", "fungus", "owl", "hawk", "falcon", "eagle", "crocodile"]
+    },
+    "slime": {
+        "base physique": {
+            "size": "medium",
+            "intelligence": "low"
+        },
+        "senses": {
+            "vibration": "high",
+            "inertial": "medium",
+            "proprioception": "medium",
+            "magnetoreception": "medium"
+        },
+        "starting attributes": {
+            "mana pool": 0,
+            "channel rate": 0,
+            "power": 0.5,
+            "dexterity": 0.5,
+            "vitality": 0.5,
+            "aura": 1.5,
+            "domain": 1.5
+        },
+        "attribute growth": {
+            "mana pool": 0.5,
+            "channel rate": 0.5,
+            "power": 0.5,
+            "dexterity": 0.5,
+            "vitality": 0.5,
+            "aura": 0.5,
+            "domain": 2.0
+        },
+        "has a": ["pseudopod"],
+        "is a": ["medium", "omnivore", "slime"],
+        "likes": [],
+        "hates": []
+    }
+}
