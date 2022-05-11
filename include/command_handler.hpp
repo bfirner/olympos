@@ -22,6 +22,12 @@ class CommandHandler {
     public:
         CommandHandler();
 
+        // TODO FIXME Add option to add new command types to be handled.
+        // TODO FIXME Things about behavior sets.
+        //   Groups of functions that use each other. E.g. movement should deplete stamina and then
+        //   kick off a handler to recover stamina.
+        // TODO FIXME Add argument lists for all of the commands
+
         // A command for a specific entity
         void enqueueEntityCommand(const std::string& entity, const std::string& command);
 

@@ -1,0 +1,114 @@
+{
+    "starting": {
+        "description": "Starting abilities that everyone can do.",
+        "abilities": {
+            "west": {
+                "type": "movement",
+                "range": "close",
+                "area": "single",
+                "arguments": [],
+                "effects": {
+                    "distance": {
+                        "x": -1
+                    }
+                },
+                "flavor": "<entity> moves West.",
+                "prereqs": {},
+                "constraints": []
+            },
+            "south": {
+                "type": "movement",
+                "range": "close",
+                "area": "single",
+                "arguments": [],
+                "effects": {
+                    "distance": {
+                        "y": 1
+                    }
+                },
+                "flavor": "<entity> moves South.",
+                "prereqs": {},
+                "constraints": []
+            },
+            "east": {
+                "type": "movement",
+                "range": "close",
+                "area": "single",
+                "arguments": [],
+                "effects": {
+                    "distance": {
+                        "x": 1
+                    }
+                },
+                "flavor": "<entity> moves East.",
+                "prereqs": {},
+                "constraints": []
+            },
+            "north": {
+                "type": "movement",
+                "range": "close",
+                "area": "single",
+                "arguments": [],
+                "effects": {
+                    "distance": {
+                        "y": -1
+                    }
+                },
+                "flavor": "<entity> moves North.",
+                "prereqs": {},
+                "constraints": []
+            },
+            "kick": {
+                "type": "attack",
+                "range": "close",
+                "area": "single",
+                "arguments": ["or", "direction", "target"],
+                "default argument": "forward",
+                "effects": {
+                    "damage": {
+                        "base": 1,
+                        "strength": 0.5,
+                        "domain": 0.25
+                    }
+                },
+                "flavor": "<entity> kicks <target>.",
+                "prereqs": {},
+                "constraints": ["or", "leg", "pseudopod"]
+            },
+            "punch": {
+                "type": "attack",
+                "range": "close",
+                "area": "single",
+                "arguments": ["or", "direction", "target"],
+                "default argument": "forward",
+                "effects": {
+                    "damage": {
+                        "base": 1,
+                        "strength": 0.25,
+                        "domain": 0.25
+                    }
+                },
+                "flavor": "<entity> punches <target>.",
+                "prereqs": {},
+                "constraints": ["or", "hand", "pseudopod"]
+            },
+            "bite": {
+                "type": "attack",
+                "range": "close",
+                "area": "single",
+                "arguments": ["or", "direction", "target"],
+                "default argument": "forward",
+                "effects": {
+                    "damage": {
+                        "base": 1,
+                        "strength": 0.25,
+                        "domain": 0.25
+                    }
+                },
+                "flavor": "<entity> bites <target>.",
+                "prereqs": {},
+                "constraints": ["or", "tooth", "fang", "beak"]
+            }
+        }
+    }
+}

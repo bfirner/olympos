@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "entity.hpp"
-
 #include <list>
 #include <map>
 #include <string>
 #include <vector>
+
+#include "entity.hpp"
 
 struct WorldState {
     std::list<Entity> entities;

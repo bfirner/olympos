@@ -6,9 +6,17 @@
 
 #pragma once
 
+#include <functional>
 #include <optional>
+#include <map>
 #include <set>
 #include <string>
+#include <vector>
+
+// Need to forward declare Entity here since the class is used inside of the world state.
+struct Entity;
+#include "world_state.hpp"
+#include "behavior.hpp"
 
 struct Stats {
     // Mana
@@ -34,13 +42,40 @@ struct Stats {
 };
 
 struct Entity {
+    // Location of the entity
     size_t y = 0;
     size_t x = 0;
+
+    // Name of the entity
     std::string name;
 
+    // Traits of this entity
     std::set<std::string> traits;
 
+    // Optional stats. Generally only for non-objects.
     std::optional<Stats> stats;
 
+    // Convenience function to find the species from the entity's traits
+    // TODO Should this return optional<string> instead for safety?
     std::string getSpecies() const;
+
+    // Behaviors available to this entity. Not all actions in a behavior may be unlocked.
+    //std::set<BehaviorSet> behaviors;
+
+    // The command handling functions of this entity.
+    // The second argument, the argument list to the command, is documented in command_args.
+    // These keep command handling tied to the entity level, while the commands themselves will be
+    // enqueued in the command queue.
+    // Notice that these will most likely be lambda functions with references to the entity that
+    // they effect.
+    std::map<std::string, std::function<void(WorldState&, const std::vector<std::string>&)>> command_handlers;
+    std::map<std::string, std::set<std::string>> command_args;
+
+    // Master of a command. Increases effectiveness and possibly unlocks new commands and behaviors.
+    std::map<std::string, double> command_mastery;
+
+    // Commands written into the essence core of the entity, enhancing their effectiveness with the
+    // aura and domain attributes. Sometimes requires to achieve higher levels of master.
+    std::vector<std::string> core_commands;
+
 };

@@ -17,6 +17,7 @@
 #include "entity.hpp"
 #include "formatting.hpp"
 #include "world_state.hpp"
+#include "behavior.hpp"
 
 using std::string;
 using std::vector;
@@ -58,6 +59,9 @@ int main(int argc, char** argv) {
     panels.push_back(new_panel(stat_window));
     panels.push_back(new_panel(window));
 
+    // Get the behaviors so that they can be assigned to the mobs.
+    const std::vector<Behavior::BehaviorSet>& behaviors = Behavior::getBehaviors();
+
     // Make some mobs
     ws.addEntity(10, 1, "Bob", {"player", "species:human", "mob"});
     ws.addEntity(10, 10, "Spider", {"species:arachnid", "mob", "aggro"});
@@ -67,6 +71,20 @@ int main(int argc, char** argv) {
     ws.addEntity(4, 6, "Bat", {"species:bat", "mob", "aggro"});
     ws.addEntity(17, 14, "Bat", {"species:bat", "mob", "aggro"});
     ws.addEntity(20, 20, "Slime", {"species:slime", "mob", "aggro"});
+
+    // TODO FIXME The behavior handler gets the entity passed to it in makeFunction anyway, could
+    // just have the function getAvailable be "give available" or "update available" or something
+    // and save us this hassle. It could still return the names of the things that are newly added.
+    // This would also save the main function from carrying around the behaviors variable.
+    // Add command handlers for all entities.
+    for (Entity& entity : ws.entities) {
+        for (const Behavior::BehaviorSet& bs : behaviors) {
+            std::vector<std::string> available = bs.getAvailable(entity);
+            for (const std::string& action : available) {
+                entity.command_handlers.insert({action, bs.makeFunction(action, entity)});
+            }
+        }
+    }
 
     ws.initialize();
 

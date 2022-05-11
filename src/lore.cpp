@@ -47,8 +47,8 @@ std::string OlymposLore::getDescription(const Entity& entity) {
         return "Unknown entity.";
     }
     std::string description = species_name + ": ";
-    auto& json_is_a = species[species_name]["is_a"];
-    auto& json_has_a = species[species_name]["has_a"];
+    auto& json_is_a = species.at(species_name).at("is_a");
+    auto& json_has_a = species.at(species_name).at("has_a");
     std::string is_a = "A mysterious entity";
     if (0 < json_is_a.size()) {
         std::uniform_int_distribution<int> uniform_dist(0, json_is_a.size()-1);
