@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <random>
 
 #include "behavior.hpp"
 
@@ -21,6 +22,7 @@ using std::vector;
 using std::string;
 
 namespace Behavior {
+
     json json_behaviors;
 
     std::vector<Behavior::BehaviorSet> loaded_behaviors;
@@ -127,26 +129,55 @@ namespace Behavior {
     // Make a function for the specific entity.
     std::function<void(WorldState&, const std::vector<std::string>&)> Behavior::Ability::makeFunction(Entity& entity) const {
         if (type == AbilityType::movement) {
-            int x_dist = 0;
-            int y_dist = 0;
             if (effects.contains("distance")) {
                 auto& distances = effects.at("distance");
-                if (distances.contains("x")) {
-                    x_dist = distances.at("x");
+                if (distances.contains("x") or distances.contains("y")) {
+                    int x_dist = 0;
+                    int y_dist = 0;
+                    if (distances.contains("x")) {
+                        x_dist = distances.at("x");
+                    }
+                    if (distances.contains("y")) {
+                        y_dist = distances.at("y");
+                    }
+                    // Capture the distances by value, but reference the entity.
+                    return [=,&entity](WorldState& ws, const vector<string>& args) {
+                        // Ignoring the movement arguments
+                        (args);
+                        if (ws.passable[entity.y+y_dist][entity.x+x_dist]) {
+                            entity.x += x_dist;
+                            entity.y += y_dist;
+                        }
+                    };
                 }
-                if (distances.contains("y")) {
-                    y_dist = distances.at("y");
+                else if (distances.contains("random_min") and distances.contains("random_max")) {
+                    // Create a random generator in the given range.
+                    int rand_min = distances.at("random_min");
+                    int rand_max = distances.at("random_max");
+
+                    return [=,&entity](WorldState& ws, const vector<string>& args) {
+                        // Ignoring the movement arguments
+                        // Going to use one RNG for each entity. This theoretically protects from
+                        // some side channel shenanigans.
+                        static std::mt19937 randgen{std::random_device{}()};
+                        static std::uniform_int_distribution<> rand_direction(0, 1);
+                        static std::uniform_int_distribution<> rand_distance(rand_min, rand_max);
+                        (args);
+                        int x_dist = 0;
+                        int y_dist = 0;
+                        if (0 == rand_direction(randgen)) {
+                            x_dist += rand_distance(randgen);
+                        }
+                        else {
+                            y_dist += rand_distance(randgen);
+                        }
+                        if (ws.passable[entity.y+y_dist][entity.x+x_dist]) {
+                            entity.x += x_dist;
+                            entity.y += y_dist;
+                        }
+                    };
                 }
             }
-            // Capture the distances by value, but reference the entity.
-            return [=,&entity](WorldState& ws, const vector<string>& args) {
-                // Ignoring the movement arguments
-                (args);
-                if (ws.passable[entity.y+y_dist][entity.x+x_dist]) {
-                    entity.x += x_dist;
-                    entity.y += y_dist;
-                }
-            };
         }
         // TODO Otherwise return a nothing
         return noop_function;
@@ -172,6 +203,33 @@ namespace Behavior {
                 }
             }
             if (can_use) {
+                available.push_back(ability_name);
+            }
+        }
+        return available;
+    }
+
+    // Update abilities from this set that are available to an entity. Return new abilities.
+    std::vector<std::string> BehaviorSet::updateAvailable(Entity& entity) const {
+        // TODO Check if ability set should be available
+        std::vector<std::string> available;
+
+        for (auto& [ability_name, ability] : abilities) {
+            bool can_use = true;
+            // TODO prereqs
+            // Verify that the entity satisfies all constraints
+            if (0 < ability.constraints.size()) {
+                if ("or" == ability.constraints.front()) {
+                    can_use = can_use and std::any_of(ability.constraints.begin()+1, ability.constraints.end(),
+                        [&](const std::string& constraint) {return entity.traits.contains(constraint);});
+                }
+                else {
+                    can_use = can_use and std::all_of(ability.constraints.begin(), ability.constraints.end(),
+                        [&](const std::string& constraint) {return entity.traits.contains(constraint);});
+                }
+            }
+            if (can_use) {
+                entity.command_handlers.insert({ability_name, makeFunction(ability_name, entity)});
                 available.push_back(ability_name);
             }
         }

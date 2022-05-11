@@ -3,7 +3,7 @@
  *
  * A command handler for entities in the game.
  * Command may or may not come from the player.
- * It is easy enough to think of this as the game's logic unit.
+ * This queue is used to ensure an orderly execution of commands.
  */
 
 #pragma once
@@ -22,11 +22,8 @@ class CommandHandler {
     public:
         CommandHandler();
 
-        // TODO FIXME Add option to add new command types to be handled.
-        // TODO FIXME Things about behavior sets.
-        //   Groups of functions that use each other. E.g. movement should deplete stamina and then
-        //   kick off a handler to recover stamina.
         // TODO FIXME Add argument lists for all of the commands
+        // TODO FIXME Events, such as recovery, that occur every tick.
 
         // A command for a specific entity
         void enqueueEntityCommand(const std::string& entity, const std::string& command);

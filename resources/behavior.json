@@ -58,6 +58,21 @@
                 "prereqs": {},
                 "constraints": []
             },
+            "wander": {
+                "type": "movement",
+                "range": "close",
+                "area": "single",
+                "arguments": [],
+                "effects": {
+                    "distance": {
+                        "random_min": -1,
+                        "random_max": 1
+                    }
+                },
+                "flavor": "<entity> wanders.",
+                "prereqs": {},
+                "constraints": ["auto"]
+            },
             "kick": {
                 "type": "attack",
                 "range": "close",

@@ -60,7 +60,7 @@ char UserInterface::getEntityChar(const Entity& ent) {
     else if (ent.traits.contains("wall")) {
         return '#';
     }
-    else if (ent.traits.contains("aggro")) {
+    else if (ent.traits.contains("mob")) {
         char c = 'M';
         if (ent.traits.contains("flying")) {
             c = 'W';

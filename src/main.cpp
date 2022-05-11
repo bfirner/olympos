@@ -64,25 +64,18 @@ int main(int argc, char** argv) {
 
     // Make some mobs
     ws.addEntity(10, 1, "Bob", {"player", "species:human", "mob"});
-    ws.addEntity(10, 10, "Spider", {"species:arachnid", "mob", "aggro"});
-    ws.addEntity(10, 12, "Spider", {"species:arachnid", "mob", "aggro"});
-    ws.addEntity(8, 10, "Spider", {"species:arachnid", "mob", "aggro"});
-    ws.addEntity(10, 14, "Spider", {"species:arachnid", "mob", "aggro"});
-    ws.addEntity(4, 6, "Bat", {"species:bat", "mob", "aggro"});
-    ws.addEntity(17, 14, "Bat", {"species:bat", "mob", "aggro"});
-    ws.addEntity(20, 20, "Slime", {"species:slime", "mob", "aggro"});
+    ws.addEntity(10, 10, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
+    ws.addEntity(10, 12, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
+    ws.addEntity(8, 10, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
+    ws.addEntity(10, 14, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
+    ws.addEntity(4, 6, "Bat", {"species:bat", "mob", "aggro", "auto"});
+    ws.addEntity(17, 14, "Bat", {"species:bat", "mob", "aggro", "auto"});
+    ws.addEntity(20, 20, "Slime", {"species:slime", "mob", "auto"});
 
-    // TODO FIXME The behavior handler gets the entity passed to it in makeFunction anyway, could
-    // just have the function getAvailable be "give available" or "update available" or something
-    // and save us this hassle. It could still return the names of the things that are newly added.
-    // This would also save the main function from carrying around the behaviors variable.
     // Add command handlers for all entities.
     for (Entity& entity : ws.entities) {
         for (const Behavior::BehaviorSet& bs : behaviors) {
-            std::vector<std::string> available = bs.getAvailable(entity);
-            for (const std::string& action : available) {
-                entity.command_handlers.insert({action, bs.makeFunction(action, entity)});
-            }
+            std::vector<std::string> updated = bs.updateAvailable(entity);
         }
     }
 
@@ -120,7 +113,7 @@ int main(int argc, char** argv) {
             if (0 < command.size() and std::string("quit").starts_with(command)) {
                 quit = true;
             }
-            // TODO Check if numeric modifier was used
+            // TODO Add user aliases.
             // Queue up actions and take them at the action tick.
             comham.enqueueEntityCommand("player", command);
             //Update the cursor and clear the input field
@@ -138,6 +131,7 @@ int main(int argc, char** argv) {
             comham.enqueueTraitCommand({"small", "aggro"}, "west");
             comham.enqueueTraitCommand({"species:spider"}, "east");
             comham.enqueueTraitCommand({"species:bat"}, "south");
+            comham.enqueueTraitCommand({"species:slime"}, "wander");
             has_command = false;
             last_update = cur_time;
             // execute all commands every tick

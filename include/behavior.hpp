@@ -90,6 +90,9 @@ namespace Behavior {
         // Return which abilities from this set are available to an entity.
         std::vector<std::string> getAvailable(const Entity& entity) const;
 
+        // Update abilities from this set that are available to an entity. Return new abilities.
+        std::vector<std::string> updateAvailable(Entity& entity) const;
+
         // Get the ability function for the given entity.
         std::function<void(WorldState&, const std::vector<std::string>&)> makeFunction(const std::string& ability, Entity& entity) const;
 

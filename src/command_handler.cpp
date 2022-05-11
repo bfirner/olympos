@@ -21,60 +21,8 @@ using std::vector;
 #include "entity.hpp"
 #include "world_state.hpp"
 
-/*
- * All known commands and how to handle them.
- */
-
-void handleEast(Entity& entity, WorldState& ws, const vector<string>& args) {
-    if (ws.passable[entity.y][entity.x+1]) {
-        entity.x += 1;
-    }
-}
-
-void handleNorth(Entity& entity, WorldState& ws, const vector<string>& args) {
-    if (ws.passable[entity.y-1][entity.x]) {
-        entity.y -= 1;
-    }
-}
-
-void handleSouth(Entity& entity, WorldState& ws, const vector<string>& args) {
-    if (ws.passable[entity.y+1][entity.x]) {
-        entity.y += 1;
-    }
-}
-
-void handleWest(Entity& entity, WorldState& ws, const vector<string>& args) {
-    if (ws.passable[entity.y][entity.x-1]) {
-        entity.x -= 1;
-    }
-}
-
-// Follow something that this entity can see
-void followEyes(Entity& entity, WorldState& ws, const vector<string>& args) {
-    // TODO Check "has a" qualities
-    // The argument should be a type of thing to track
-    // Search for any of those things within the entity's vision radius
-    // Then (ideally) issue move commands.
-    // Should behaviors be classes with an update member function that is handled here?
-    // The handler would just see a function, but a complex and stateful behavior could be happening
-    // behind the scene. Otherwise the state would have to live in the entity which sounds bloaty.
-    // This would let us have behaviors across entities by trait and also for individuals.
-}
-
-// A basic attack available to anything with arms
-void handlePunch(Entity& entity, WorldState& ws, const vector<string>& args) {
-}
-
-// A basic attack available to anything with legs
-void handleKick(Entity& entity, WorldState& ws, const vector<string>& args) {
-}
-
 // Where we can find all of the handlers
 std::unordered_map<std::string, std::function<void(Entity&, WorldState&, const vector<string>&)>> command_handlers{
-    {"east", handleEast},
-    {"north", handleNorth},
-    {"south", handleSouth},
-    {"west", handleWest},
 };
 
 // Go through all of the command handlers, take the keys, and insert any non-overlapping
