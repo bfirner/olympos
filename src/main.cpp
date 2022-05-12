@@ -41,8 +41,8 @@ int main(int argc, char** argv) {
         UserInterface::setupColors();
     }
 
-    // TODO keypad(stdscr) and then check for arrow keys. Maybe function keys for macros?
-    // Arrow keys are KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT. Function keys are KEY_F(number)
+    // Enable keypad inputs (arrow and function keys)
+    keypad(window, true);
 
     // Our generic command handler
     CommandHandler comham;
@@ -106,7 +106,31 @@ int main(int argc, char** argv) {
     bool has_command = false;
     std::string command = "";
     while(not quit) {
-        char in_c = wgetch(window);
+        int in_c = wgetch(window);
+        std::string shortcut_str = "";
+        switch (in_c) {
+            // Check for arrow keys and treat them as an immediately commanded direction and enter
+            // key.
+            case KEY_UP:
+                shortcut_str = "north";
+                break;
+            case KEY_DOWN:
+                shortcut_str = "south";
+                break;
+            case KEY_LEFT:
+                shortcut_str = "west";
+                break;
+            case KEY_RIGHT:
+                shortcut_str = "east";
+                break;
+        }
+        if (0 < shortcut_str.size()) {
+            if (0 < command.size() and command.back() != ' ') {
+                command.push_back(' ');
+            }
+            command += shortcut_str;
+            in_c = '\n';
+        }
         // Process a command on a new line.
         if ('\n' == in_c) {
             // Accept any abbreviation of quit
@@ -124,6 +148,7 @@ int main(int argc, char** argv) {
         else if (in_c != ERR) {
             command.push_back(in_c);
         }
+
         auto cur_time = std::chrono::steady_clock::now();
         std::chrono::duration<double> time_diff = cur_time - last_update;
         if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or
