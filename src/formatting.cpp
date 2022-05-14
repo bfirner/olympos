@@ -117,14 +117,14 @@ void UserInterface::setupColors() {
     init_pair(Colors::cyan_on_black, COLOR_CYAN, COLOR_BLACK);
 }
 
-void UserInterface::updateDisplay(WINDOW* window, const std::list<Entity>& entities) {
+void UserInterface::updateDisplay(WINDOW* window, const std::list<std::shared_ptr<Entity>>& entities) {
     attr_t orig_attrs;
     short orig_color;
     wattr_get(window, &orig_attrs, &orig_color, nullptr);
     werase(window);
-    for (const Entity& ent : entities) {
-        wattr_set(window, getEntityAttr(ent), getEntityColor(ent), nullptr);
-        mvwaddch(window, ent.y, ent.x, getEntityChar(ent));
+    for (const std::shared_ptr<Entity>& ent : entities) {
+        wattr_set(window, getEntityAttr(*ent), getEntityColor(*ent), nullptr);
+        mvwaddch(window, ent->y, ent->x, getEntityChar(*ent));
     }
     // Back to the original setting
     wattr_set(window, orig_attrs, orig_color, nullptr);

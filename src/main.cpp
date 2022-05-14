@@ -73,9 +73,9 @@ int main(int argc, char** argv) {
     ws.addEntity(20, 20, "Slime", {"species:slime", "mob", "auto"});
 
     // Add command handlers for all entities.
-    for (Entity& entity : ws.entities) {
+    for (std::shared_ptr<Entity>& entity : ws.entities) {
         for (const Behavior::BehaviorSet& bs : behaviors) {
-            std::vector<std::string> updated = bs.updateAvailable(entity);
+            std::vector<std::string> updated = bs.updateAvailable(*entity);
         }
     }
 

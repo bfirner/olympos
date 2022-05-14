@@ -20,7 +20,7 @@ namespace UserInterface {
 
 
     // Update all of the entities onto the given window
-    void updateDisplay(WINDOW* window, const std::list<Entity>& entities);
+    void updateDisplay(WINDOW* window, const std::list<std::shared_ptr<Entity>>& entities);
     // Clear the user input area
     void clearInput(WINDOW* window, size_t field_height, size_t field_width);
     // Setup colors

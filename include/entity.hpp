@@ -39,6 +39,8 @@ struct Stats {
     size_t class1_level;
     size_t class2_level;
     size_t class3_level;
+
+    bool operator==(const Stats&) const = default;
 };
 
 struct Entity {
@@ -78,4 +80,5 @@ struct Entity {
     // aura and domain attributes. Sometimes requires to achieve higher levels of master.
     std::vector<std::string> core_commands;
 
+    //bool operator==(const Entity&) const;
 };

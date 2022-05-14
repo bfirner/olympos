@@ -18,3 +18,15 @@ std::string Entity::getSpecies() const {
     }
     return species_location->substr(std::string("species:").size());
 }
+
+/*
+bool Entity::operator==(const Entity& other) const {
+    return this->y == other.y and
+        this->x == other.x and
+        this->name == other.name and
+        this->traits == other.traits and
+        this->stats == other.stats and
+        this->command_mastery == other.command_mastery and
+        this->core_commands == other.core_commands;
+}
+*/

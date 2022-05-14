@@ -111,14 +111,14 @@ void CommandHandler::executeCommands(WorldState& ws) {
     // Handle all {traits, command} pairs if we can find entities with matching traits.
     for (const auto& [entity_traits, command] : trait_commands) {
         // Find any entities with all matching traits
-        for (Entity& entity : ws.entities) {
+        for (std::shared_ptr<Entity>& entity : ws.entities) {
             if (std::all_of(entity_traits.begin(), entity_traits.end(),
-                [&](const std::string& trait) { return entity.traits.contains(trait);})) {
+                [&](const std::string& trait) { return entity->traits.contains(trait);})) {
                 // This entity has all of the necessary traits, so execute the command if it is
                 // supported.
-                if (entity.command_handlers.contains(command)) {
+                if (entity->command_handlers.contains(command)) {
                     // TODO Arguments
-                    entity.command_handlers.at(command)(ws, {});
+                    entity->command_handlers.at(command)(ws, {});
                 }
             }
         }

@@ -144,10 +144,7 @@ namespace Behavior {
                     return [=,&entity](WorldState& ws, const vector<string>& args) {
                         // Ignoring the movement arguments
                         (args);
-                        if (ws.passable[entity.y+y_dist][entity.x+x_dist]) {
-                            entity.x += x_dist;
-                            entity.y += y_dist;
-                        }
+                        ws.moveEntity(entity, entity.y + y_dist, entity.x + x_dist);
                     };
                 }
                 else if (distances.contains("random_min") and distances.contains("random_max")) {
@@ -163,18 +160,16 @@ namespace Behavior {
                         static std::uniform_int_distribution<> rand_direction(0, 1);
                         static std::uniform_int_distribution<> rand_distance(rand_min, rand_max);
                         (args);
-                        int x_dist = 0;
-                        int y_dist = 0;
+                        int y_location = entity.y;
+                        int x_location = entity.x;
+                        // Chose a random movement
                         if (0 == rand_direction(randgen)) {
-                            x_dist += rand_distance(randgen);
+                            y_location += rand_distance(randgen);
                         }
                         else {
-                            y_dist += rand_distance(randgen);
+                            x_location += rand_distance(randgen);
                         }
-                        if (ws.passable[entity.y+y_dist][entity.x+x_dist]) {
-                            entity.x += x_dist;
-                            entity.y += y_dist;
-                        }
+                        ws.moveEntity(entity, y_location, x_location);
                     };
                 }
             }
