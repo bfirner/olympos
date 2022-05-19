@@ -9,6 +9,7 @@
 #pragma once
 
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "entity.hpp"
@@ -16,7 +17,7 @@
 
 class CommandHandler {
     private:
-        std::vector<std::pair<std::string, std::string>> entity_commands;
+        std::vector<std::tuple<std::string, std::string, std::vector<std::string>>> entity_commands;
         std::vector<std::pair<std::vector<std::string>, std::string>> trait_commands;
 
     public:

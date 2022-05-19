@@ -17,8 +17,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include <iostream>
-
 using json = nlohmann::json;
 
 using std::vector;
@@ -225,14 +223,11 @@ namespace Behavior {
                 dexterity = damage_effects.at("dexterity");
             }
         }
-        std::cerr<<"making an attack function!\n";
         // TODO Or maybe just copy over any effects that are also in the expected arguments?
-        std::map<std::string, nlohmann::json> effects = effects;
         std::vector<std::string> expected_args = arguments;
         std::vector<std::string> default_args = this->default_args;
         // TODO Make different classes for range and area combinations
-        return [=,&entity,&effects,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
-            std::cerr<<"entity "<<entity.name<<" is using "<<name<<'\n';
+        return [=,&entity,effects=this->effects,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
             size_t damage = floor(base + strength * entity.stats.value().strength + domain * entity.stats.value().domain +
                 aura * entity.stats.value().aura + dexterity * entity.stats.value().dexterity);
             // Now parse the arguments to see what is getting hit.
@@ -252,7 +247,7 @@ namespace Behavior {
                         if (effects.at(arg).contains("distance")) {
                             size_t target_y = entity.y;
                             size_t target_x = entity.x;
-                            auto& distances = effects.at("distance");
+                            auto& distances = effects.at(arg).at("distance");
                             if (distances.contains("y")) {
                                 target_y += distances.at("y").get<int>();
                             }
@@ -284,7 +279,6 @@ namespace Behavior {
                 // Deal damage to the target
                 ws.damageEntity(target, damage, entity);
                 ws.logEvent({flavor, target->y, target->x});
-                std::cerr<<"did some damage!\n";
             }
             // The attack always consumes stamina
             entity.stats.value().stamina -= stamina;

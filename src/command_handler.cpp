@@ -78,12 +78,33 @@ size_t parseRepititions(string& command) {
     return 1;
 }
 
+std::vector<string> parseArguments(string& command) {
+    std::string::size_type space_idx = command.find(' ');
+    std::vector<string> arguments;
+    if (std::string::npos != space_idx) {
+        string command_part = command.substr(0, space_idx);
+        while (std::string::npos != space_idx) {
+            std::string::size_type next_idx = command.find(' ', space_idx+1);
+            std::string next_argument = command.substr(space_idx+1, next_idx-space_idx-1);
+            if (" " != next_argument) {
+                arguments.push_back(next_argument);
+            }
+            space_idx = next_idx;
+        }
+        command = command_part;
+    }
+    return arguments;
+}
+
 // A command for a specific entity
 void CommandHandler::enqueueEntityCommand(const std::string& entity, const std::string& command) {
     string new_command = command;
     size_t reps = parseRepititions(new_command);
+
+    // Now split off the arguments
+    std::vector<string> arguments = parseArguments(new_command);
     for (size_t i = 0; i < reps; ++i) {
-        entity_commands.push_back({entity, new_command});
+        entity_commands.push_back({entity, new_command, arguments});
     }
 }
 
@@ -99,11 +120,10 @@ void CommandHandler::enqueueTraitCommand(const std::vector<std::string>& traits,
 // Execute all enqueued commands. Entity commands will always occur before trait commands.
 void CommandHandler::executeCommands(WorldState& ws) {
     // Handle all {name, command} pairs if they both exist
-    for (const auto& [entity_name, command] : entity_commands) {
+    for (const auto& [entity_name, command, arguments] : entity_commands) {
         if (ws.named_entities.contains(entity_name) and
                 ws.named_entities.at(entity_name)->command_handlers.contains(command)) {
-            // TODO Arguments
-            ws.named_entities.at(entity_name)->command_handlers.at(command)(ws, {});
+            ws.named_entities.at(entity_name)->command_handlers.at(command)(ws, arguments);
         }
     }
     entity_commands.clear();
