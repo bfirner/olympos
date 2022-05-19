@@ -47,8 +47,8 @@ std::string OlymposLore::getDescription(const Entity& entity) {
         return "Unknown entity.";
     }
     std::string description = species_name + ": ";
-    auto& json_is_a = species.at(species_name).at("is_a");
-    auto& json_has_a = species.at(species_name).at("has_a");
+    auto& json_is_a = species.at(species_name).at("is a");
+    auto& json_has_a = species.at(species_name).at("has a");
     std::string is_a = "A mysterious entity";
     if (0 < json_is_a.size()) {
         std::uniform_int_distribution<int> uniform_dist(0, json_is_a.size()-1);
@@ -88,7 +88,7 @@ std::optional<Stats> OlymposLore::getStats(const Entity& entity) {
 
     stats.pool_volume  = std::floor(base["mana pool"].get<double>() + stats.species_level * growth["mana pool"].get<double>());
     stats.channel_rate = std::floor(base["channel rate"].get<double>() + stats.species_level * growth["channel rate"].get<double>());
-    stats.power        = std::floor(base["power"].get<double>() + stats.species_level * growth["power"].get<double>());
+    stats.strength     = std::floor(base["strength"].get<double>() + stats.species_level * growth["strength"].get<double>());
     stats.dexterity    = std::floor(base["dexterity"].get<double>() + stats.species_level * growth["dexterity"].get<double>());
     stats.vitality     = std::floor(base["vitality"].get<double>() + stats.species_level * growth["vitality"].get<double>());
     stats.aura         = std::floor(base["aura"].get<double>() + stats.species_level * growth["aura"].get<double>());
@@ -102,6 +102,16 @@ std::optional<Stats> OlymposLore::getStats(const Entity& entity) {
 //TODO FIXME These functions are all almost exactly the same, maybe provide a generic function to
 //fetch an entity from the json based upon a string.
 
+std::set<std::string> OlymposLore::getSpeciesField(const std::string species_name, const std::string& field) {
+    json& species = getSpecies();
+    // Don't try anything if there is no species name.
+    if ("" == species_name or not species.contains(species_name)) {
+        return std::set<std::string>{};
+    }
+    auto& json_data = species[species_name][field];
+    return std::set<std::string>(json_data.begin(), json_data.end());
+}
+
 std::set<std::string> OlymposLore::getNamedEntry(const Entity& entity, const std::string& field) {
     json& species = getSpecies();
     std::string species_name = entity.getSpecies();
@@ -113,22 +123,4 @@ std::set<std::string> OlymposLore::getNamedEntry(const Entity& entity, const std
     return std::set<std::string>(json_data.begin(), json_data.end());
 }
 
-std::set<std::string> OlymposLore::getHasA(const Entity& entity) {
-    return getNamedEntry(entity, "has_a");
-}
-
-std::set<std::string> OlymposLore::getIsA(const Entity& entity) {
-    return getNamedEntry(entity, "is_a");
-}
-
 // TODO Get other things like XP
-// TODO All species have likes and dislikes that affect essence gains
-// e.g. Elves level more slowly if they are wearing shoes, human level more quickly if they
-// drink caffeine, get into arguments, yell, etc
-std::set<std::string> OlymposLore::getLikes(const Entity& entity) {
-    return getNamedEntry(entity, "likes");
-}
-
-std::set<std::string> OlymposLore::getHates(const Entity& entity) {
-    return getNamedEntry(entity, "hates");
-}

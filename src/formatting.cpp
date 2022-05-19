@@ -117,26 +117,26 @@ void UserInterface::setupColors() {
     init_pair(Colors::cyan_on_black, COLOR_CYAN, COLOR_BLACK);
 }
 
-void UserInterface::updateDisplay(WINDOW* window, const std::list<std::shared_ptr<Entity>>& entities) {
+void UserInterface::updateDisplay(WINDOW* window, const std::list<Entity>& entities) {
     attr_t orig_attrs;
     short orig_color;
     wattr_get(window, &orig_attrs, &orig_color, nullptr);
     werase(window);
-    for (const std::shared_ptr<Entity>& ent : entities) {
-        wattr_set(window, getEntityAttr(*ent), getEntityColor(*ent), nullptr);
-        mvwaddch(window, ent->y, ent->x, getEntityChar(*ent));
+    for (const Entity& ent : entities) {
+        wattr_set(window, getEntityAttr(ent), getEntityColor(ent), nullptr);
+        mvwaddch(window, ent.y, ent.x, getEntityChar(ent));
     }
     // Back to the original setting
     wattr_set(window, orig_attrs, orig_color, nullptr);
-    //wrefresh(window);
 }
 
 void UserInterface::clearInput(WINDOW* window, size_t field_height, size_t field_width) {
-    for (size_t x = 0; x < field_width; ++x) {
+    mvwaddch(window, field_height, 0, '>');
+    for (size_t x = 1; x < field_width; ++x) {
         mvwaddch(window, field_height, x, ' ');
     }
-    // Reset the cursor
-    wmove(window, field_height, 0);
+    // Reset the cursor, leaving the '>' character to indicate where typing occurs.
+    wmove(window, field_height, 1);
 }
 
 void drawString(WINDOW* window, const std::string& str) {
@@ -144,6 +144,31 @@ void drawString(WINDOW* window, const std::string& str) {
     for (char c : str) {
         waddch(window, c);
     }
+}
+
+void drawBar(WINDOW* window, double percent) {
+    // Store the current settings
+    attr_t orig_attrs;
+    short orig_color;
+    wattr_get(window, &orig_attrs, &orig_color, nullptr);
+    for (int step = 0; step < 20; ++step) {
+        short bar_color = Colors::green_on_black;
+        if (step < 4) {
+            bar_color = Colors::red_on_black;
+        }
+        else if (step < 10) {
+            bar_color = Colors::yellow_on_black;
+        }
+        wattr_set(window, A_BOLD, bar_color, nullptr);
+        if (20 * percent >= step) {
+            waddch(window, '#');
+        }
+        else {
+            waddch(window, ' ');
+        }
+    }
+    // Restore the original settings
+    wattr_set(window, orig_attrs, orig_color, nullptr);
 }
 
 void UserInterface::drawString(WINDOW* window, const std::string& str, size_t row, size_t column) {
@@ -167,36 +192,66 @@ void UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row,
     std::ostringstream line;
 
     // TODO Colors on hp and mana
+    int cur_row = row+1;
+
     // HP Information
-    wmove(window, row+1, column);
-    line << "[HP] " << stats.health << "/" << std::floor(stats.vitality*0.8 + stats.domain*0.2);
+    wmove(window, cur_row++, column);
+    line << "[HP] " << stats.health << "/" << stats.maxHealth();
     drawString(window, line.str());
+    wmove(window, cur_row++, column);
+    drawBar(window, static_cast<double>(stats.health) / stats.maxHealth());
 
     // Mana information
-    wmove(window, row+2, column);
+    wmove(window, cur_row++, column);
     line.str("");
     line << "[MP] " << stats.mana << "/" << stats.pool_volume;
     drawString(window, line.str());
     line.str("");
     line << stats.channel_rate << " channel rate";
-    wmove(window, row+3, column);
+    wmove(window, cur_row++, column);
     drawString(window, line.str());
+    wmove(window, cur_row++, column);
+    drawBar(window, static_cast<double>(stats.mana) / stats.mana);
+
+    // Stamina information
+    wmove(window, cur_row++, column);
+    line.str("");
+    line << "[Stamina] " << stats.stamina << "/" << stats.maxStamina();
+    drawString(window, line.str());
+    wmove(window, cur_row++, column);
+    drawBar(window, static_cast<double>(stats.stamina) / stats.maxStamina());
 
     // Physical status
-    wmove(window, row+5, column);
+    wmove(window, cur_row++, column);
     drawString(window, "[Physical]");
-    wmove(window, row+6, column);
+    wmove(window, cur_row++, column);
     line.str("");
-    line << stats.power << " POW # " << stats.dexterity << " DEX # " << stats.vitality << " VIT";
+    line << stats.strength << " STR # " << stats.dexterity << " DEX # " << stats.vitality << " VIT";
     drawString(window, line.str());
 
     // Metaphysical status
-    wmove(window, row+8, column);
+    wmove(window, cur_row++, column);
     drawString(window, "[Metaphysical]");
     line.str("");
     line << stats.aura << " AURA # " << stats.domain << " DOMAIN";
-    wmove(window, row+9, column);
+    wmove(window, cur_row++, column);
     drawString(window, line.str());
 
     // TODO Classes
+    wmove(window, cur_row++, column);
+    drawString(window, "Description:");
+    std::string description = entity.getDescription();
+    wmove(window, cur_row, column);
+    drawString(window, std::string(28, ' '));
+    wmove(window, cur_row, column);
+    drawString(window, description);
+
+}
+
+void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer) {
+    // First clear the existing text from the window?
+    // Now redraw the text in the event window.
+    for (size_t row = 0; row < buffer.size(); ++row) {
+        drawString(window, buffer[row], row, 0);
+    }
 }

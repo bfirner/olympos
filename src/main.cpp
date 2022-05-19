@@ -11,6 +11,7 @@
 // C++ headers
 #include <algorithm>
 #include <chrono>
+#include <deque>
 #include <list>
 
 #include "command_handler.hpp"
@@ -55,7 +56,12 @@ int main(int argc, char** argv) {
     box(stat_window, 0, 0);
     UserInterface::drawString(stat_window, "Heart of Olympos", 1, 1);
 
+    // Create another window for the event log.
+    WINDOW* event_window = newwin(40, 80, 41, 0);
+    std::deque<std::string> event_strings;
+
     std::vector<PANEL*> panels;
+    panels.push_back(new_panel(event_window));
     panels.push_back(new_panel(stat_window));
     panels.push_back(new_panel(window));
 
@@ -73,9 +79,9 @@ int main(int argc, char** argv) {
     ws.addEntity(20, 20, "Slime", {"species:slime", "mob", "auto"});
 
     // Add command handlers for all entities.
-    for (std::shared_ptr<Entity>& entity : ws.entities) {
+    for (Entity& entity : ws.entities) {
         for (const Behavior::BehaviorSet& bs : behaviors) {
-            std::vector<std::string> updated = bs.updateAvailable(*entity);
+            std::vector<std::string> updated = bs.updateAvailable(entity);
         }
     }
 
@@ -161,7 +167,20 @@ int main(int argc, char** argv) {
             last_update = cur_time;
             // execute all commands every tick
             comham.executeCommands(ws);
+            auto player_i = ws.named_entities["player"];
+            std::vector<std::string> player_events = ws.getLocalEvents(player_i->y, player_i->x, 10);
+            for (std::string& event : player_events) {
+                event_strings.push_front(event);
+            }
+            // Limit to 40 events in the event window.
+            while (40 < event_strings.size()) {
+                event_strings.pop_back();
+            }
+            ws.clearEvents();
             ws.update();
+            UserInterface::updateEvents(event_window, event_strings);
+            // Update the player's status in the window
+            UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
             // Update panels, refresh the screen, and reset the cursor position
             UserInterface::updateDisplay(window, ws.entities);
             // Need to redraw the command since we've just erased the window.
@@ -175,6 +194,11 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Clean things up.
+    for (PANEL* panel : panels) {
+        del_panel(panel);
+    }
+    delwin(event_window);
     delwin(stat_window);
     delwin(window);
     endwin();

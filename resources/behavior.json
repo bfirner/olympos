@@ -6,6 +6,7 @@
                 "type": "movement",
                 "range": "close",
                 "area": "single",
+                "stamina": 1,
                 "arguments": [],
                 "effects": {
                     "distance": {
@@ -20,6 +21,7 @@
                 "type": "movement",
                 "range": "close",
                 "area": "single",
+                "stamina": 1,
                 "arguments": [],
                 "effects": {
                     "distance": {
@@ -34,6 +36,7 @@
                 "type": "movement",
                 "range": "close",
                 "area": "single",
+                "stamina": 1,
                 "arguments": [],
                 "effects": {
                     "distance": {
@@ -48,6 +51,7 @@
                 "type": "movement",
                 "range": "close",
                 "area": "single",
+                "stamina": 1,
                 "arguments": [],
                 "effects": {
                     "distance": {
@@ -62,6 +66,7 @@
                 "type": "movement",
                 "range": "close",
                 "area": "single",
+                "stamina": 1,
                 "arguments": [],
                 "effects": {
                     "distance": {
@@ -77,13 +82,34 @@
                 "type": "attack",
                 "range": "close",
                 "area": "single",
-                "arguments": ["or", "direction", "target"],
-                "default argument": "forward",
+                "stamina": 1,
+                "arguments": ["or", "north", "east", "south", "west", "<target>"],
+                "default arguments": ["forward"],
                 "effects": {
                     "damage": {
                         "base": 1,
                         "strength": 0.5,
                         "domain": 0.25
+                    },
+                    "north": {
+                        "distance": {
+                            "y": -1
+                        }
+                    },
+                    "south": {
+                        "distance": {
+                            "y": 1
+                        }
+                    },
+                    "east": {
+                        "distance": {
+                            "x": 1
+                        }
+                    },
+                    "west": {
+                        "distance": {
+                            "x": -1
+                        }
                     }
                 },
                 "flavor": "<entity> kicks <target>.",
@@ -94,13 +120,34 @@
                 "type": "attack",
                 "range": "close",
                 "area": "single",
-                "arguments": ["or", "direction", "target"],
-                "default argument": "forward",
+                "stamina": 1,
+                "arguments": ["or", "north", "east", "south", "west", "<target>"],
+                "default arguments": ["forward"],
                 "effects": {
                     "damage": {
                         "base": 1,
                         "strength": 0.25,
                         "domain": 0.25
+                    },
+                    "north": {
+                        "distance": {
+                            "y": -1
+                        }
+                    },
+                    "south": {
+                        "distance": {
+                            "y": 1
+                        }
+                    },
+                    "east": {
+                        "distance": {
+                            "x": 1
+                        }
+                    },
+                    "west": {
+                        "distance": {
+                            "x": -1
+                        }
                     }
                 },
                 "flavor": "<entity> punches <target>.",
@@ -111,13 +158,34 @@
                 "type": "attack",
                 "range": "close",
                 "area": "single",
-                "arguments": ["or", "direction", "target"],
-                "default argument": "forward",
+                "stamina": 1,
+                "arguments": ["or", "north", "east", "south", "west", "<target>"],
+                "default arguments": ["forward"],
                 "effects": {
                     "damage": {
                         "base": 1,
                         "strength": 0.25,
                         "domain": 0.25
+                    },
+                    "north": {
+                        "distance": {
+                            "y": -1.0
+                        }
+                    },
+                    "south": {
+                        "distance": {
+                            "y": 1.0
+                        }
+                    },
+                    "east": {
+                        "distance": {
+                            "x": 1.0
+                        }
+                    },
+                    "west": {
+                        "distance": {
+                            "x": -1.0
+                        }
                     }
                 },
                 "flavor": "<entity> bites <target>.",

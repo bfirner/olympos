@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <execution>
+#include <functional>
 #include <set>
 #include <optional>
 #include <stdexcept>
@@ -28,21 +30,20 @@ bool isPassable(const Entity& entity) {
 }
 
 // TODO This may not be the way, but it will work out for now.
-void updatePassable(const std::list<std::shared_ptr<Entity>>& entities, vector<vector<bool>>& passable) {
+void updatePassable(const std::list<Entity>& entities, vector<vector<bool>>& passable) {
     // Set everything passable and then update things that are not.
     for (auto& row : passable) {
         row.assign(true, row.size());
     }
     for (auto& entity_p : entities) {
-        if (not isPassable(*entity_p)) {
-            passable[entity_p->y][entity_p->x] = false;
+        if (not isPassable(entity_p)) {
+            passable[entity_p.y][entity_p.x] = false;
         }
     }
 }
 
 WorldState::WorldState(size_t field_height, size_t field_width) :
-    passable{field_height, vector<bool>(field_width, true)},
-    locations{field_height, {field_width, std::list<std::shared_ptr<Entity>>()}} {
+    passable{field_height, vector<bool>(field_width, true)} {
     this->field_height = field_height;
     this->field_width = field_width;
 }
@@ -52,17 +53,23 @@ void WorldState::addEntity(size_t y, size_t x, const std::string& name, const st
         throw std::runtime_error("Cannot place entity at "+std::to_string(y)+", "+std::to_string(x)+": out of bounds.");
     }
     // TODO FIXME Make a real constructor for the Entity class
-    entities.push_front(std::shared_ptr<Entity>(new Entity{y, x, name, traits, {}}));
+    entities.push_front({y, x, name, traits});
     // Fetch the traits from the game lore if some exist for this entity.
-    std::set<std::string> base_traits = OlymposLore::getNamedEntry(*entities.front(), "is a");
-    entities.front()->traits.insert(base_traits.begin(), base_traits.end());
-    // Calculate starting stats for this entity (if it has any)
-    std::optional<Stats> stats = OlymposLore::getStats(*entities.front());
-    if (stats) {
-        entities.front()->stats = stats.value();
-    }
+    //std::set<std::string> base_traits = OlymposLore::getNamedEntry(entities.front(), "is a");
+    //entities.front().traits.insert(base_traits.begin(), base_traits.end());
 
-    locations[y][x].push_back(entities.front());
+    // Use the "is a" to get the "has a" entries for the things for which this entity "is a" member.
+
+
+    // Calculate starting stats for this entity (if it has any)
+    std::optional<Stats> stats = OlymposLore::getStats(entities.front());
+    if (stats) {
+        entities.front().stats = stats.value();
+    }
+}
+
+bool passableOrNotPresent(size_t y, size_t x, const Entity& ent) {
+    return ent.y != y or ent.x != x or isPassable(ent);
 }
 
 bool WorldState::moveEntity(Entity& entity, size_t y, size_t x) {
@@ -74,41 +81,59 @@ bool WorldState::moveEntity(Entity& entity, size_t y, size_t x) {
     if (not passable[y][x]) {
         return false;
     }
-    // Otherwise move the entity and update the passable and locations members.
-    std::list<std::shared_ptr<Entity>>& location_list = locations.at(entity.y).at(entity.x);
-    auto this_entity =
-        std::find_if(location_list.begin(), location_list.end(),
-                [&entity](auto& other) {return other.get() == &entity; });
-    // TODO If this entity was not at the location that it thought it was then this was a big mess.
-    if (this_entity == location_list.end()) {
-        throw std::runtime_error("Messed up locations, dying.");
-    }
-    // Should be checking for this_entity being the end of the list though.
-    // TODO This entire locations member variable is a mess.
-    location_list.remove_if([&entity](auto& other) {
-            return other.get() == &entity; });
 
-    // Update passable with this entity removed.
-    passable[entity.y][entity.x] = std::all_of(location_list.begin(), location_list.end(), [](auto& ent_iter){return isPassable(*ent_iter);});
-
-    // Now that the old location is updated, move into the new location.
+    // Move the entity to the new location
+    size_t old_y = entity.y;
+    size_t old_x = entity.x;
     entity.y = y;
     entity.x = x;
-    locations[y][x].push_back(*this_entity);
-    // Update passable at the new location.
-    {
-        std::list<std::shared_ptr<Entity>>& location_list = locations.at(entity.y).at(entity.x);
-        passable[entity.y][entity.x] = std::all_of(location_list.begin(), location_list.end(), [](auto& ent_iter){return isPassable(*ent_iter);});
-    }
+
+    // Update passable with this entity removed.
+    passable[old_y][old_x] = std::all_of(
+        std::execution::par_unseq, entities.begin(), entities.end(),
+        std::bind_front(passableOrNotPresent, old_y, old_x));
+
+    // Now updated passable at the new location. Note that we are calling the function to prepare
+    // for the possibility more complex rules in the future.
+    passable[y][x] = std::all_of(
+        std::execution::par_unseq, entities.begin(), entities.end(),
+        std::bind_front(passableOrNotPresent, y, x));
     return true;
+}
+
+void WorldState::damageEntity(decltype(entities)::iterator entity_i, size_t damage, Entity& attacker) {
+    // Out of bounds, nothing happens.
+    if (entities.end() == entity_i) {
+        return;
+    }
+
+    if (entity_i->stats) {
+        Stats& stats = entity_i->stats.value();
+        if (damage >= stats.health) {
+            stats.health = 0;
+            // Remove the entity.
+            // TODO FIXME Remove all of its actions from the action queue.
+            // That implies that the action queue should be part of the world model.
+            // Makes sense, the action log should live in the world model as well.
+            entities.erase(entity_i);
+        }
+        else {
+            stats.health -= damage;
+        }
+    }
+}
+
+std::list<Entity>::iterator WorldState::findEntity(const std::string& name) {
+    return std::find_if(entities.begin(), entities.end(),
+        [&](Entity& ent) {return ent.name == name;});
 }
 
 void WorldState::initialize() {
     // Get the player entity
     decltype(entities)::iterator player = std::find_if(entities.begin(), entities.end(),
-            [](auto& ent) {return (ent->traits.contains("player"));});
+            [](auto& ent) {return (ent.traits.contains("player"));});
     if (player != entities.end()) {
-        named_entities["player"] = *player;
+        named_entities["player"] = player;
     }
 
     // Make the walls
@@ -124,8 +149,8 @@ void WorldState::initialize() {
 
     // Initialize HP and Mana
     for (auto& entity_p : entities) {
-        if (entity_p->stats) {
-            Stats& stats = entity_p->stats.value();
+        if (entity_p.stats) {
+            Stats& stats = entity_p.stats.value();
             stats.health = std::floor(stats.vitality*0.8 + stats.domain*0.2);
             stats.mana = stats.pool_volume;
         }
@@ -134,6 +159,40 @@ void WorldState::initialize() {
     updatePassable(entities, passable);
 }
 
+void WorldState::logEvent(WorldEvent event) {
+    if (event.y >= this->field_height or event.x >= this->field_width) {
+        throw std::runtime_error("Cannot log event at "+std::to_string(event.y)+", "+std::to_string(event.x)+": out of bounds.");
+    }
+    events.push_back(event);
+}
+
+std::vector<std::string> WorldState::getLocalEvents(size_t y, size_t x, size_t range) {
+    std::vector<std::string> local_events;
+    for (WorldEvent& event : events) {
+        if (abs(y - event.y) + abs(x - event.x) <= range) {
+            // Making this a coroutine is possible, but current feels more clunky than it is worth.
+            local_events.push_back(event.message);
+        }
+    }
+    return local_events;
+}
+
+void WorldState::clearEvents() {
+    events.clear();
+}
+
 void WorldState::update() {
-    updatePassable(entities, passable);
+    cur_tick += 1;
+    // Need to handle events that occur every tick.
+
+    // Tic updates are independent per entity and car be done in parallel and in any order.
+    std::for_each(std::execution::par_unseq, entities.begin(), entities.end(),
+        [cur_tick=cur_tick](Entity& ent) {
+            if (ent.stats) {
+            ent.stats.value().ticHealthManaStamina(cur_tick);
+        }});
+    if (named_entities.contains("player")) {
+        auto player = named_entities["player"];
+        logEvent({"==========Tick " + std::to_string(cur_tick) + "========", player->y, player->x});
+    }
 }

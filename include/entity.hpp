@@ -23,7 +23,7 @@ struct Stats {
     size_t pool_volume;
     size_t channel_rate;
     // Physical
-    size_t power;
+    size_t strength;
     size_t dexterity;
     size_t vitality;
     // Metaphysical
@@ -31,14 +31,22 @@ struct Stats {
     size_t domain;
 
     // Current status
-    // Max health is 1 + vitality*0.8 + domain*0.2
     size_t health;
     size_t mana;
+    size_t stamina;
 
     size_t species_level;
     size_t class1_level;
     size_t class2_level;
     size_t class3_level;
+
+    void ticHealthManaStamina(size_t tick_num);
+
+    // The maximum health from these stats (a derived value)
+    size_t maxHealth() const;
+
+    // The maximum stamina from these stats (a derived value)
+    size_t maxStamina() const;
 
     bool operator==(const Stats&) const = default;
 };
@@ -70,15 +78,18 @@ struct Entity {
     // enqueued in the command queue.
     // Notice that these will most likely be lambda functions with references to the entity that
     // they effect.
-    std::map<std::string, std::function<void(WorldState&, const std::vector<std::string>&)>> command_handlers;
-    std::map<std::string, std::set<std::string>> command_args;
+    std::map<std::string, std::function<void(WorldState&, const std::vector<std::string>&)>> command_handlers = {};
+    std::map<std::string, std::set<std::string>> command_args = {};
 
     // Master of a command. Increases effectiveness and possibly unlocks new commands and behaviors.
-    std::map<std::string, double> command_mastery;
+    std::map<std::string, double> command_mastery = {};
 
     // Commands written into the essence core of the entity, enhancing their effectiveness with the
     // aura and domain attributes. Sometimes requires to achieve higher levels of master.
-    std::vector<std::string> core_commands;
+    std::vector<std::string> core_commands = {};
 
-    //bool operator==(const Entity&) const;
+    // Constructor
+    Entity(size_t y, size_t x, const std::string& name, const std::set<std::string> traits);
+
+    std::string getDescription() const;
 };

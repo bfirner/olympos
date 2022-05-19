@@ -28,7 +28,7 @@
         "starting attributes": {
             "mana pool": 1,
             "channel rate": 1,
-            "power": 1,
+            "strength": 1,
             "dexterity": 1,
             "vitality": 1,
             "aura": 1,
@@ -37,7 +37,7 @@
         "attribute growth": {
             "mana pool": 0.1,
             "channel rate": 0.01,
-            "power": 1,
+            "strength": 1,
             "dexterity": 1,
             "vitality": 1,
             "aura": 0.15,
@@ -64,7 +64,7 @@
         "starting attributes": {
             "mana pool": 1,
             "channel rate": 1,
-            "power": 1,
+            "strength": 1,
             "dexterity": 1,
             "vitality": 1,
             "aura": 1,
@@ -73,7 +73,7 @@
         "attribute growth": {
             "mana pool": 0.1,
             "channel rate": 0.1,
-            "power": 1,
+            "strength": 1,
             "dexterity": 1.5,
             "vitality": 0.5,
             "aura": 0.5,
@@ -100,7 +100,7 @@
         "starting attributes": {
             "mana pool": 0,
             "channel rate": 0,
-            "power": 0.5,
+            "strength": 0.5,
             "dexterity": 1.5,
             "vitality": 0.5,
             "aura": 0.5,
@@ -109,7 +109,7 @@
         "attribute growth": {
             "mana pool": 0.01,
             "channel rate": 0.01,
-            "power": 0.5,
+            "strength": 0.5,
             "dexterity": 2.0,
             "vitality": 0.5,
             "aura": 0.25,
@@ -137,7 +137,7 @@
         "starting attributes": {
             "mana pool": 0,
             "channel rate": 0,
-            "power": 0.5,
+            "strength": 0.5,
             "dexterity": 1.5,
             "vitality": 0.5,
             "aura": 0.5,
@@ -146,7 +146,7 @@
         "attribute growth": {
             "mana pool": 0.01,
             "channel rate": 0.01,
-            "power": 0.5,
+            "strength": 0.5,
             "dexterity": 2.0,
             "vitality": 0.5,
             "aura": 0.25,
@@ -171,7 +171,7 @@
         "starting attributes": {
             "mana pool": 0,
             "channel rate": 0,
-            "power": 0.5,
+            "strength": 0.5,
             "dexterity": 0.5,
             "vitality": 0.5,
             "aura": 1.5,
@@ -180,7 +180,7 @@
         "attribute growth": {
             "mana pool": 0.5,
             "channel rate": 0.5,
-            "power": 0.5,
+            "strength": 0.5,
             "dexterity": 0.5,
             "vitality": 0.5,
             "aura": 0.5,

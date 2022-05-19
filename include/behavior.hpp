@@ -59,9 +59,11 @@ namespace Behavior {
         AbilityType type;
         AbilityArea area;
         AbilityRange range;
+        size_t stamina;
         std::vector<std::string> arguments;
+        std::vector<std::string> default_args;
         // Each effect may change multiple variables or require multiple variables to calculate.
-        std::map<std::string, std::map<std::string, double>> effects;
+        std::map<std::string, nlohmann::json> effects;
         // Abilities that must be known prior to this one.
         std::map<std::string, size_t> prereqs;
         // Traits that must be possessed to use this ability.
@@ -69,6 +71,15 @@ namespace Behavior {
         // Flavor text when this ability is used.
         std::string flavor;
 
+        // TODO FIXME If these are being handled separately anyway, then the Ability class should be
+        // subclassed for each of them anyway and a factory can decide which one to create.
+        // Make a movement type of function.
+        std::function<void(WorldState&, const std::vector<std::string>&)> makeMoveFunction(Entity& entity) const;
+
+        // Make an attack type of function.
+        std::function<void(WorldState&, const std::vector<std::string>&)> makeAttackFunction(Entity& entity) const;
+
+        // Make a function for this ability
         std::function<void(WorldState&, const std::vector<std::string>&)> makeFunction(Entity& entity) const;
 
         // Construct from a json object.

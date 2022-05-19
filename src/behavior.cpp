@@ -11,10 +11,13 @@
 #include <filesystem>
 #include <fstream>
 #include <random>
+#include <ranges>
 
 #include "behavior.hpp"
 
 #include <nlohmann/json.hpp>
+
+#include <iostream>
 
 using json = nlohmann::json;
 
@@ -90,16 +93,23 @@ namespace Behavior {
     }
 
     Behavior::Ability::Ability(const std::string& name, nlohmann::json& ability_json) {
+        // TODO Use NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE macro to automatically define the json to
+        // ability conversion?
         this->name = name;
         type = stoType(ability_json.at("type").get<string>());
         area = stoArea(ability_json.at("area").get<string>());
         range = stoRange(ability_json.at("range").get<string>());
-        flavor = ability_json.at("flavor").get<string>();
+        ability_json.at("flavor").get_to(flavor);
 
-        arguments = ability_json.at("arguments").get<vector<string>>();
-        effects = ability_json.at("effects").get<decltype(effects)>();
-        prereqs = ability_json.at("prereqs").get<decltype(prereqs)>();
-        constraints = ability_json.at("constraints").get<decltype(constraints)>();
+        ability_json.at("stamina").get_to(stamina);
+
+        ability_json.at("arguments").get_to(arguments);
+        if (ability_json.contains("default arguments")) {
+            ability_json.at("default arguments").get_to(default_args);
+        }
+        ability_json.at("effects").get_to(effects);
+        ability_json.at("prereqs").get_to(prereqs);
+        ability_json.at("constraints").get_to(constraints);
     }
 
     Behavior::BehaviorSet::BehaviorSet(const std::string& name, nlohmann::json& behavior_json) {
@@ -126,53 +136,170 @@ namespace Behavior {
         return loaded_behaviors;
     }
 
-    // Make a function for the specific entity.
-    std::function<void(WorldState&, const std::vector<std::string>&)> Behavior::Ability::makeFunction(Entity& entity) const {
-        if (type == AbilityType::movement) {
-            if (effects.contains("distance")) {
-                auto& distances = effects.at("distance");
-                if (distances.contains("x") or distances.contains("y")) {
-                    int x_dist = 0;
-                    int y_dist = 0;
-                    if (distances.contains("x")) {
-                        x_dist = distances.at("x");
-                    }
-                    if (distances.contains("y")) {
-                        y_dist = distances.at("y");
-                    }
-                    // Capture the distances by value, but reference the entity.
-                    return [=,&entity](WorldState& ws, const vector<string>& args) {
-                        // Ignoring the movement arguments
-                        (args);
-                        ws.moveEntity(entity, entity.y + y_dist, entity.x + x_dist);
-                    };
+    std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeMoveFunction(Entity& entity) const {
+        if (effects.contains("distance")) {
+            auto& distances = effects.at("distance");
+            if (distances.contains("x") or distances.contains("y")) {
+                int x_dist = 0;
+                int y_dist = 0;
+                if (distances.contains("x")) {
+                    x_dist = distances.at("x");
                 }
-                else if (distances.contains("random_min") and distances.contains("random_max")) {
-                    // Create a random generator in the given range.
-                    int rand_min = distances.at("random_min");
-                    int rand_max = distances.at("random_max");
+                if (distances.contains("y")) {
+                    y_dist = distances.at("y");
+                }
+                // Capture the distances by value, but reference the entity.
+                return [=,&entity](WorldState& ws, const vector<string>& args) {
+                    // Ignoring the movement arguments
+                    (args);
+                    // If the entity has the stamina for the action take it, and then reduce the
+                    // stamina cost from the entity's stamina if the action occurred.
+                    if (stamina <= entity.stats.value().stamina) {
+                        if (ws.moveEntity(entity, entity.y + y_dist, entity.x + x_dist)) {
+                            entity.stats.value().stamina -= stamina;
+                        }
+                    }
+                };
+            }
+            else if (distances.contains("random_min") and distances.contains("random_max")) {
+                // Create a random generator in the given range.
+                int rand_min = distances.at("random_min");
+                int rand_max = distances.at("random_max");
 
-                    return [=,&entity](WorldState& ws, const vector<string>& args) {
-                        // Ignoring the movement arguments
-                        // Going to use one RNG for each entity. This theoretically protects from
-                        // some side channel shenanigans.
-                        static std::mt19937 randgen{std::random_device{}()};
-                        static std::uniform_int_distribution<> rand_direction(0, 1);
-                        static std::uniform_int_distribution<> rand_distance(rand_min, rand_max);
-                        (args);
-                        int y_location = entity.y;
-                        int x_location = entity.x;
-                        // Chose a random movement
-                        if (0 == rand_direction(randgen)) {
-                            y_location += rand_distance(randgen);
+                // Lambda functions do not capture member variables, so shadow stamina with a
+                // local variable.
+                return [=,&entity,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
+                    // Ignoring the movement arguments
+                    // Going to use one RNG for each lambda. This theoretically protects from
+                    // some side channel shenanigans.
+                    static std::mt19937 randgen{std::random_device{}()};
+                    static std::uniform_int_distribution<> rand_direction(0, 1);
+                    static std::uniform_int_distribution<> rand_distance(rand_min, rand_max);
+                    (args);
+                    int y_location = entity.y;
+                    int x_location = entity.x;
+                    // Chose a random movement
+                    if (0 == rand_direction(randgen)) {
+                        y_location += rand_distance(randgen);
+                    }
+                    else {
+                        x_location += rand_distance(randgen);
+                    }
+                    // If the entity has the stamina for the action take it, and then reduce the
+                    // stamina cost from the entity's stamina if the action occurred.
+                    if (stamina <= entity.stats.value().stamina) {
+                        if (ws.moveEntity(entity, y_location, x_location)) {
+                            entity.stats.value().stamina -= stamina;
                         }
-                        else {
-                            x_location += rand_distance(randgen);
+                    }
+                };
+            }
+        }
+        // TODO Otherwise return a nothing
+        return noop_function;
+    }
+
+    std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeAttackFunction(Entity& entity) const {
+        // Lambda functions do not capture member variables, so shadow stamina with a
+        // local variable.
+        double base = 0;
+        double strength = 0;
+        double domain = 0;
+        double aura = 0;
+        double dexterity = 0;
+        if (effects.contains("damage")) {
+            auto& damage_effects = effects.at("damage");
+            if (damage_effects.contains("base")) {
+                base = damage_effects.at("base");
+            }
+            if (damage_effects.contains("strength")) {
+                strength = damage_effects.at("strength");
+            }
+            if (damage_effects.contains("domain")) {
+                domain = damage_effects.at("domain");
+            }
+            if (damage_effects.contains("aura")) {
+                aura = damage_effects.at("aura");
+            }
+            if (damage_effects.contains("dexterity")) {
+                dexterity = damage_effects.at("dexterity");
+            }
+        }
+        std::cerr<<"making an attack function!\n";
+        // TODO Or maybe just copy over any effects that are also in the expected arguments?
+        std::map<std::string, nlohmann::json> effects = effects;
+        std::vector<std::string> expected_args = arguments;
+        std::vector<std::string> default_args = this->default_args;
+        // TODO Make different classes for range and area combinations
+        return [=,&entity,&effects,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
+            std::cerr<<"entity "<<entity.name<<" is using "<<name<<'\n';
+            size_t damage = floor(base + strength * entity.stats.value().strength + domain * entity.stats.value().domain +
+                aura * entity.stats.value().aura + dexterity * entity.stats.value().dexterity);
+            // Now parse the arguments to see what is getting hit.
+            auto target = ws.entities.end();
+            if (0 < expected_args.size() and expected_args[0] == "or") {
+                // Expecting a single argument
+                std::string arg = default_args.at(0);
+                if (0 < args.size()) {
+                    arg = args.at(0);
+                }
+                auto arg_options = std::ranges::subrange(expected_args.begin()+1, expected_args.end());
+                // See if we match an argument
+                if (arg_options.end() != std::find(arg_options.begin(), arg_options.end(), arg)) {
+                    // TODO FIXME What about the forward option?
+                    // Find the effects of for this argument.
+                    if (effects.contains(arg)) {
+                        if (effects.at(arg).contains("distance")) {
+                            size_t target_y = entity.y;
+                            size_t target_x = entity.x;
+                            auto& distances = effects.at("distance");
+                            if (distances.contains("y")) {
+                                target_y += distances.at("y").get<int>();
+                            }
+                            if (distances.contains("x")) {
+                                target_x += distances.at("x").get<int>();
+                            }
+                            // Now find the target at that location if one exists.
+                            // It is possible that there are multiple entities in that tile. This
+                            // will find the first one arbitrarily.
+                            target = std::find_if(ws.entities.begin(), ws.entities.end(),
+                                [=](Entity& ent) { return ent.y == target_y and ent.x == target_x;});
                         }
-                        ws.moveEntity(entity, y_location, x_location);
-                    };
+                    }
+                }
+                else if (expected_args.end() != std::find(expected_args.begin(), expected_args.end(), ("<target>"))) {
+                    // Going to have to search for this target in range.
+                    std::string target_name = "";
+                    if (0 < args.size()) {
+                        target_name = args[0];
+                    }
+                    else if (0 < default_args.size()) {
+                        target_name = default_args[0];
+                    }
+                    // Assign the target.
+                    target = ws.findEntity(target_name);
                 }
             }
+            if (target != ws.entities.end()) {
+                // Deal damage to the target
+                ws.damageEntity(target, damage, entity);
+                ws.logEvent({flavor, target->y, target->x});
+                std::cerr<<"did some damage!\n";
+            }
+            // The attack always consumes stamina
+            entity.stats.value().stamina -= stamina;
+        };
+        // TODO Otherwise return a nothing
+        return noop_function;
+    }
+
+    // Make a function for the specific entity.
+    std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeFunction(Entity& entity) const {
+        if (type == AbilityType::movement) {
+            return makeMoveFunction(entity);
+        }
+        else if (type == AbilityType::attack) {
+            return makeAttackFunction(entity);
         }
         // TODO Otherwise return a nothing
         return noop_function;
