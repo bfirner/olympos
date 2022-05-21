@@ -26,7 +26,6 @@
             "proprioception": "medium"
         },
         "starting attributes": {
-            "mana pool": 1,
             "channel rate": 1,
             "strength": 1,
             "dexterity": 1,
@@ -35,8 +34,7 @@
             "domain": 1
         },
         "attribute growth": {
-            "mana pool": 0.1,
-            "channel rate": 0.01,
+            "channel rate": 0.1,
             "strength": 1,
             "dexterity": 1,
             "vitality": 1,
@@ -62,7 +60,6 @@
             "proprioception": "high"
         },
         "starting attributes": {
-            "mana pool": 1,
             "channel rate": 1,
             "strength": 1,
             "dexterity": 1,
@@ -71,7 +68,6 @@
             "domain": 1
         },
         "attribute growth": {
-            "mana pool": 0.1,
             "channel rate": 0.1,
             "strength": 1,
             "dexterity": 1.5,
@@ -98,7 +94,6 @@
             "proprioception": "medium"
         },
         "starting attributes": {
-            "mana pool": 0,
             "channel rate": 0,
             "strength": 0.5,
             "dexterity": 1.5,
@@ -107,7 +102,6 @@
             "domain": 0.5
         },
         "attribute growth": {
-            "mana pool": 0.01,
             "channel rate": 0.01,
             "strength": 0.5,
             "dexterity": 2.0,
@@ -135,7 +129,6 @@
             "magnetoreception": "medium"
         },
         "starting attributes": {
-            "mana pool": 0,
             "channel rate": 0,
             "strength": 0.5,
             "dexterity": 1.5,
@@ -144,7 +137,6 @@
             "domain": 0.5
         },
         "attribute growth": {
-            "mana pool": 0.01,
             "channel rate": 0.01,
             "strength": 0.5,
             "dexterity": 2.0,
@@ -169,7 +161,6 @@
             "magnetoreception": "medium"
         },
         "starting attributes": {
-            "mana pool": 0,
             "channel rate": 0,
             "strength": 0.5,
             "dexterity": 0.5,
@@ -178,7 +169,6 @@
             "domain": 1.5
         },
         "attribute growth": {
-            "mana pool": 0.5,
             "channel rate": 0.5,
             "strength": 0.5,
             "dexterity": 0.5,

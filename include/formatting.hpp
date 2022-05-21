@@ -32,5 +32,5 @@ namespace UserInterface {
     void drawString(WINDOW* window, const std::string& str, size_t row, size_t column);
     void drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column);
 
-    void updateEvents(WINDOW* window, std::deque<std::string>& buffer);
+    void updateEvents(WINDOW* window, std::deque<std::string>& buffer, size_t line_size);
 }

@@ -151,8 +151,9 @@ void WorldState::initialize() {
     for (auto& entity_p : entities) {
         if (entity_p.stats) {
             Stats& stats = entity_p.stats.value();
-            stats.health = std::floor(stats.vitality*0.8 + stats.domain*0.2);
-            stats.mana = stats.pool_volume;
+            stats.health = stats.maxHealth();
+            stats.mana = stats.maxMana();
+            stats.stamina = stats.maxStamina();
         }
     }
 

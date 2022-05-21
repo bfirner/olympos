@@ -204,11 +204,7 @@ void UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row,
     // Mana information
     wmove(window, cur_row++, column);
     line.str("");
-    line << "[MP] " << stats.mana << "/" << stats.pool_volume;
-    drawString(window, line.str());
-    line.str("");
-    line << stats.channel_rate << " channel rate";
-    wmove(window, cur_row++, column);
+    line << "[MP] " << stats.mana << "/" << stats.maxMana();
     drawString(window, line.str());
     wmove(window, cur_row++, column);
     drawBar(window, static_cast<double>(stats.mana) / stats.mana);
@@ -236,6 +232,10 @@ void UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row,
     line << stats.aura << " AURA # " << stats.domain << " DOMAIN";
     wmove(window, cur_row++, column);
     drawString(window, line.str());
+    line.str("");
+    line << stats.channel_rate << " channel rate";
+    wmove(window, cur_row++, column);
+    drawString(window, line.str());
 
     // TODO Classes
     wmove(window, cur_row++, column);
@@ -248,10 +248,14 @@ void UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row,
 
 }
 
-void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer) {
+void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer, size_t line_size) {
     // First clear the existing text from the window?
     // Now redraw the text in the event window.
     for (size_t row = 0; row < buffer.size(); ++row) {
         drawString(window, buffer[row], row, 0);
+        if (buffer[row].size() < line_size) {
+            std::string padding(line_size - buffer[row].size(), ' ');
+            drawString(window, padding, row, buffer[row].size());
+        }
     }
 }

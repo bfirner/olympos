@@ -134,8 +134,20 @@ namespace Behavior {
         return loaded_behaviors;
     }
 
+    void replaceSubstring(std::string& str, const std::string& target, const std::string& replacement) {
+        std::string::size_type index = str.find(target);
+        if (index != std::string::npos) {
+            str.replace(index, index+target.size(), replacement);
+        }
+    }
+
     std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeMoveFunction(Entity& entity) const {
         if (effects.contains("distance")) {
+            // Prepare a flavor string to go into the event log whenever this behavior occurs.
+            // Fill in some fields in advance.
+            std::string event_string = flavor;
+            replaceSubstring(event_string, "<entity>", entity.name);
+
             auto& distances = effects.at("distance");
             if (distances.contains("x") or distances.contains("y")) {
                 int x_dist = 0;
@@ -155,6 +167,7 @@ namespace Behavior {
                     if (stamina <= entity.stats.value().stamina) {
                         if (ws.moveEntity(entity, entity.y + y_dist, entity.x + x_dist)) {
                             entity.stats.value().stamina -= stamina;
+                            ws.logEvent({event_string, entity.y, entity.x});
                         }
                     }
                 };
@@ -188,12 +201,13 @@ namespace Behavior {
                     if (stamina <= entity.stats.value().stamina) {
                         if (ws.moveEntity(entity, y_location, x_location)) {
                             entity.stats.value().stamina -= stamina;
+                            ws.logEvent({event_string, entity.y, entity.x});
                         }
                     }
                 };
             }
         }
-        // TODO Otherwise return a nothing
+        // Otherwise return a nothing
         return noop_function;
     }
 
@@ -227,6 +241,11 @@ namespace Behavior {
         std::vector<std::string> expected_args = arguments;
         std::vector<std::string> default_args = this->default_args;
         // TODO Make different classes for range and area combinations
+        // Prepare a flavor string to go into the event log whenever this behavior occurs.
+        // Fill in some fields in advance.
+        std::string event_string = flavor;
+        replaceSubstring(event_string, "<entity>", entity.name);
+
         return [=,&entity,effects=this->effects,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
             size_t damage = floor(base + strength * entity.stats.value().strength + domain * entity.stats.value().domain +
                 aura * entity.stats.value().aura + dexterity * entity.stats.value().dexterity);
@@ -276,14 +295,17 @@ namespace Behavior {
                 }
             }
             if (target != ws.entities.end()) {
+                std::string log_string = event_string;
+                replaceSubstring(log_string, "<target>", target->name);
+                ws.logEvent({log_string, target->y, target->x});
+
                 // Deal damage to the target
                 ws.damageEntity(target, damage, entity);
-                ws.logEvent({flavor, target->y, target->x});
             }
             // The attack always consumes stamina
             entity.stats.value().stamina -= stamina;
         };
-        // TODO Otherwise return a nothing
+        // Otherwise return a nothing
         return noop_function;
     }
 
@@ -295,7 +317,7 @@ namespace Behavior {
         else if (type == AbilityType::attack) {
             return makeAttackFunction(entity);
         }
-        // TODO Otherwise return a nothing
+        // Otherwise return a nothing
         return noop_function;
     }
 

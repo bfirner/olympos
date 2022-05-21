@@ -29,8 +29,12 @@ void Stats::ticHealthManaStamina(size_t tick_num) {
 
     // We obviously do not go beyond maximum values.
     health = std::min(maxHealth(), health + tickIncrease(health_tick, tick_num));
-    mana = std::min(pool_volume, mana + tickIncrease(mana_tick, tick_num));
+    mana = std::min(maxMana(), mana + tickIncrease(mana_tick, tick_num));
     stamina = std::min(maxStamina(), stamina + tickIncrease(stamina_tick, tick_num));
+}
+
+size_t Stats::maxMana() const {
+    return std::floor(aura + domain);
 }
 
 size_t Stats::maxHealth() const {
@@ -40,7 +44,7 @@ size_t Stats::maxHealth() const {
 size_t Stats::maxStamina() const {
     // Control stamina growth to prevent insane turns later on.
     // Each point in stamina corresponds to roughly one action in a tick.
-    return std::floor(cbrt(1.0 + vitality*0.5 + strength + domain*0.5));
+    return 1 + std::floor(cbrt(1.0 + vitality*0.5 + strength + domain*0.5));
 }
 
 std::string Entity::getSpecies() const {

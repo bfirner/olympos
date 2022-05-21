@@ -19,9 +19,6 @@ struct Entity;
 #include "behavior.hpp"
 
 struct Stats {
-    // Mana
-    size_t pool_volume;
-    size_t channel_rate;
     // Physical
     size_t strength;
     size_t dexterity;
@@ -29,6 +26,7 @@ struct Stats {
     // Metaphysical
     size_t aura;
     size_t domain;
+    size_t channel_rate;
 
     // Current status
     size_t health;
@@ -41,6 +39,9 @@ struct Stats {
     size_t class3_level;
 
     void ticHealthManaStamina(size_t tick_num);
+
+    // The maximum mana of this entity (derived from aura and domain)
+    size_t maxMana() const;
 
     // The maximum health from these stats (a derived value)
     size_t maxHealth() const;

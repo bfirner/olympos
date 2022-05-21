@@ -90,8 +90,8 @@ int main(int argc, char** argv) {
     // Draw the player's status in the window
     UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
 
-    // Initialize time stuff for the ticks
-    auto last_update = std::chrono::steady_clock::now();
+    // Update the world state.
+    ws.update();
 
     // Turn cursor visibility to normal.
     curs_set(1);
@@ -107,6 +107,9 @@ int main(int argc, char** argv) {
     UserInterface::clearInput(window, ws.field_height, ws.field_width);
     update_panels();
     doupdate();
+
+    // Initialize time stuff for the ticks
+    auto last_update = std::chrono::steady_clock::now();
 
     bool quit = false;
     bool has_command = false;
@@ -168,6 +171,7 @@ int main(int argc, char** argv) {
             // execute all commands every tick
             comham.executeCommands(ws);
             auto player_i = ws.named_entities["player"];
+            // Find the user visible events.
             std::vector<std::string> player_events = ws.getLocalEvents(player_i->y, player_i->x, 10);
             for (std::string& event : player_events) {
                 event_strings.push_front(event);
@@ -176,9 +180,10 @@ int main(int argc, char** argv) {
             while (40 < event_strings.size()) {
                 event_strings.pop_back();
             }
+            // Clear the events after the user-visible ones have been dealt with.
             ws.clearEvents();
             ws.update();
-            UserInterface::updateEvents(event_window, event_strings);
+            UserInterface::updateEvents(event_window, event_strings, 30);
             // Update the player's status in the window
             UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
             // Update panels, refresh the screen, and reset the cursor position
