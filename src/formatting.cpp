@@ -177,14 +177,14 @@ void UserInterface::drawString(WINDOW* window, const std::string& str, size_t ro
     drawString(window, str);
 }
 
-void UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column) {
+size_t UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column) {
     // Set the cursor
     wmove(window, row, column);
     // Draw the name
     drawString(window, entity.name);
     // Nothing more to do if there are no stats
     if (not entity.stats) {
-        return;
+        return row;
     }
     // Otherwise continue with the species.
     drawString(window, " (" + entity.getSpecies() + ")");
@@ -246,6 +246,7 @@ void UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row,
     wmove(window, cur_row, column);
     drawString(window, description);
 
+    return cur_row;
 }
 
 void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer, size_t line_size) {
@@ -258,4 +259,17 @@ void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer
             drawString(window, padding, row, buffer[row].size());
         }
     }
+}
+
+size_t UserInterface::drawHotkeys(WINDOW* window, size_t row, const std::vector<std::string>& shortcuts) {
+    // Label
+    drawString(window, "Hotkeys:", row, 1);
+    row += 1;
+
+    for (size_t idx = 0; idx < shortcuts.size(); ++idx) {
+        if (0 < shortcuts[idx].size()) {
+            drawString(window, "F" + std::to_string(idx) + ")" + shortcuts[idx], ++row, 1);
+        }
+    }
+    return row;
 }

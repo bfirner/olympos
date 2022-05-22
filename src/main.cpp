@@ -14,6 +14,7 @@
 #include <chrono>
 #include <deque>
 #include <list>
+#include <vector>
 
 #include "command_handler.hpp"
 #include "entity.hpp"
@@ -129,9 +130,23 @@ int main(int argc, char** argv) {
     // named entities?
     auto player_i = ws.named_entities["player"];
 
+    std::vector<std::string> function_shortcuts;
+    std::set<std::string> nav_shortcuts{"north", "east", "south", "west"};
+    // Doesn't seem to be easy for someone to use a function 0 key.
+    function_shortcuts.push_back("");
+    for (auto& [key, value] : player_i->command_handlers) {
+        if (12 > function_shortcuts.size() and not nav_shortcuts.contains(key)) {
+            function_shortcuts.push_back(key);
+        }
+    }
+    while (function_shortcuts.size() < 12) {
+        function_shortcuts.push_back("");
+    }
+
     while(not quit) {
         int in_c = wgetch(window);
         std::string shortcut_str = "";
+        int function_hotkey = -1;
         switch (in_c) {
             // Check for arrow keys and treat them as an immediately commanded direction and enter
             // key.
@@ -146,6 +161,45 @@ int main(int argc, char** argv) {
                 break;
             case KEY_RIGHT:
                 shortcut_str = "east";
+                break;
+            case KEY_F(0):
+                function_hotkey = 0;
+                break;
+            case KEY_F(1):
+                function_hotkey = 1;
+                break;
+            case KEY_F(2):
+                function_hotkey = 2;
+                break;
+            case KEY_F(3):
+                function_hotkey = 3;
+                break;
+            case KEY_F(4):
+                function_hotkey = 4;
+                break;
+            case KEY_F(5):
+                function_hotkey = 5;
+                break;
+            case KEY_F(6):
+                function_hotkey = 6;
+                break;
+            case KEY_F(7):
+                function_hotkey = 7;
+                break;
+            case KEY_F(8):
+                function_hotkey = 8;
+                break;
+            case KEY_F(9):
+                function_hotkey = 9;
+                break;
+            case KEY_F(10):
+                function_hotkey = 10;
+                break;
+            case KEY_F(11):
+                function_hotkey = 11;
+                break;
+            case KEY_F(12):
+                function_hotkey = 12;
                 break;
             case KEY_BACKSPACE:
             case 127:
@@ -163,6 +217,14 @@ int main(int argc, char** argv) {
             }
             command += shortcut_str;
             in_c = '\n';
+        }
+        if (0 <= function_hotkey and 0 < function_shortcuts.at(function_hotkey).size()) {
+            if (0 < command.size() and command.back() != ' ') {
+                command.push_back(' ');
+            }
+            command += function_shortcuts.at(function_hotkey);
+            // Don't process the character.
+            in_c = ERR;
         }
         // Process a command on a new line.
         if ('\n' == in_c) {
@@ -211,8 +273,10 @@ int main(int argc, char** argv) {
             ws.update();
             UserInterface::updateEvents(event_window, event_strings, 30);
             // Update the player's status in the window
-            UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
+            size_t status_row = UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
+            UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
         }
+        // TODO Add any visual effects that occur faster than ticks here.
         // Update panels, refresh the screen, and reset the cursor position
         UserInterface::updateDisplay(window, ws.entities);
         // Need to redraw the command since we've just erased the window.

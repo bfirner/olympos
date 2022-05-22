@@ -9,8 +9,6 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Improve event messages.
-* Support function key shortcuts
 * Show common and hotkey commands in side bar
 * Help command
 * * Details on available skills
@@ -29,6 +27,9 @@ C++ compiler that supports the C++20 standard.
       firebolt)
 * * Class gains
 * * * From associated skill usage
+* Add skills for all of the basic sensors (listen, taste, look, touch/feel, smell)
 * * Make multiple rooms
 * * World state to world state communication at "doorways". Can also go from entity -> world state -> world state ->
 entity when it passes from one room to another.
+* Mouse stuff (click on ability to add text).
+* * See `curs_mouse`

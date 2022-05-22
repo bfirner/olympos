@@ -30,7 +30,11 @@ namespace UserInterface {
     void setupColors();
 
     void drawString(WINDOW* window, const std::string& str, size_t row, size_t column);
-    void drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column);
+    // Update the status and return the last row used.
+    size_t drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column);
 
     void updateEvents(WINDOW* window, std::deque<std::string>& buffer, size_t line_size);
+
+    // Draw hotkey shortcuts and return the last row used.
+    size_t drawHotkeys(WINDOW* window, size_t row, const std::vector<std::string>& shortcuts);
 }
