@@ -5,6 +5,7 @@
  */
 
 // C headers
+#include <locale.h>
 #include <ncurses.h>
 #include <panel.h>
 
@@ -31,10 +32,16 @@ int main(int argc, char** argv) {
         tick_rate = std::stod(argv[1]);
     }
 
+    setlocale(LC_ALL, "");
+
     // Set up an ncurses screen and turn off echoing what the user writes.
     // TODO Pass the window around to everything using it so that we can manage multiple windows.
     //WINDOW* window = initscr();
     initscr();
+    // Get input as it is typed.
+    cbreak();
+    // Don't echo what the user types.
+    noecho();
     WINDOW* window = newwin(42, 80, 0, 0);
     if (has_colors()) {
         // TODO start_color() and then do stuff
@@ -42,6 +49,8 @@ int main(int argc, char** argv) {
         UserInterface::setupColors();
     }
 
+    // No weird flush handling
+    intrflush(window, false);
     // Enable keypad inputs (arrow and function keys)
     keypad(window, true);
 
@@ -114,6 +123,12 @@ int main(int argc, char** argv) {
     bool quit = false;
     bool has_command = false;
     std::string command = "";
+
+    // Keep an easy handle to access the player
+    // TODO If we keep this here is there any reason for the world state to bother tracking some
+    // named entities?
+    auto player_i = ws.named_entities["player"];
+
     while(not quit) {
         int in_c = wgetch(window);
         std::string shortcut_str = "";
@@ -131,6 +146,15 @@ int main(int argc, char** argv) {
                 break;
             case KEY_RIGHT:
                 shortcut_str = "east";
+                break;
+            case KEY_BACKSPACE:
+            case 127:
+                // Remove a character from the command.
+                if (not command.empty()) {
+                    command.pop_back();
+                    wdelch(window);
+                }
+                in_c = ERR;
                 break;
         }
         if (0 < shortcut_str.size()) {
@@ -155,6 +179,9 @@ int main(int argc, char** argv) {
             has_command = true;
         }
         else if (in_c != ERR) {
+            // Since we are in noecho mode the character should be drawn.
+            //waddch(window, in_c);
+            wechochar(window, in_c);
             command.push_back(in_c);
         }
 
@@ -170,7 +197,6 @@ int main(int argc, char** argv) {
             last_update = cur_time;
             // execute all commands every tick
             comham.executeCommands(ws);
-            auto player_i = ws.named_entities["player"];
             // Find the user visible events.
             std::vector<std::string> player_events = ws.getLocalEvents(player_i->y, player_i->x, 10);
             for (std::string& event : player_events) {
@@ -186,17 +212,17 @@ int main(int argc, char** argv) {
             UserInterface::updateEvents(event_window, event_strings, 30);
             // Update the player's status in the window
             UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
-            // Update panels, refresh the screen, and reset the cursor position
-            UserInterface::updateDisplay(window, ws.entities);
-            // Need to redraw the command since we've just erased the window.
-            UserInterface::clearInput(window, ws.field_height, ws.field_width);
-            for (char c : command) {
-                waddch(window, c);
-            }
-            // Update panels and refresh the screen
-            update_panels();
-            doupdate();
         }
+        // Update panels, refresh the screen, and reset the cursor position
+        UserInterface::updateDisplay(window, ws.entities);
+        // Need to redraw the command since we've just erased the window.
+        UserInterface::clearInput(window, ws.field_height, ws.field_width);
+        for (char c : command) {
+            waddch(window, c);
+        }
+        // Update panels and refresh the screen
+        update_panels();
+        doupdate();
     }
 
     // Clean things up.
