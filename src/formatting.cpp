@@ -139,6 +139,14 @@ void UserInterface::clearInput(WINDOW* window, size_t field_height, size_t field
     wmove(window, field_height, 1);
 }
 
+void drawString(WINDOW* window, const std::wstring& str) {
+    // Draw the string
+    for (wchar_t c : str) {
+        //wadd_wch(window, c);
+        waddch(window, c);
+    }
+}
+
 void drawString(WINDOW* window, const std::string& str) {
     // Draw the string
     for (char c : str) {
@@ -169,6 +177,10 @@ void drawBar(WINDOW* window, double percent) {
     }
     // Restore the original settings
     wattr_set(window, orig_attrs, orig_color, nullptr);
+}
+
+void UserInterface::drawString(WINDOW* window, const std::wstring& str, size_t row, size_t column) {
+    mvwprintw(window, row, column, "%ls", str.data());
 }
 
 void UserInterface::drawString(WINDOW* window, const std::string& str, size_t row, size_t column) {
@@ -266,10 +278,24 @@ size_t UserInterface::drawHotkeys(WINDOW* window, size_t row, const std::vector<
     drawString(window, "Hotkeys:", row, 1);
     row += 1;
 
+    // Navigation
+    drawString(window, L"↑) north", ++row, 1);
+    drawString(window, L"→) east", ++row, 1);
+    drawString(window, L"↓) south", ++row, 1);
+    drawString(window, L"←) west", ++row, 1);
+
+    // Function hotkeys
     for (size_t idx = 0; idx < shortcuts.size(); ++idx) {
         if (0 < shortcuts[idx].size()) {
-            drawString(window, "F" + std::to_string(idx) + ")" + shortcuts[idx], ++row, 1);
+            drawString(window, "F" + std::to_string(idx) + ") " + shortcuts[idx], ++row, 1);
         }
     }
     return row;
+}
+
+void drawPause(WINDOW* window, size_t rows, size_t columns) {
+    const std::string message = "===PAUSED===";
+    // Clear the window, then draw the pause message.
+    werase(window);
+    mvwprintw(window, rows / 2, columns / 2 - message.size() / 2, "%s", message.data());
 }

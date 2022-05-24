@@ -14,6 +14,7 @@
 #include <chrono>
 #include <deque>
 #include <list>
+#include <utility>
 #include <vector>
 
 #include "command_handler.hpp"
@@ -21,6 +22,7 @@
 #include "formatting.hpp"
 #include "world_state.hpp"
 #include "behavior.hpp"
+#include "uicomponent.hpp"
 
 using std::string;
 using std::vector;
@@ -36,8 +38,6 @@ int main(int argc, char** argv) {
     setlocale(LC_ALL, "");
 
     // Set up an ncurses screen and turn off echoing what the user writes.
-    // TODO Pass the window around to everything using it so that we can manage multiple windows.
-    //WINDOW* window = initscr();
     initscr();
     // Get input as it is typed.
     cbreak();
@@ -95,14 +95,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    ws.initialize();
-
-    // Draw the player's status in the window
-    UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
-
-    // Update the world state.
-    ws.update();
-
     // Turn cursor visibility to normal.
     curs_set(1);
 
@@ -112,18 +104,7 @@ int main(int argc, char** argv) {
         wtimeout(window, 50);
     }
 
-    // Update panels, refresh the screen, and reset the cursor position
-    UserInterface::updateDisplay(window, ws.entities);
-    UserInterface::clearInput(window, ws.field_height, ws.field_width);
-    update_panels();
-    doupdate();
-
-    // Initialize time stuff for the ticks
-    auto last_update = std::chrono::steady_clock::now();
-
-    bool quit = false;
-    bool has_command = false;
-    std::string command = "";
+    ws.initialize();
 
     // Keep an easy handle to access the player
     // TODO If we keep this here is there any reason for the world state to bother tracking some
@@ -142,6 +123,62 @@ int main(int argc, char** argv) {
     while (function_shortcuts.size() < 12) {
         function_shortcuts.push_back("");
     }
+
+    // Create a pause panel.
+    UIComponent pause_panel(ws, 38, 76, 1, 2);
+    UserInterface::drawString(pause_panel.window, "===Game Paused===", 38/2, 76/2 - std::string("===Game Paused===").size()/2);
+
+    // Create (and hide) a dialog window for help screens.
+    std::map<std::string, UIComponent> help_components;
+    {
+        auto insert_stat = help_components.emplace(std::make_pair("help", UIComponent(ws, 38, 76, 1, 2)));
+        UIComponent& uic = insert_stat.first->second;
+        UserInterface::drawString(uic.window, "help", 0, 0);
+        UserInterface::drawString(uic.window, "Type 'help' and a command for more information.", 2, 0);
+        UserInterface::drawString(uic.window, "Available commands are:", 3, 0);
+        size_t cur_row = 3;
+        for (auto& [cmd_name, args] : player_i->command_args) {
+            UserInterface::drawString(uic.window, cmd_name, ++cur_row, 5);
+        }
+    }
+    for (auto& [cmd_name, args] : player_i->command_args) {
+        // Insert a tuple for this key.
+        auto insert_stat = help_components.emplace(std::make_pair(cmd_name, UIComponent(ws, 38, 76, 1, 2)));
+        UIComponent& uic = insert_stat.first->second;
+        // If this element already existed then clear it before drawing text.
+        if (not insert_stat.second) {
+            werase(uic.window);
+        }
+        // Set the help message.
+        UserInterface::drawString(uic.window, cmd_name, 0, 0);
+        UserInterface::drawString(uic.window, "Usage:", 2, 0);
+        size_t cur_row = 2;
+        for (const std::string& arg : args) {
+            UserInterface::drawString(uic.window, arg, ++cur_row, 5);
+        }
+    }
+
+    // Draw the player's status in the window
+    size_t status_row = UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
+    UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
+
+    // Update the world state.
+    ws.update();
+
+    // Update panels, refresh the screen, and reset the cursor position
+    UserInterface::updateDisplay(window, ws.entities);
+    UserInterface::clearInput(window, ws.field_height, ws.field_width);
+    update_panels();
+    doupdate();
+
+    // Initialize time stuff for the ticks
+    auto last_update = std::chrono::steady_clock::now();
+
+    bool quit = false;
+    bool has_command = false;
+    bool game_paused = false;
+    decltype(help_components)::iterator help_displayed = help_components.end();
+    std::string command = "";
 
     while(not quit) {
         int in_c = wgetch(window);
@@ -232,49 +269,88 @@ int main(int argc, char** argv) {
             if (0 < command.size() and std::string("quit").starts_with(command)) {
                 quit = true;
             }
-            // TODO Add user aliases.
-            // Queue up actions and take them at the action tick.
-            comham.enqueueEntityCommand("player", command);
+            else if (0 < command.size() and command.starts_with("help")) {
+                // No pausing and helping at the same time.
+                if (game_paused) {
+                    game_paused = false;
+                    pause_panel.hide();
+                }
+                // Show the top level help panel unless an argument was provided.
+                std::string help_target = "help";
+                if (std::string::npos != command.find_last_of(' ')) {
+                    help_target = command.substr(command.find_last_of(' '));
+                }
+                // If this help panel exists then show the panel.
+                if (help_components.contains(help_target)) {
+                    help_displayed = help_components.find(help_target);
+                    help_displayed->second.show();
+                }
+            }
+            else if (0 < command.size() and std::string("pause").starts_with(command)) {
+                // No pausing and helping at the same time.
+                if (help_displayed != help_components.end()) {
+                    help_displayed->second.hide();
+                    help_displayed = help_components.end();
+                }
+                // Pause and display the pause panel.
+                game_paused = true;
+                pause_panel.show();
+            }
+            else {
+                // If the user is issuing commands then exit pause or help mode.
+                if (game_paused) {
+                    game_paused = false;
+                    pause_panel.hide();
+                }
+                if (help_displayed != help_components.end()) {
+                    help_displayed->second.hide();
+                    help_displayed = help_components.end();
+                }
+                // TODO Add user aliases.
+                // Queue up actions and take them at the action tick.
+                comham.enqueueEntityCommand("player", command);
+                has_command = true;
+            }
             //Update the cursor and clear the input field
             UserInterface::clearInput(window, ws.field_height, ws.field_width);
             command = "";
-            has_command = true;
         }
         else if (in_c != ERR) {
             // Since we are in noecho mode the character should be drawn.
-            //waddch(window, in_c);
             wechochar(window, in_c);
             command.push_back(in_c);
         }
 
-        auto cur_time = std::chrono::steady_clock::now();
-        std::chrono::duration<double> time_diff = cur_time - last_update;
-        if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or
-            (0.0 >= tick_rate and has_command)) {
-            comham.enqueueTraitCommand({"small", "aggro"}, "west");
-            comham.enqueueTraitCommand({"species:spider"}, "east");
-            comham.enqueueTraitCommand({"species:bat"}, "south");
-            comham.enqueueTraitCommand({"species:slime"}, "wander");
-            has_command = false;
-            last_update = cur_time;
-            // execute all commands every tick
-            comham.executeCommands(ws);
-            // Find the user visible events.
-            std::vector<std::string> player_events = ws.getLocalEvents(player_i->y, player_i->x, 10);
-            for (std::string& event : player_events) {
-                event_strings.push_front(event);
+        if (not game_paused and help_displayed == help_components.end()) {
+            auto cur_time = std::chrono::steady_clock::now();
+            std::chrono::duration<double> time_diff = cur_time - last_update;
+            if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or
+                (0.0 >= tick_rate and has_command)) {
+                comham.enqueueTraitCommand({"small", "aggro"}, "west");
+                comham.enqueueTraitCommand({"species:spider"}, "east");
+                comham.enqueueTraitCommand({"species:bat"}, "south");
+                comham.enqueueTraitCommand({"species:slime"}, "wander");
+                has_command = false;
+                last_update = cur_time;
+                // execute all commands every tick
+                comham.executeCommands(ws);
+                // Find the user visible events.
+                std::vector<std::string> player_events = ws.getLocalEvents(player_i->y, player_i->x, 10);
+                for (std::string& event : player_events) {
+                    event_strings.push_front(event);
+                }
+                // Limit to 40 events in the event window.
+                while (40 < event_strings.size()) {
+                    event_strings.pop_back();
+                }
+                // Clear the events after the user-visible ones have been dealt with.
+                ws.clearEvents();
+                ws.update();
+                UserInterface::updateEvents(event_window, event_strings, 30);
+                // Update the player's status in the window
+                size_t status_row = UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
+                UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
             }
-            // Limit to 40 events in the event window.
-            while (40 < event_strings.size()) {
-                event_strings.pop_back();
-            }
-            // Clear the events after the user-visible ones have been dealt with.
-            ws.clearEvents();
-            ws.update();
-            UserInterface::updateEvents(event_window, event_strings, 30);
-            // Update the player's status in the window
-            size_t status_row = UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
-            UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
         }
         // TODO Add any visual effects that occur faster than ticks here.
         // Update panels, refresh the screen, and reset the cursor position

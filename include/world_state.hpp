@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+// Forward declare world state because it is used in Entity's dependencies.
+struct WorldState;
 #include "entity.hpp"
 
 struct WorldEvent {

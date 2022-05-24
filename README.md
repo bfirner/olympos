@@ -4,13 +4,14 @@ Rogue-like for friends.
 
 ## Prerequisites
 nlohmann-json C++ library
-ncurses (and the panel library that should come with it)
+ncurses >= 5 (and the panel library that should come with it)
 C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Show common and hotkey commands in side bar
 * Help command
+* * Open a new panel and pause the game
+* * General help
 * * Details on available skills
 * * Ability to hotkey commands
 * Make more complicated mob behavior

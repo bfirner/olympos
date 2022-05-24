@@ -9,7 +9,7 @@ OBJECTS := $(SOURCES:.cpp=.o)
 DEPFILES := $(OBJECTS:.o=.d)
 
 olympos: $(OBJECTS)
-	g++ $(CXXFLAGS) $^ -lpanel -lncurses -o $@
+	g++ $(CXXFLAGS) $^ -lpanel -lncursesw -o $@
 
 -include $(DEPFILES)
 
