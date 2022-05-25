@@ -16,6 +16,12 @@
 #include <string>
 #include <vector>
 
+// Forward declare types
+namespace Behavior {
+    struct Ability;
+    struct BehaviorSet;
+}
+
 #include "entity.hpp"
 #include "world_state.hpp"
 

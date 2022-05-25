@@ -80,7 +80,7 @@ struct Entity {
     // Notice that these will most likely be lambda functions with references to the entity that
     // they effect.
     std::map<std::string, std::function<void(WorldState&, const std::vector<std::string>&)>> command_handlers = {};
-    std::map<std::string, std::set<std::string>> command_args = {};
+    std::map<std::string, Behavior::Ability> command_details = {};
 
     // Master of a command. Increases effectiveness and possibly unlocks new commands and behaviors.
     std::map<std::string, double> command_mastery = {};

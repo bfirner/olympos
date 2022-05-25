@@ -368,6 +368,7 @@ namespace Behavior {
             }
             if (can_use) {
                 entity.command_handlers.insert({ability_name, makeFunction(ability_name, entity)});
+                entity.command_details.insert({ability_name, ability});
                 available.push_back(ability_name);
             }
         }

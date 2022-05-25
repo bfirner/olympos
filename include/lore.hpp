@@ -19,5 +19,5 @@ namespace OlymposLore {
     std::set<std::string> getSpeciesField(const std::string species_name, const std::string& field);
     // TODO Remove this in favor of getNamedEntry
     // TODO Get other things like XP
-};
+}
 

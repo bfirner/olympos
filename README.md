@@ -9,17 +9,11 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Help command
-* * Open a new panel and pause the game
-* * General help
-* * Details on available skills
-* * Ability to hotkey commands
 * Make more complicated mob behavior
 * * Follow
 * * Follow within some distance
 * * Attack if able
-* Multiple floors
-* * Start with floor descriptions in json
+* Ability to hotkey commands
 * Prototype the following
 * * Essence gains (experience) from combat and actions.
 * * Skill gains
@@ -29,8 +23,12 @@ C++ compiler that supports the C++20 standard.
 * * Class gains
 * * * From associated skill usage
 * Add skills for all of the basic sensors (listen, taste, look, touch/feel, smell)
-* * Make multiple rooms
+* Help command
+* * General help
+* Multiple floors
+* * Start with floor descriptions in json
+* * Make multiple rooms per floor
 * * World state to world state communication at "doorways". Can also go from entity -> world state -> world state ->
 entity when it passes from one room to another.
-* Mouse stuff (click on ability to add text).
+* Mouse stuff (click on things to use ability, add hotkeys, etc)
 * * See `curs_mouse`

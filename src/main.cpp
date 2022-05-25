@@ -137,11 +137,11 @@ int main(int argc, char** argv) {
         UserInterface::drawString(uic.window, "Type 'help' and a command for more information.", 2, 0);
         UserInterface::drawString(uic.window, "Available commands are:", 3, 0);
         size_t cur_row = 3;
-        for (auto& [cmd_name, args] : player_i->command_args) {
+        for (auto& [cmd_name, ability] : player_i->command_details) {
             UserInterface::drawString(uic.window, cmd_name, ++cur_row, 5);
         }
     }
-    for (auto& [cmd_name, args] : player_i->command_args) {
+    for (auto& [cmd_name, ability] : player_i->command_details) {
         // Insert a tuple for this key.
         auto insert_stat = help_components.emplace(std::make_pair(cmd_name, UIComponent(ws, 38, 76, 1, 2)));
         UIComponent& uic = insert_stat.first->second;
@@ -153,9 +153,34 @@ int main(int argc, char** argv) {
         UserInterface::drawString(uic.window, cmd_name, 0, 0);
         UserInterface::drawString(uic.window, "Usage:", 2, 0);
         size_t cur_row = 2;
-        for (const std::string& arg : args) {
-            UserInterface::drawString(uic.window, arg, ++cur_row, 5);
+        if (0 < ability.arguments.size()) {
+            if (ability.arguments.front() == "or") {
+                std::string arg_str = "{";
+                for (size_t idx = 1; idx < ability.arguments.size(); ++idx) {
+                    arg_str = arg_str + ability.arguments.at(idx);
+                    if (idx + 1 < ability.arguments.size()) {
+                        arg_str += ", ";
+                    }
+                }
+                arg_str += "}";
+                UserInterface::drawString(uic.window, arg_str, ++cur_row, 5);
+            }
+            else {
+                std::string arg_str;
+                for (size_t idx = 1; idx < ability.arguments.size(); ++idx) {
+                    arg_str = arg_str + ability.arguments.at(idx);
+                    if (idx + 1 < ability.arguments.size()) {
+                        arg_str += " ";
+                    }
+                }
+                UserInterface::drawString(uic.window, arg_str, ++cur_row, 5);
+            }
         }
+        // TODO Ability type (should probably show up with the name)
+        // TODO Stamina cost
+        // TODO Default arguments
+        // TODO Describe effects
+        // TODO Add a description to the json.
     }
 
     // Draw the player's status in the window
@@ -278,7 +303,7 @@ int main(int argc, char** argv) {
                 // Show the top level help panel unless an argument was provided.
                 std::string help_target = "help";
                 if (std::string::npos != command.find_last_of(' ')) {
-                    help_target = command.substr(command.find_last_of(' '));
+                    help_target = command.substr(command.find_last_of(' ')+1);
                 }
                 // If this help panel exists then show the panel.
                 if (help_components.contains(help_target)) {
