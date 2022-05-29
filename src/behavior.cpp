@@ -165,7 +165,11 @@ namespace Behavior {
 
         // If the target was not found then take no action.
         if (target_i == ws.entities.end()) {
-            return;
+            // Check to see if this is a trait rather than a name.
+            target_i = ws.findEntity(std::vector<string>{target_name}, actor.y, actor.x, detection_range);
+            if (target_i == ws.entities.end()) {
+                return;
+            }
         }
 
         // If the target entity was found then calculate how to move closer or farther.
@@ -234,7 +238,7 @@ namespace Behavior {
         // reduce the stamina cost from the actor's stamina if the action occurred.
         if ((next_y_location != actor.y or next_x_location != actor.x) ) {
             if (ws.moveEntity(actor, next_y_location, next_x_location)) {
-                replaceSubstring(event_string, "<target>", target_name);
+                replaceSubstring(event_string, "<target>", target_i->name);
                 actor.stats.value().stamina -= ability.stamina;
                 // TODO Event string setup on the calling side
                 ws.logEvent({event_string, actor.y, actor.x});

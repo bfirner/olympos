@@ -355,7 +355,7 @@ int main(int argc, char** argv) {
                 //comham.enqueueTraitCommand({"small", "aggro"}, "flee player");
                 comham.enqueueEntityCommand("Ralph", "seek Bob");
                 comham.enqueueTraitCommand({"species:arachnid"}, "kite Bob 3");
-                comham.enqueueTraitCommand({"species:bat"}, "flee Bob");
+                comham.enqueueTraitCommand({"species:bat"}, "flee player");
                 comham.enqueueTraitCommand({"species:slime"}, "wander");
                 has_command = false;
                 last_update = cur_time;
