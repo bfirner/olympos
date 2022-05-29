@@ -49,6 +49,9 @@ struct Stats {
     // The maximum stamina from these stats (a derived value)
     size_t maxStamina() const;
 
+    // The detection range of this entity (derived from stamina)
+    size_t detectionRange() const;
+
     bool operator==(const Stats&) const = default;
 };
 

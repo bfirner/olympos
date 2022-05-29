@@ -9,11 +9,21 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Make more complicated mob behavior
-* * Follow
-* * Follow within some distance
-* * Attack if able
+* Test findEntity with traits version
+* Create behavior sets, which represent how entities should behave, in json
+* * For example, define modes based upon proximity or visibility
+* * * HP below some threshold: heal, flee
+* * * Adjacent to player: attack
+* * * Within x steps of player: chase
+* * * Within x steps of player: kite
+* * * Within x steps of player: ranged attacks
+* * Define priority of different skills based upon the current mode
 * Ability to hotkey commands
+* Add skills for all of the basic sensors (listen, taste, look, touch/feel, smell)
+* Utility and tool commands
+* * Pick up
+* * Throw
+* * Swing
 * Prototype the following
 * * Essence gains (experience) from combat and actions.
 * * Skill gains
@@ -22,9 +32,9 @@ C++ compiler that supports the C++20 standard.
       firebolt)
 * * Class gains
 * * * From associated skill usage
-* Add skills for all of the basic sensors (listen, taste, look, touch/feel, smell)
-* Help command
+* Help command has non-skill help
 * * General help
+* * UI help
 * Multiple floors
 * * Start with floor descriptions in json
 * * Make multiple rooms per floor

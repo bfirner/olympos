@@ -42,6 +42,20 @@ void updatePassable(const std::list<Entity>& entities, vector<vector<bool>>& pas
     }
 }
 
+
+bool WorldState::isPassable(size_t y, size_t x) {
+    // Out of bounds? Return false.
+    if (y >= this->field_height or x >= this->field_width) {
+        return false;
+    }
+    // Return false if given location is not passable.
+    if (not passable[y][x]) {
+        return false;
+    }
+    // Otherwise return true.
+    return true;
+}
+
 WorldState::WorldState(size_t field_height, size_t field_width) :
     passable{field_height, vector<bool>(field_width, true)} {
     this->field_height = field_height;
@@ -126,6 +140,16 @@ void WorldState::damageEntity(decltype(entities)::iterator entity_i, size_t dama
 std::list<Entity>::iterator WorldState::findEntity(const std::string& name) {
     return std::find_if(entities.begin(), entities.end(),
         [&](Entity& ent) {return ent.name == name;});
+}
+
+std::list<Entity>::iterator WorldState::findEntity(const std::string& name, int64_t y, int64_t x, size_t range) {
+    return std::find_if(entities.begin(), entities.end(),
+        [&](Entity& ent) {return ent.name == name and (abs(y - ent.y) + abs(x - ent.x)) <= range;});
+}
+
+std::list<Entity>::iterator WorldState::findEntity(const std::vector<std::string>& traits, int64_t y, int64_t x, size_t range) {
+    return std::find_if(entities.begin(), entities.end(),
+        [&](Entity& ent) {return std::all_of(traits.begin(), traits.end(), [&](const std::string& trait) {return ent.traits.contains(trait);}) and (abs(y - ent.y) + abs(x - ent.x)) <= range;});
 }
 
 void WorldState::initialize() {

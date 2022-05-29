@@ -47,6 +47,10 @@ size_t Stats::maxStamina() const {
     return 1 + std::floor(cbrt(1.0 + vitality*0.5 + strength + domain*0.5));
 }
 
+size_t Stats::detectionRange() const {
+    return 4 + std::floor(cbrt(vitality));
+}
+
 std::string Entity::getSpecies() const {
     auto species_location = std::find_if(traits.begin(), traits.end(),
             [](const std::string& entry){ return entry.starts_with("species:");});

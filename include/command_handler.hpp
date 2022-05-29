@@ -18,7 +18,7 @@
 class CommandHandler {
     private:
         std::vector<std::tuple<std::string, std::string, std::vector<std::string>>> entity_commands;
-        std::vector<std::pair<std::vector<std::string>, std::string>> trait_commands;
+        std::vector<std::tuple<std::vector<std::string>, std::string, std::vector<std::string>>> trait_commands;
 
     public:
         CommandHandler();

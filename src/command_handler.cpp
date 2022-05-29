@@ -112,8 +112,11 @@ void CommandHandler::enqueueEntityCommand(const std::string& entity, const std::
 void CommandHandler::enqueueTraitCommand(const std::vector<std::string>& traits, const std::string& command) {
     string new_command = command;
     size_t reps = parseRepititions(new_command);
+
+    // Now split off the arguments
+    std::vector<string> arguments = parseArguments(new_command);
     for (size_t i = 0; i < reps; ++i) {
-        trait_commands.push_back({traits, new_command});
+        trait_commands.push_back({traits, new_command, arguments});
     }
 }
 
@@ -125,11 +128,18 @@ void CommandHandler::executeCommands(WorldState& ws) {
                 ws.named_entities.at(entity_name)->command_handlers.contains(command)) {
             ws.named_entities.at(entity_name)->command_handlers.at(command)(ws, arguments);
         }
+        // If this wasn't a "special" entity then look for one with this given name.
+        else {
+            auto entity_i = ws.findEntity(entity_name);
+            if (entity_i != ws.entities.end() and entity_i->command_handlers.contains(command)) {
+                entity_i->command_handlers.at(command)(ws, arguments);
+            }
+        }
     }
     entity_commands.clear();
 
     // Handle all {traits, command} pairs if we can find entities with matching traits.
-    for (const auto& [entity_traits, command] : trait_commands) {
+    for (const auto& [entity_traits, command, arguments] : trait_commands) {
         // Find any entities with all matching traits
         for (Entity& entity : ws.entities) {
             if (std::all_of(entity_traits.begin(), entity_traits.end(),
@@ -138,7 +148,7 @@ void CommandHandler::executeCommands(WorldState& ws) {
                 // supported.
                 if (entity.command_handlers.contains(command)) {
                     // TODO Arguments
-                    entity.command_handlers.at(command)(ws, {});
+                    entity.command_handlers.at(command)(ws, arguments);
                 }
             }
         }

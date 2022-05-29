@@ -42,7 +42,7 @@
             "domain": 1
         },
         "has a": ["arm", "hand", "finger"],
-        "is a": ["medium", "omnivore", "mammal", "biped"],
+        "is a": ["medium", "omnivore", "mammal", "biped", "sentient"],
         "likes": ["caffeine", "sleep", "throwing", "art", "entertainment", "sunset", "sunrise", "tool", "fire"],
         "hates": ["poop", "corpse", "mosquito", "leech"]
     },
@@ -76,7 +76,7 @@
             "domain": 0.5
         },
         "has a": ["arm", "hand", "finger"],
-        "is a": ["medium", "vegetarian", "mammal", "biped"],
+        "is a": ["medium", "vegetarian", "mammal", "biped", "sentient"],
         "likes": ["plant", "meditation", "art", "flower", "sunset", "sunrise"],
         "hates": ["poop", "corpse", "concrete", "iron", "mine", "fire"]
     },

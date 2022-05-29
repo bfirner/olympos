@@ -36,6 +36,8 @@ struct WorldState {
     // Keep track of what is passable.
     std::vector<std::vector<bool>> passable;
 
+    bool isPassable(size_t y, size_t x);
+
     WorldState(size_t field_height, size_t field_width);
     void addEntity(size_t y, size_t x, const std::string& name, const std::set<std::string>& traits);
 
@@ -47,6 +49,12 @@ struct WorldState {
 
     // Find the named entity, or named_entities.end()
     decltype(entities)::iterator findEntity(const std::string& name);
+
+    // Find the named entity within the given range, or named_entities.end()
+    decltype(entities)::iterator findEntity(const std::string& name, int64_t y, int64_t x, size_t range);
+
+    // Find an entity with the given traits within the given range, or named_entities.end()
+    decltype(entities)::iterator findEntity(const std::vector<std::string>& traits, int64_t y, int64_t x, size_t range);
 
     // Initialize layers, such as passable areas, and named entities.
     void initialize();

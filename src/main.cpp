@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
     ws.addEntity(4, 6, "Bat", {"species:bat", "mob", "aggro", "auto"});
     ws.addEntity(17, 14, "Bat", {"species:bat", "mob", "aggro", "auto"});
     ws.addEntity(20, 20, "Slime", {"species:slime", "mob", "auto"});
+    ws.addEntity(30, 30, "Ralph", {"species:elf", "mob", "auto"});
 
     // Add command handlers for all entities.
     for (Entity& entity : ws.entities) {
@@ -351,14 +352,17 @@ int main(int argc, char** argv) {
             std::chrono::duration<double> time_diff = cur_time - last_update;
             if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or
                 (0.0 >= tick_rate and has_command)) {
-                comham.enqueueTraitCommand({"small", "aggro"}, "west");
-                comham.enqueueTraitCommand({"species:spider"}, "east");
-                comham.enqueueTraitCommand({"species:bat"}, "south");
+                //comham.enqueueTraitCommand({"small", "aggro"}, "flee player");
+                comham.enqueueEntityCommand("Ralph", "seek Bob");
+                comham.enqueueTraitCommand({"species:arachnid"}, "kite Bob 3");
+                comham.enqueueTraitCommand({"species:bat"}, "flee Bob");
                 comham.enqueueTraitCommand({"species:slime"}, "wander");
                 has_command = false;
                 last_update = cur_time;
                 // execute all commands every tick
                 comham.executeCommands(ws);
+                // Tick update
+                ws.update();
                 // Find the user visible events.
                 std::vector<std::string> player_events = ws.getLocalEvents(player_i->y, player_i->x, 10);
                 for (std::string& event : player_events) {
@@ -370,7 +374,7 @@ int main(int argc, char** argv) {
                 }
                 // Clear the events after the user-visible ones have been dealt with.
                 ws.clearEvents();
-                ws.update();
+                // Draw the user visible events
                 UserInterface::updateEvents(event_window, event_strings, 30);
                 // Update the player's status in the window
                 size_t status_row = UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);

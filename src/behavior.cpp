@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <random>
 #include <ranges>
 
@@ -94,7 +95,8 @@ namespace Behavior {
         // TODO Use NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE macro to automatically define the json to
         // ability conversion?
         this->name = name;
-        type = stoType(ability_json.at("type").get<string>());
+        type = ability_json.at("type").get<AbilityType>();
+        //type = stoType(ability_json.at("type").get<string>());
         area = stoArea(ability_json.at("area").get<string>());
         range = stoRange(ability_json.at("range").get<string>());
         ability_json.at("flavor").get_to(flavor);
@@ -141,71 +143,206 @@ namespace Behavior {
         }
     }
 
+    // A function meant for binding that increases or decreases one entity's distance from another.
+    void changeDistance(Entity& actor, const Ability& ability, std::string event_string, size_t desired_distance, WorldState& ws, const std::vector<std::string>& arguments) {
+        // Verify that the actor can take this action
+        if (ability.stamina > actor.stats.value().stamina) {
+            return;
+        }
+
+        // Find the target from the arguments.
+        if (arguments.size() < 1) {
+            return;
+        }
+        const std::string& target_name = arguments.at(0);
+
+        // First, check if the actor can see or sense the target.
+        size_t detection_range = 0;
+        if (actor.stats) {
+            detection_range = actor.stats.value().detectionRange();
+        }
+        auto target_i = ws.findEntity(target_name, actor.y, actor.x, detection_range);
+
+        // If the target was not found then take no action.
+        if (target_i == ws.entities.end()) {
+            return;
+        }
+
+        // If the target entity was found then calculate how to move closer or farther.
+        // There won't be any pathing, this is just a straight line calculation.
+        int y_dist = (int)actor.y - target_i->y;
+        int x_dist = (int)actor.x - target_i->x;
+        size_t distance = abs(y_dist) + abs(x_dist);
+        // See if this entity wants to move closer or further
+        size_t next_y_location = actor.y;
+        size_t next_x_location = actor.x;
+        // Move closer?
+        if (distance > desired_distance) {
+            // Determine the sign of movement and check if that space is passable.
+            bool y_move_possible = (0 < y_dist and ws.isPassable(actor.y-1, actor.x)) or
+                                   (0 > y_dist and ws.isPassable(actor.y+1, actor.x));
+            bool x_move_possible = (0 < x_dist and ws.isPassable(actor.y, actor.x-1)) or
+                                   (0 > x_dist and ws.isPassable(actor.y, actor.x+1));
+            // Move closer along the farther dimension
+            if (abs(y_dist) >= abs(x_dist) and y_move_possible) {
+                if (0 < y_dist) {
+                    next_y_location -= 1;
+                }
+                else if (0 > y_dist) {
+                    next_y_location += 1;
+                }
+            }
+            // If we didn't move in y, then try to move in x.
+            else if (x_move_possible) {
+                if (0 < x_dist) {
+                    next_x_location -= 1;
+                }
+                else if (0 > x_dist) {
+                    next_x_location += 1;
+                }
+            }
+        }
+        // Move farther
+        else if (distance < desired_distance) {
+            // Determine the sign of movement and check if that space is passable.
+            bool y_move_possible = (0 <= y_dist and ws.isPassable(actor.y+1, actor.x)) or
+                                   (0 >= y_dist and ws.isPassable(actor.y-1, actor.x));
+            bool x_move_possible = (0 <= x_dist and ws.isPassable(actor.y, actor.x+1)) or
+                                   (0 >= x_dist and ws.isPassable(actor.y, actor.x-1));
+            // Move farther along the smaller dimension. This becomes ambiguous when the smaller
+            // dimension has a distance of 0, in which case we break towards the positive direction
+            // if it is possible to move to that location.
+            if (abs(y_dist) <= abs(x_dist) and y_move_possible) {
+                if (0 <= y_dist and ws.isPassable(actor.y+1, actor.x)) {
+                    next_y_location += 1;
+                }
+                else if (0 >= y_dist) {
+                    next_y_location -= 1;
+                }
+            }
+            // If we didn't move in y, then try to move in x.
+            else if (x_move_possible) {
+                if (0 <= x_dist and ws.isPassable(actor.y, actor.x+1)) {
+                    next_x_location += 1;
+                }
+                else if (0 >= x_dist) {
+                    next_x_location -= 1;
+                }
+            }
+        }
+        // If there is movement and the actor has the stamina for the action take it, and then
+        // reduce the stamina cost from the actor's stamina if the action occurred.
+        if ((next_y_location != actor.y or next_x_location != actor.x) ) {
+            if (ws.moveEntity(actor, next_y_location, next_x_location)) {
+                replaceSubstring(event_string, "<target>", target_name);
+                actor.stats.value().stamina -= ability.stamina;
+                // TODO Event string setup on the calling side
+                ws.logEvent({event_string, actor.y, actor.x});
+            }
+        }
+    }
+
+    std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeConditionalMoveFunction(Entity& entity) const {
+        // Prepare a flavor string to go into the event log whenever this behavior occurs.
+        // Fill in some fields in advance.
+        std::string event_string = flavor;
+        replaceSubstring(event_string, "<entity>", entity.name);
+
+        if (effects.contains("minimize distance") and arguments.at(0) == "<target>") {
+            return std::bind_front(changeDistance, std::ref(entity), std::cref(*this), event_string, 0);
+        }
+        else if (effects.contains("maximize distance") and arguments.at(0) == "<target>") {
+            return std::bind_front(changeDistance, std::ref(entity), std::cref(*this), event_string, std::numeric_limits<size_t>::max()/2);
+        }
+        else if (effects.contains("maintain distance") and
+                 arguments == vector<string>{"<target>", "range"}) {
+            auto bound_fun = std::bind_front(changeDistance, std::ref(entity), std::cref(*this), event_string);
+            return [=](WorldState& ws, const std::vector<std::string>& args) {
+                size_t desired_distance = std::stoull(args.at(1));
+                return bound_fun(desired_distance, ws, args);
+            };
+        }
+        // Otherwise return a nothing
+        return noop_function;
+    }
+
+    std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeLinearMoveFunction(Entity& entity) const {
+        // Prepare a flavor string to go into the event log whenever this behavior occurs.
+        // Fill in some fields in advance.
+        std::string event_string = flavor;
+        replaceSubstring(event_string, "<entity>", entity.name);
+
+        auto& distances = effects.at("distance");
+        if (distances.contains("x") or distances.contains("y")) {
+            int x_dist = 0;
+            int y_dist = 0;
+            if (distances.contains("x")) {
+                x_dist = distances.at("x");
+            }
+            if (distances.contains("y")) {
+                y_dist = distances.at("y");
+            }
+            // Capture the distances by value, but reference the entity.
+            return [=,&entity](WorldState& ws, const vector<string>& args) {
+                // Ignoring the movement arguments
+                (args);
+                // If the entity has the stamina for the action take it, and then reduce the
+                // stamina cost from the entity's stamina if the action occurred.
+                if (stamina <= entity.stats.value().stamina) {
+                    if (ws.moveEntity(entity, entity.y + y_dist, entity.x + x_dist)) {
+                        entity.stats.value().stamina -= stamina;
+                        ws.logEvent({event_string, entity.y, entity.x});
+                    }
+                }
+            };
+        }
+        else if (distances.contains("random_min") and distances.contains("random_max")) {
+            // Create a random generator in the given range.
+            int rand_min = distances.at("random_min");
+            int rand_max = distances.at("random_max");
+
+            // Lambda functions do not capture member variables, so shadow stamina with a
+            // local variable.
+            return [=,&entity,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
+                // Ignoring the movement arguments
+                // Going to use one RNG for each lambda. This theoretically protects from
+                // some side channel shenanigans.
+                static std::mt19937 randgen{std::random_device{}()};
+                static std::uniform_int_distribution<> rand_direction(0, 1);
+                static std::uniform_int_distribution<> rand_distance(rand_min, rand_max);
+                (args);
+                int y_location = entity.y;
+                int x_location = entity.x;
+                // Chose a random movement
+                if (0 == rand_direction(randgen)) {
+                    y_location += rand_distance(randgen);
+                }
+                else {
+                    x_location += rand_distance(randgen);
+                }
+                // If the entity has the stamina for the action take it, and then reduce the
+                // stamina cost from the entity's stamina if the action occurred.
+                if (stamina <= entity.stats.value().stamina) {
+                    if (ws.moveEntity(entity, y_location, x_location)) {
+                        entity.stats.value().stamina -= stamina;
+                        ws.logEvent({event_string, entity.y, entity.x});
+                    }
+                }
+            };
+        }
+        // Otherwise return a nothing
+        return noop_function;
+    }
+
     std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeMoveFunction(Entity& entity) const {
         if (effects.contains("distance")) {
-            // Prepare a flavor string to go into the event log whenever this behavior occurs.
-            // Fill in some fields in advance.
-            std::string event_string = flavor;
-            replaceSubstring(event_string, "<entity>", entity.name);
+            // Linear movement function
+            return makeLinearMoveFunction(entity);
+        }
+        else {
+            // Conditional movement function.
+            return makeConditionalMoveFunction(entity);
 
-            auto& distances = effects.at("distance");
-            if (distances.contains("x") or distances.contains("y")) {
-                int x_dist = 0;
-                int y_dist = 0;
-                if (distances.contains("x")) {
-                    x_dist = distances.at("x");
-                }
-                if (distances.contains("y")) {
-                    y_dist = distances.at("y");
-                }
-                // Capture the distances by value, but reference the entity.
-                return [=,&entity](WorldState& ws, const vector<string>& args) {
-                    // Ignoring the movement arguments
-                    (args);
-                    // If the entity has the stamina for the action take it, and then reduce the
-                    // stamina cost from the entity's stamina if the action occurred.
-                    if (stamina <= entity.stats.value().stamina) {
-                        if (ws.moveEntity(entity, entity.y + y_dist, entity.x + x_dist)) {
-                            entity.stats.value().stamina -= stamina;
-                            ws.logEvent({event_string, entity.y, entity.x});
-                        }
-                    }
-                };
-            }
-            else if (distances.contains("random_min") and distances.contains("random_max")) {
-                // Create a random generator in the given range.
-                int rand_min = distances.at("random_min");
-                int rand_max = distances.at("random_max");
-
-                // Lambda functions do not capture member variables, so shadow stamina with a
-                // local variable.
-                return [=,&entity,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
-                    // Ignoring the movement arguments
-                    // Going to use one RNG for each lambda. This theoretically protects from
-                    // some side channel shenanigans.
-                    static std::mt19937 randgen{std::random_device{}()};
-                    static std::uniform_int_distribution<> rand_direction(0, 1);
-                    static std::uniform_int_distribution<> rand_distance(rand_min, rand_max);
-                    (args);
-                    int y_location = entity.y;
-                    int x_location = entity.x;
-                    // Chose a random movement
-                    if (0 == rand_direction(randgen)) {
-                        y_location += rand_distance(randgen);
-                    }
-                    else {
-                        x_location += rand_distance(randgen);
-                    }
-                    // If the entity has the stamina for the action take it, and then reduce the
-                    // stamina cost from the entity's stamina if the action occurred.
-                    if (stamina <= entity.stats.value().stamina) {
-                        if (ws.moveEntity(entity, y_location, x_location)) {
-                            entity.stats.value().stamina -= stamina;
-                            ws.logEvent({event_string, entity.y, entity.x});
-                        }
-                    }
-                };
-            }
         }
         // Otherwise return a nothing
         return noop_function;

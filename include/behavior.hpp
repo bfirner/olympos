@@ -41,6 +41,14 @@ namespace Behavior {
         attack
     };
 
+    NLOHMANN_JSON_SERIALIZE_ENUM(
+        AbilityType,
+        {
+            {AbilityType::unknown, nullptr},
+            {AbilityType::movement, "movement"},
+            {AbilityType::attack, "attack"},
+        })
+
     enum class AbilityArea {
         unknown,
         single,
@@ -49,12 +57,31 @@ namespace Behavior {
         radius
     };
 
+    NLOHMANN_JSON_SERIALIZE_ENUM(
+        AbilityArea,
+        {
+            {AbilityArea::unknown, nullptr},
+            {AbilityArea::single, "single"},
+            {AbilityArea::line, "line"},
+            {AbilityArea::cone, "cone"},
+            {AbilityArea::radius, "radius"},
+        })
+
     enum class AbilityRange {
         unknown,
         close,
         medium,
         far
     };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(
+        AbilityRange,
+        {
+            {AbilityRange::unknown, nullptr},
+            {AbilityRange::close, "close"},
+            {AbilityRange::medium, "medium"},
+            {AbilityRange::far, "far"},
+        })
 
     struct Ability {
         // Ability name
@@ -81,6 +108,8 @@ namespace Behavior {
         // subclassed for each of them anyway and a factory can decide which one to create.
         // Make a movement type of function.
         std::function<void(WorldState&, const std::vector<std::string>&)> makeMoveFunction(Entity& entity) const;
+        std::function<void(WorldState&, const std::vector<std::string>&)> makeConditionalMoveFunction(Entity& entity) const;
+        std::function<void(WorldState&, const std::vector<std::string>&)> makeLinearMoveFunction(Entity& entity) const;
 
         // Make an attack type of function.
         std::function<void(WorldState&, const std::vector<std::string>&)> makeAttackFunction(Entity& entity) const;
