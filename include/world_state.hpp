@@ -56,6 +56,9 @@ struct WorldState {
     // Find an entity with the given traits within the given range, or named_entities.end()
     decltype(entities)::iterator findEntity(const std::vector<std::string>& traits, int64_t y, int64_t x, size_t range);
 
+    // Find an entity with the given entity ID number.
+    decltype(entities)::iterator findEntity(size_t entity_id);
+
     // Initialize layers, such as passable areas, and named entities.
     void initialize();
 

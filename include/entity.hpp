@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <optional>
 #include <map>
@@ -56,6 +57,9 @@ struct Stats {
 };
 
 struct Entity {
+    // Every entity is created with a unique ID number.
+    std::atomic_size_t next_entity_id = 0;
+    size_t entity_id;
     // Location of the entity
     size_t y = 0;
     size_t x = 0;
@@ -73,8 +77,8 @@ struct Entity {
     // TODO Should this return optional<string> instead for safety?
     std::string getSpecies() const;
 
-    // Behaviors available to this entity. Not all actions in a behavior may be unlocked.
-    //std::set<BehaviorSet> behaviors;
+    // Rules that control how this entity should behave.
+    std::string behavior_set_name;
 
     // The command handling functions of this entity.
     // The second argument, the argument list to the command, is documented in command_args.
@@ -92,8 +96,14 @@ struct Entity {
     // aura and domain attributes. Sometimes requires to achieve higher levels of master.
     std::vector<std::string> core_commands = {};
 
-    // Constructor
+    // Constructors
     Entity(size_t y, size_t x, const std::string& name, const std::set<std::string> traits);
 
+    Entity(const Entity&);
+
     std::string getDescription() const;
+
+    // Equality operator. Based upon the entity_id value.
+    bool operator==(const Entity&) const;
+    bool operator==(const size_t) const;
 };

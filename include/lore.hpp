@@ -17,7 +17,7 @@ namespace OlymposLore {
     std::optional<Stats> getStats(const Entity& entity);
     std::set<std::string> getNamedEntry(const Entity& entity, const std::string& field);
     std::set<std::string> getSpeciesField(const std::string species_name, const std::string& field);
-    // TODO Remove this in favor of getNamedEntry
+    std::string getSpeciesString(const std::string species_name, const std::string& field);
     // TODO Get other things like XP
 }
 

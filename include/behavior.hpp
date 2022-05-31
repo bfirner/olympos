@@ -14,14 +14,17 @@
 #include <map>
 #include <set>
 #include <string>
+#include <tuple>
 #include <vector>
 
 // Forward declare types
 namespace Behavior {
     struct Ability;
+    struct AbilitySet;
     struct BehaviorSet;
 }
 
+#include "command_handler.hpp"
 #include "entity.hpp"
 #include "world_state.hpp"
 
@@ -33,7 +36,7 @@ namespace Behavior {
 
 namespace Behavior {
 
-    // TODO FIXME Use NLOHMANN_JSON_SERIALIZE_ENUM for these enums.
+    // TODO FIXME Split behavior stuff and ability stuff into two different files.
 
     enum class AbilityType {
         unknown,
@@ -121,17 +124,17 @@ namespace Behavior {
         Ability(const std::string& name, nlohmann::json& ability_json);
     };
 
-    struct BehaviorSet {
-        // Name of the behavior set.
+    struct AbilitySet {
+        // Name of the ability set.
         std::string name;
-        // Description of the behavior set.
+        // Description of the ability set.
         std::string description;
 
         // Abilities in the set.
         std::map<std::string, Ability> abilities;
 
         // Construct from a json object.
-        BehaviorSet(const std::string& name, nlohmann::json& behavior_json);
+        AbilitySet(const std::string& name, nlohmann::json& behavior_json);
 
         // Return which abilities from this set are available to an entity.
         std::vector<std::string> getAvailable(const Entity& entity) const;
@@ -146,6 +149,24 @@ namespace Behavior {
     };
 
     // Get all of the available behavior sets.
-    const std::vector<BehaviorSet>& getBehaviors();
+    const std::vector<AbilitySet>& getAbilities();
+
+    // Conditions and abilities that define the behavior of an entity.
+    struct BehaviorSet {
+        // Name of the behavior set.
+        std::string name;
+
+        // Description
+        std::string description;
+
+        // Conditions and actions that make up this behavior set, ordered by precedence.
+        std::vector<std::vector<std::string>> rules;
+
+        // Go through the behavior set of the given entity and follow its rules to take appropriate
+        // actions.
+        void executeBehavior(Entity&, WorldState&, CommandHandler&);
+    };
+
+    const std::map<std::string, BehaviorSet>& getBehaviors();
 }
 

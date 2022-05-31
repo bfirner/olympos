@@ -1,0 +1,45 @@
+{
+    "standard mob": {
+        "description": "Standard mob that gets close and then attacks.",
+        "rules": [
+            ["hp < 10%", "flee player"],
+            ["distance:player < 2", "attack player"],
+            ["sense player", "seek player"],
+            ["else", "wander"]
+        ]
+    },
+    "persistent mob": {
+        "description": "Mob that tries harder to get close to attack and doesn't flee.",
+        "rules": [
+            ["distance:player < 2", "attack player"],
+            ["distance:player > 2", "seek player", "seek player"],
+            ["distance:player > 1", "seek player"],
+            ["else", "wander"]
+        ]
+    },
+    "scared mob": {
+        "description": "Mob that runs away from the player.",
+        "rules": [
+            ["distance:player < 30", "flee player", "flee player"],
+            ["distance:player < 2", "attack player"],
+            ["else", "wander"]
+        ]
+    },
+    "passive mob": {
+        "description": "Mob that runs away if damaged, but otherwise doesn't react.",
+        "rules": [
+            ["hp < 100%", "flee player", "flee player"],
+            ["else", "wander"]
+        ]
+    },
+    "ranged mob": {
+        "description": "Mob that kites the player, attacking from a distance.",
+        "rules": [
+            ["distance:player > 4", "kite player 4"],
+            ["distance:player < 4", "kite player 4"],
+            ["distance:player < 5", "ranged_attack player"],
+            ["else", "wander"]
+        ]
+    }
+}
+

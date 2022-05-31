@@ -62,6 +62,8 @@ std::string Entity::getSpecies() const {
 
 // Constructor
 Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::string> traits) {
+    // Assign the entity ID and increment the classwide variable to ensure the ID remains unique.
+    entity_id = Entity::next_entity_id.fetch_add(1);
     this->y = y;
     this->x = x;
     this->name = name;
@@ -70,19 +72,34 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     // If the traits defined a species then fill in stats. If there is no species then
     stats = OlymposLore::getStats(*this);
 
+    std::string species = getSpecies();
+
     // Get the "is a" and "has a" relationships to expand traits.
-    std::set<std::string> has_a = OlymposLore::getSpeciesField(getSpecies(), "has a");
+    std::set<std::string> has_a = OlymposLore::getSpeciesField(species, "has a");
     this->traits.insert(has_a.begin(), has_a.end());
 
     // Get the traits of the groups of which this entity is a member.
-    std::set<std::string> is_a = OlymposLore::getSpeciesField(getSpecies(), "is a");
+    std::set<std::string> is_a = OlymposLore::getSpeciesField(species, "is a");
     for (const std::string& group : is_a) {
         this->traits.insert(group);
         std::set<std::string> has_a = OlymposLore::getSpeciesField(group, "has a");
         this->traits.insert(has_a.begin(), has_a.end());
     }
+
+    behavior_set_name = OlymposLore::getSpeciesString(species, "base behavior");
+}
+
+Entity::Entity(const Entity& other) : entity_id(other.entity_id), y(other.y), x(other.x), name(other.name), traits(other.traits), stats(other.stats), behavior_set_name(other.behavior_set_name) {
 }
 
 std::string Entity::getDescription() const {
     return OlymposLore::getDescription(*this);
+}
+
+bool Entity::operator==(const Entity& other) const {
+    return this->entity_id == other.entity_id;
+}
+
+bool Entity::operator==(const size_t other) const {
+    return this->entity_id == other;
 }

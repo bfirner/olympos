@@ -10,9 +10,11 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <limits>
 #include <random>
 #include <ranges>
+#include <regex>
 
 #include "behavior.hpp"
 
@@ -25,9 +27,8 @@ using std::string;
 
 namespace Behavior {
 
-    json json_behaviors;
-
-    std::vector<Behavior::BehaviorSet> loaded_behaviors;
+    std::vector<Behavior::AbilitySet> loaded_abilities;
+    std::map<std::string, BehaviorSet> loaded_behaviors;
 
     // No op function
     void noop_function(WorldState& ws, const vector<string>& args) {
@@ -36,20 +37,22 @@ namespace Behavior {
         (args);
     }
 
-    json& loadBehaviors() {
+    json loadJson(const std::string& path) {
         // Read in the file if it hasn't already been done.
-        const std::filesystem::path behaviors_path{"resources/behavior.json"};
-        if (0 == json_behaviors.size()) {
-            if (std::filesystem::exists(behaviors_path)) {
-                std::ifstream istream(behaviors_path.string(), std::ios::binary);
-                if (istream) {
-                    std::string contents;
-                    std::getline(istream, contents, '\0');
-                    json_behaviors = json::parse(contents);
-                }
+        const std::filesystem::path json_path{path};
+        json json_data;
+        if (std::filesystem::exists(json_path)) {
+            std::ifstream istream(json_path.string(), std::ios::binary);
+            if (istream) {
+                std::string contents;
+                std::getline(istream, contents, '\0');
+                json_data = json::parse(contents);
             }
         }
-        return json_behaviors;
+        else {
+            std::cerr<<"Error finding file at "<<path<<'\n';
+        }
+        return json_data;
     }
 
     AbilityType stoType(const std::string& str) {
@@ -112,7 +115,7 @@ namespace Behavior {
         ability_json.at("constraints").get_to(constraints);
     }
 
-    Behavior::BehaviorSet::BehaviorSet(const std::string& name, nlohmann::json& behavior_json) {
+    Behavior::AbilitySet::AbilitySet(const std::string& name, nlohmann::json& behavior_json) {
         this->name = name;
         description = behavior_json.at("description");
 
@@ -121,19 +124,6 @@ namespace Behavior {
         for (auto& [ability_name, ability_json] : behavior_json.at("abilities").get<std::map<std::string, json>>()) {
             abilities.insert({ability_name, Ability(ability_name, ability_json)});
         }
-    }
-
-    const std::vector<BehaviorSet>& getBehaviors() {
-        if (0 < loaded_behaviors.size()) {
-            return loaded_behaviors;
-        }
-        // Otherwise we need to load the json file and populate the behaviors.
-        json& behaviors = loadBehaviors();
-        // Go through the json and translate all of the entries into new BehaviorSets.
-        for (auto& [behavior_name, behavior_json] : behaviors.get<std::map<std::string, json>>()) {
-            loaded_behaviors.push_back(BehaviorSet(behavior_name, behavior_json));
-        }
-        return loaded_behaviors;
     }
 
     void replaceSubstring(std::string& str, const std::string& target, const std::string& replacement) {
@@ -463,7 +453,7 @@ namespace Behavior {
     }
 
     // Find the ability names that are available to this entity within this behavior set.
-    std::vector<std::string> BehaviorSet::getAvailable(const Entity& entity) const {
+    std::vector<std::string> AbilitySet::getAvailable(const Entity& entity) const {
         // TODO Check if ability set should be available
         std::vector<std::string> available;
 
@@ -489,7 +479,7 @@ namespace Behavior {
     }
 
     // Update abilities from this set that are available to an entity. Return new abilities.
-    std::vector<std::string> BehaviorSet::updateAvailable(Entity& entity) const {
+    std::vector<std::string> AbilitySet::updateAvailable(Entity& entity) const {
         // TODO Check if ability set should be available
         std::vector<std::string> available;
 
@@ -517,7 +507,7 @@ namespace Behavior {
     }
 
 
-    std::function<void(WorldState&, const std::vector<std::string>&)> BehaviorSet::makeFunction(const std::string& ability, Entity& entity) const {
+    std::function<void(WorldState&, const std::vector<std::string>&)> AbilitySet::makeFunction(const std::string& ability, Entity& entity) const {
         // Make the function for this ability.
         if (not abilities.contains(ability)) {
             return noop_function;
@@ -525,4 +515,148 @@ namespace Behavior {
         return abilities.at(ability).makeFunction(entity);
     }
 
+    const std::vector<AbilitySet>& getAbilities() {
+        if (0 < loaded_abilities.size()) {
+            return loaded_abilities;
+        }
+        // Otherwise we need to load the json file and populate the behaviors.
+        json abilities = loadJson("resources/behavior.json");
+        // Go through the json and translate all of the entries into new AbilitySets.
+        for (auto& [ability_name, ability_json] : abilities.get<std::map<std::string, json>>()) {
+            loaded_abilities.push_back(AbilitySet(ability_name, ability_json));
+        }
+        return loaded_abilities;
+    }
+
+    const std::map<std::string, BehaviorSet>& getBehaviors() {
+        if (0 < loaded_behaviors.size()) {
+            return loaded_behaviors;
+        }
+        // Otherwise we need to load the json file and populate the behaviors.
+        json behaviors = loadJson("resources/behavior_set.json");
+        // Go through the json and translate all of the entries into new BehaviorSets.
+        for (auto& [behavior_name, behavior_json] : behaviors.get<std::map<std::string, json>>()) {
+            std::string description = behavior_json.at("description").get<std::string>();
+            std::vector<std::vector<std::string>> rules;
+            behavior_json.at("rules").get_to(rules);
+            loaded_behaviors.insert({behavior_name, {behavior_name, description, rules}});
+        }
+        return loaded_behaviors;
+    }
+
+    std::function<bool(double, double)> strToCompFn(const std::string& str) {
+        if ("<" == str) {
+            return std::less<double>{};
+        }
+        else if (">" == str) {
+            return std::greater<double>{};
+        }
+        else if ("<=" == str) {
+            return std::less_equal<double>{};
+        }
+        else if (">=" == str) {
+            return std::greater_equal<double>{};
+        }
+        else if ("!=" == str) {
+            return std::not_equal_to<double>{};
+        }
+        else if ("==" == str) {
+            return std::equal_to<double>{};
+        }
+        // Return an empty function if there was no match.
+        return [](double, double) { return false; };
+    }
+
+    void BehaviorSet::executeBehavior(Entity& entity, WorldState& ws, CommandHandler& comham) {
+        // Go through the behavior set of the given entity and follow its rules to take appropriate
+        // actions.
+        const std::regex hp_condition("hp ([<>]) ([0-9])%");
+        const std::regex distance_condition("distance:([a-z]+) ([<>]) ([0-9])");
+        const std::regex detect_condition("sense ([a-z]+)");
+        const std::regex else_condition("else");
+
+        std::smatch matches;
+        // Check entity.behavior_set_name to ensure that the entity has a valid behavior pattern.
+        if (loaded_behaviors.contains(entity.behavior_set_name)) {
+            // Need to remember if any actions were taken when we reach any "else" rule conditions.
+            bool any_action_taken = false;
+
+            // TODO FIXME These could be preprocessed once when the BehaviorSet is constructed
+            // instead of being reprocessed every time the behavior is executed.
+            const BehaviorSet& bset = loaded_behaviors.at(entity.behavior_set_name);
+            for (const std::vector<std::string>& rule_actions : bset.rules) {
+                bool do_actions = false;
+                const std::string& rule = rule_actions.at(0);
+                // Check if this rule is a hit point condition
+                if (std::regex_match(rule, matches, hp_condition)) {
+                    std::string comparison = matches[0].str();
+                    double threshold = stod(matches[1].str());
+                    if (entity.stats) {
+                        Stats& stats = entity.stats.value();
+                        double hp_percent = (double)stats.health / stats.maxHealth();
+                        auto comp_fn = strToCompFn(comparison);
+                        // Take the actions if the comparison is true.
+                        do_actions = comp_fn(hp_percent, threshold);
+                    }
+                }
+                // Check if this rule is a distance condition
+                else if (std::regex_match(rule, matches, distance_condition)) {
+                    // Unpack the values from the match
+                    std::string target = matches[0].str();
+                    auto comp_fn = strToCompFn(matches[1].str());
+                    size_t range = stoull(matches[2].str());
+                    // An entity cannot sense anything beyond its detection range.
+                    if (entity.stats) {
+                        range = std::min(range, entity.stats.value().detectionRange());
+                    }
+                    // Assume that the target is a trait and search for it.
+                    auto target_entity_i = ws.findEntity(std::vector<std::string>{target}, entity.y, entity.x, range);
+                    // If that didn't match, then search via a name
+                    if (ws.entities.end() == target_entity_i) {
+                        target_entity_i = ws.findEntity(target, entity.y, entity.x, range);
+                    }
+
+                    // Now check the distance threshold if the target entity was found.
+                    if (ws.entities.end() != target_entity_i) {
+                        size_t distance = std::abs((int)entity.y - (int)target_entity_i->y) +
+                                          std::abs((int)entity.x - (int)target_entity_i->x);
+                        do_actions = comp_fn(distance, range);
+                    }
+                }
+                // Check if this rule is a detection condition
+                if (std::regex_match(rule, matches, detect_condition)) {
+                    // Unpack the values from the match
+                    std::string target = matches[0].str();
+                    // Check if this entity has a detection range.
+                    if (entity.stats) {
+                        size_t range =  entity.stats.value().detectionRange();
+                        // Assume that the target is a trait and search for it.
+                        auto target_entity_i = ws.findEntity(std::vector<std::string>{target}, entity.y, entity.x, range);
+                        // If that didn't match, then search via a name
+                        if (ws.entities.end() == target_entity_i) {
+                            target_entity_i = ws.findEntity(target, entity.y, entity.x, range);
+                        }
+                        // If the entity was detected then do the actions.
+                        do_actions = ws.entities.end() != target_entity_i;
+                    }
+                }
+                // Check if this rule is an else condition.
+                if (std::regex_match(rule, matches, else_condition)) {
+                    // Take the else actions if no other actions were taken.
+                    do_actions = not any_action_taken;
+                }
+                any_action_taken = any_action_taken or do_actions;
+                if (do_actions) {
+                    // Put the actions into the command handler.
+                    // Actions are everything in rule_actions from index 1 onward.
+                    for (size_t idx = 1; idx < rule_actions.size(); ++idx) {
+                        //TODO it would be nice if we got world state changes in between
+                        //actions.
+                        //Easy enough to craft the AI rules around this limitation though.
+                        comham.enqueueEntityCommand(entity, rule_actions.at(idx));
+                    }
+                }
+            }
+        }
+    }
 }

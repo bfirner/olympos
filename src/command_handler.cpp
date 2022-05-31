@@ -97,14 +97,14 @@ std::vector<string> parseArguments(string& command) {
 }
 
 // A command for a specific entity
-void CommandHandler::enqueueEntityCommand(const std::string& entity, const std::string& command) {
+void CommandHandler::enqueueNamedEntityCommand(const std::string& entity, const std::string& command) {
     string new_command = command;
     size_t reps = parseRepititions(new_command);
 
     // Now split off the arguments
     std::vector<string> arguments = parseArguments(new_command);
     for (size_t i = 0; i < reps; ++i) {
-        entity_commands.push_back({entity, new_command, arguments});
+        named_entity_commands.push_back({entity, new_command, arguments});
     }
 }
 
@@ -120,10 +120,34 @@ void CommandHandler::enqueueTraitCommand(const std::vector<std::string>& traits,
     }
 }
 
+void CommandHandler::enqueueEntityRefCommand(decltype(WorldState::entities)::iterator entity_i, const std::string& command) {
+    string new_command = command;
+    size_t reps = parseRepititions(new_command);
+
+    // Now split off the arguments
+    std::vector<string> arguments = parseArguments(new_command);
+    for (size_t i = 0; i < reps; ++i) {
+        // It's too dangerous to store iterators to a container that this class has no control over,
+        // so store the entity IDs instead.
+        entity_commands.push_back({entity_i->entity_id, new_command, arguments});
+    }
+}
+
+void CommandHandler::enqueueEntityCommand(const Entity& entity, const std::string& command) {
+    string new_command = command;
+    size_t reps = parseRepititions(new_command);
+
+    // Now split off the arguments
+    std::vector<string> arguments = parseArguments(new_command);
+    for (size_t i = 0; i < reps; ++i) {
+        entity_commands.push_back({entity.entity_id, new_command, arguments});
+    }
+}
+
 // Execute all enqueued commands. Entity commands will always occur before trait commands.
 void CommandHandler::executeCommands(WorldState& ws) {
     // Handle all {name, command} pairs if they both exist
-    for (const auto& [entity_name, command, arguments] : entity_commands) {
+    for (const auto& [entity_name, command, arguments] : named_entity_commands) {
         if (ws.named_entities.contains(entity_name) and
                 ws.named_entities.at(entity_name)->command_handlers.contains(command)) {
             ws.named_entities.at(entity_name)->command_handlers.at(command)(ws, arguments);
@@ -136,7 +160,7 @@ void CommandHandler::executeCommands(WorldState& ws) {
             }
         }
     }
-    entity_commands.clear();
+    named_entity_commands.clear();
 
     // Handle all {traits, command} pairs if we can find entities with matching traits.
     for (const auto& [entity_traits, command, arguments] : trait_commands) {
@@ -154,4 +178,13 @@ void CommandHandler::executeCommands(WorldState& ws) {
         }
     }
     trait_commands.clear();
+
+    // Handle all {entity iterator, command, arguments}
+    for (const auto& [entity_id, command, arguments] : entity_commands) {
+        auto entity_i = ws.findEntity(entity_id);
+        if (entity_i != ws.entities.end() and entity_i->command_handlers.contains(command)) {
+            entity_i->command_handlers.at(command)(ws, arguments);
+        }
+    }
+    entity_commands.clear();
 }

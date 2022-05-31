@@ -9,6 +9,7 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
+* Change "dexterity" to "reflexes"
 * Create behavior sets, which represent how entities should behave, in json
 * * For example, define modes based upon proximity or visibility
 * * * HP below some threshold: heal, flee

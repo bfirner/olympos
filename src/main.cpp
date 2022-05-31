@@ -75,8 +75,8 @@ int main(int argc, char** argv) {
     panels.push_back(new_panel(stat_window));
     panels.push_back(new_panel(window));
 
-    // Get the behaviors so that they can be assigned to the mobs.
-    const std::vector<Behavior::BehaviorSet>& behaviors = Behavior::getBehaviors();
+    // Get the abilities so that they can be assigned to the mobs.
+    const std::vector<Behavior::AbilitySet>& abilities = Behavior::getAbilities();
 
     // Make some mobs
     ws.addEntity(10, 1, "Bob", {"player", "species:human", "mob"});
@@ -91,8 +91,8 @@ int main(int argc, char** argv) {
 
     // Add command handlers for all entities.
     for (Entity& entity : ws.entities) {
-        for (const Behavior::BehaviorSet& bs : behaviors) {
-            std::vector<std::string> updated = bs.updateAvailable(entity);
+        for (const Behavior::AbilitySet& abset : abilities) {
+            std::vector<std::string> updated = abset.updateAvailable(entity);
         }
     }
 
@@ -334,7 +334,7 @@ int main(int argc, char** argv) {
                 }
                 // TODO Add user aliases.
                 // Queue up actions and take them at the action tick.
-                comham.enqueueEntityCommand("player", command);
+                comham.enqueueNamedEntityCommand("player", command);
                 has_command = true;
             }
             //Update the cursor and clear the input field
@@ -353,7 +353,7 @@ int main(int argc, char** argv) {
             if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or
                 (0.0 >= tick_rate and has_command)) {
                 //comham.enqueueTraitCommand({"small", "aggro"}, "flee player");
-                comham.enqueueEntityCommand("Ralph", "seek Bob");
+                comham.enqueueNamedEntityCommand("Ralph", "seek Bob");
                 comham.enqueueTraitCommand({"species:arachnid"}, "kite Bob 3");
                 comham.enqueueTraitCommand({"species:bat"}, "flee player");
                 comham.enqueueTraitCommand({"species:slime"}, "wander");

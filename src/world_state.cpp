@@ -67,19 +67,15 @@ void WorldState::addEntity(size_t y, size_t x, const std::string& name, const st
         throw std::runtime_error("Cannot place entity at "+std::to_string(y)+", "+std::to_string(x)+": out of bounds.");
     }
     // TODO FIXME Make a real constructor for the Entity class
-    entities.push_front({y, x, name, traits});
-    // Fetch the traits from the game lore if some exist for this entity.
-    //std::set<std::string> base_traits = OlymposLore::getNamedEntry(entities.front(), "is a");
-    //entities.front().traits.insert(base_traits.begin(), base_traits.end());
-
-    // Use the "is a" to get the "has a" entries for the things for which this entity "is a" member.
-
+    entities.push_front(Entity(y, x, name, traits));
 
     // Calculate starting stats for this entity (if it has any)
+    /*
     std::optional<Stats> stats = OlymposLore::getStats(entities.front());
     if (stats) {
         entities.front().stats = stats.value();
     }
+    */
 }
 
 bool passableOrNotPresent(size_t y, size_t x, const Entity& ent) {
@@ -150,6 +146,10 @@ std::list<Entity>::iterator WorldState::findEntity(const std::string& name, int6
 std::list<Entity>::iterator WorldState::findEntity(const std::vector<std::string>& traits, int64_t y, int64_t x, size_t range) {
     return std::find_if(entities.begin(), entities.end(),
         [&](Entity& ent) {return std::all_of(traits.begin(), traits.end(), [&](const std::string& trait) {return ent.traits.contains(trait);}) and (abs(y - ent.y) + abs(x - ent.x)) <= range;});
+}
+
+std::list<Entity>::iterator WorldState::findEntity(size_t entity_id) {
+    return std::find(entities.begin(), entities.end(), entity_id);
 }
 
 void WorldState::initialize() {

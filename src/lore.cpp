@@ -111,6 +111,15 @@ std::set<std::string> OlymposLore::getSpeciesField(const std::string species_nam
     return std::set<std::string>(json_data.begin(), json_data.end());
 }
 
+std::string OlymposLore::getSpeciesString(const std::string species_name, const std::string& field) {
+    json& species = getSpecies();
+    // Don't try anything if there is no species name.
+    if ("" == species_name or not species.contains(species_name)) {
+        return "";
+    }
+    return species.at(species_name).at(field).get<std::string>();
+}
+
 std::set<std::string> OlymposLore::getNamedEntry(const Entity& entity, const std::string& field) {
     json& species = getSpecies();
     std::string species_name = entity.getSpecies();

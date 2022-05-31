@@ -41,6 +41,7 @@
             "aura": 0.15,
             "domain": 1
         },
+        "base behavior": "persistent mob",
         "has a": ["arm", "hand", "finger"],
         "is a": ["medium", "omnivore", "mammal", "biped", "sentient"],
         "likes": ["caffeine", "sleep", "throwing", "art", "entertainment", "sunset", "sunrise", "tool", "fire"],
@@ -75,6 +76,7 @@
             "aura": 0.5,
             "domain": 0.5
         },
+        "base behavior": "persistent mob",
         "has a": ["arm", "hand", "finger"],
         "is a": ["medium", "vegetarian", "mammal", "biped", "sentient"],
         "likes": ["plant", "meditation", "art", "flower", "sunset", "sunrise"],
@@ -109,6 +111,7 @@
             "aura": 0.25,
             "domain": 0.25
         },
+        "base behavior": "standard mob",
         "has a": ["fang", "spineret", "carapace"],
         "is a": ["small", "octoped", "carnivore", "arthropod", "bidentate", "venomous"],
         "likes": ["ambush", "sneak", "hide", "lasso", "bolas", "silk", "web"],
@@ -144,6 +147,7 @@
             "aura": 0.25,
             "domain": 0.5
         },
+        "base behavior": "scared mob",
         "has a": ["wing"],
         "is a": ["small", "flying", "biped", "mammal", "insectivore", "frugivore"],
         "likes": ["flying", "fruit"],
@@ -176,6 +180,7 @@
             "aura": 0.5,
             "domain": 2.0
         },
+        "base behavior": "passive mob",
         "has a": ["pseudopod"],
         "is a": ["medium", "omnivore", "slime"],
         "likes": [],
