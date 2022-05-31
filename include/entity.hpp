@@ -58,7 +58,7 @@ struct Stats {
 
 struct Entity {
     // Every entity is created with a unique ID number.
-    std::atomic_size_t next_entity_id = 0;
+    static std::atomic_size_t next_entity_id;
     size_t entity_id;
     // Location of the entity
     size_t y = 0;

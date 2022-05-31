@@ -80,6 +80,8 @@ int main(int argc, char** argv) {
 
     // Make some mobs
     ws.addEntity(10, 1, "Bob", {"player", "species:human", "mob"});
+    // The player shouldn't have an automatic behavior set.
+    ws.entities.back().behavior_set_name = "none";
     ws.addEntity(10, 10, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
     ws.addEntity(10, 12, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
     ws.addEntity(8, 10, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
@@ -352,11 +354,21 @@ int main(int argc, char** argv) {
             std::chrono::duration<double> time_diff = cur_time - last_update;
             if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or
                 (0.0 >= tick_rate and has_command)) {
-                //comham.enqueueTraitCommand({"small", "aggro"}, "flee player");
+                /*
+                 * Examples of manual commands
+                comham.enqueueTraitCommand({"small", "aggro"}, "flee player");
                 comham.enqueueNamedEntityCommand("Ralph", "seek Bob");
                 comham.enqueueTraitCommand({"species:arachnid"}, "kite Bob 3");
                 comham.enqueueTraitCommand({"species:bat"}, "flee player");
                 comham.enqueueTraitCommand({"species:slime"}, "wander");
+                */
+                // Handle automated behaviors.
+                const std::map<std::string, Behavior::BehaviorSet>& behaviors = Behavior::getBehaviors();
+                for (Entity& entity : ws.entities) {
+                    if (behaviors.contains(entity.behavior_set_name)) {
+                        behaviors.at(entity.behavior_set_name).executeBehavior(entity, ws, comham);
+                    }
+                }
                 has_command = false;
                 last_update = cur_time;
                 // execute all commands every tick

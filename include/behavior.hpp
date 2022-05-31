@@ -109,6 +109,8 @@ namespace Behavior {
 
         // TODO FIXME If these are being handled separately anyway, then the Ability class should be
         // subclassed for each of them anyway and a factory can decide which one to create.
+        // TODO FIXME Should these just be objects instead of lambda functions? The lambda functions
+        // can't be queried for information, which is annoying.
         // Make a movement type of function.
         std::function<void(WorldState&, const std::vector<std::string>&)> makeMoveFunction(Entity& entity) const;
         std::function<void(WorldState&, const std::vector<std::string>&)> makeConditionalMoveFunction(Entity& entity) const;
@@ -164,7 +166,7 @@ namespace Behavior {
 
         // Go through the behavior set of the given entity and follow its rules to take appropriate
         // actions.
-        void executeBehavior(Entity&, WorldState&, CommandHandler&);
+        void executeBehavior(Entity&, WorldState&, CommandHandler&) const;
     };
 
     const std::map<std::string, BehaviorSet>& getBehaviors();

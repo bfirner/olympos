@@ -4,6 +4,7 @@
  * Entity in the game. Has a position, a name, and some traits.
  */
 
+#include <iostream>
 #include <algorithm>
 #include <cmath>
 #include <set>
@@ -11,6 +12,9 @@
 
 #include "entity.hpp"
 #include "lore.hpp"
+
+// Initialize the class-wide variable.
+std::atomic_size_t Entity::next_entity_id = 0;
 
 size_t tickIncrease(double rate, size_t tick_num) {
     // Avoid storing any partial states by using the tick number to calculate if there are any whole
@@ -64,6 +68,8 @@ std::string Entity::getSpecies() const {
 Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::string> traits) {
     // Assign the entity ID and increment the classwide variable to ensure the ID remains unique.
     entity_id = Entity::next_entity_id.fetch_add(1);
+    std::cerr<<"Constructing an entity with id "<<entity_id<<'\n';
+    std::cerr<<"Next entity id is "<<Entity::next_entity_id<<'\n';
     this->y = y;
     this->x = x;
     this->name = name;

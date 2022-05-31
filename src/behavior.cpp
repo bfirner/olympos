@@ -480,9 +480,9 @@ namespace Behavior {
 
     // Update abilities from this set that are available to an entity. Return new abilities.
     std::vector<std::string> AbilitySet::updateAvailable(Entity& entity) const {
-        // TODO Check if ability set should be available
         std::vector<std::string> available;
 
+        // Check which abilities this entity should be able to use.
         for (auto& [ability_name, ability] : abilities) {
             bool can_use = true;
             // TODO prereqs
@@ -501,8 +501,17 @@ namespace Behavior {
                 entity.command_handlers.insert({ability_name, makeFunction(ability_name, entity)});
                 entity.command_details.insert({ability_name, ability});
                 available.push_back(ability_name);
+
+                // Automatically alias "attack" to the strongest single stamina attack available.
+                if (AbilityType::attack == ability.type) {
+                    // TODO The strongest attack type
+                    available.push_back("attack");
+                    entity.command_handlers.insert({"attack", entity.command_handlers.at(ability_name)});
+                    entity.command_details.insert({"attack", entity.command_details.at(ability_name)});
+                }
             }
         }
+
         return available;
     }
 
@@ -567,11 +576,11 @@ namespace Behavior {
         return [](double, double) { return false; };
     }
 
-    void BehaviorSet::executeBehavior(Entity& entity, WorldState& ws, CommandHandler& comham) {
+    void BehaviorSet::executeBehavior(Entity& entity, WorldState& ws, CommandHandler& comham) const{
         // Go through the behavior set of the given entity and follow its rules to take appropriate
         // actions.
-        const std::regex hp_condition("hp ([<>]) ([0-9])%");
-        const std::regex distance_condition("distance:([a-z]+) ([<>]) ([0-9])");
+        const std::regex hp_condition("hp ([<>]) ([0-9]+)%");
+        const std::regex distance_condition("distance:([a-z]+) ([<>]) ([0-9]+)");
         const std::regex detect_condition("sense ([a-z]+)");
         const std::regex else_condition("else");
 
@@ -589,8 +598,8 @@ namespace Behavior {
                 const std::string& rule = rule_actions.at(0);
                 // Check if this rule is a hit point condition
                 if (std::regex_match(rule, matches, hp_condition)) {
-                    std::string comparison = matches[0].str();
-                    double threshold = stod(matches[1].str());
+                    std::string comparison = matches[1].str();
+                    double threshold = stod(matches[2].str());
                     if (entity.stats) {
                         Stats& stats = entity.stats.value();
                         double hp_percent = (double)stats.health / stats.maxHealth();
@@ -602,9 +611,9 @@ namespace Behavior {
                 // Check if this rule is a distance condition
                 else if (std::regex_match(rule, matches, distance_condition)) {
                     // Unpack the values from the match
-                    std::string target = matches[0].str();
-                    auto comp_fn = strToCompFn(matches[1].str());
-                    size_t range = stoull(matches[2].str());
+                    std::string target = matches[1].str();
+                    auto comp_fn = strToCompFn(matches[2].str());
+                    size_t range = stoull(matches[3].str());
                     // An entity cannot sense anything beyond its detection range.
                     if (entity.stats) {
                         range = std::min(range, entity.stats.value().detectionRange());
@@ -626,7 +635,7 @@ namespace Behavior {
                 // Check if this rule is a detection condition
                 if (std::regex_match(rule, matches, detect_condition)) {
                     // Unpack the values from the match
-                    std::string target = matches[0].str();
+                    std::string target = matches[1].str();
                     // Check if this entity has a detection range.
                     if (entity.stats) {
                         size_t range =  entity.stats.value().detectionRange();
@@ -653,6 +662,7 @@ namespace Behavior {
                         //TODO it would be nice if we got world state changes in between
                         //actions.
                         //Easy enough to craft the AI rules around this limitation though.
+                        std::cerr<<"Entity "<<entity.name<<" going to do: "<<rule_actions.at(idx)<<'\n';
                         comham.enqueueEntityCommand(entity, rule_actions.at(idx));
                     }
                 }
