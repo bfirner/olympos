@@ -50,6 +50,9 @@ struct WorldState {
     // Find the named entity, or named_entities.end()
     decltype(entities)::iterator findEntity(const std::string& name);
 
+    // Find an entity with the given traits, or named_entities.end()
+    decltype(entities)::iterator findEntity(const std::vector<std::string>& traits);
+
     // Find the named entity within the given range, or named_entities.end()
     decltype(entities)::iterator findEntity(const std::string& name, int64_t y, int64_t x, size_t range);
 

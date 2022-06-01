@@ -138,6 +138,11 @@ std::list<Entity>::iterator WorldState::findEntity(const std::string& name) {
         [&](Entity& ent) {return ent.name == name;});
 }
 
+std::list<Entity>::iterator WorldState::findEntity(const std::vector<std::string>& traits) {
+    return std::find_if(entities.begin(), entities.end(),
+        [&](Entity& ent) {return std::all_of(traits.begin(), traits.end(), [&](const std::string& trait) {return ent.traits.contains(trait);});});
+}
+
 std::list<Entity>::iterator WorldState::findEntity(const std::string& name, int64_t y, int64_t x, size_t range) {
     return std::find_if(entities.begin(), entities.end(),
         [&](Entity& ent) {return ent.name == name and (abs(y - ent.y) + abs(x - ent.x)) <= range;});

@@ -9,8 +9,13 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
+* Handle the player getting killed.
 * Aliases
 * Change "dexterity" to "reflexes"
+* Add visual effects
+* * Color-code the event log
+* * Some kind of motion indicator?
+* * Some kind of attack indicator?
 * Create behavior sets, which represent how entities should behave, in json
 * * For example, define modes based upon proximity or visibility
 * * * HP below some threshold: heal, flee

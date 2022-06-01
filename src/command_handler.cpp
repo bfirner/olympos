@@ -6,7 +6,6 @@
  * It is easy enough to think of this as the game's logic unit.
  */
 
-#include <iostream>
 #include <algorithm>
 #include <cctype>
 #include <functional>
@@ -147,9 +146,6 @@ void CommandHandler::enqueueEntityCommand(const Entity& entity, const std::strin
 
 // Execute all enqueued commands. Entity commands will always occur before trait commands.
 void CommandHandler::executeCommands(WorldState& ws) {
-    for (Entity& entity : ws.entities) {
-        std::cerr<<"entity: "<<entity.entity_id<<'\n';
-    }
     // Handle all {name, command} pairs if they both exist
     for (const auto& [entity_name, command, arguments] : named_entity_commands) {
         if (ws.named_entities.contains(entity_name) and
@@ -186,9 +182,7 @@ void CommandHandler::executeCommands(WorldState& ws) {
     // Handle all {entity iterator, command, arguments}
     for (const auto& [entity_id, command, arguments] : entity_commands) {
         auto entity_i = ws.findEntity(entity_id);
-        std::cerr<<"Searching for "<<entity_id<<"to do "<<command<<'\n';
         if (entity_i != ws.entities.end() and entity_i->command_handlers.contains(command)) {
-            std::cerr<<"Issuing command for "<<entity_id<<"to do "<<command<<'\n';
             entity_i->command_handlers.at(command)(ws, arguments);
         }
     }

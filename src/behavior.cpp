@@ -368,6 +368,10 @@ namespace Behavior {
                 dexterity = damage_effects.at("dexterity");
             }
         }
+        size_t attack_range = 0;
+        if (effects.contains("range")) {
+            attack_range = effects.at("range");
+        }
         // TODO Or maybe just copy over any effects that are also in the expected arguments?
         std::vector<std::string> expected_args = arguments;
         std::vector<std::string> default_args = this->default_args;
@@ -390,6 +394,7 @@ namespace Behavior {
                 }
                 auto arg_options = std::ranges::subrange(expected_args.begin()+1, expected_args.end());
                 // See if we match an argument
+                // Match a static argument with set distance (e.g. east or west)
                 if (arg_options.end() != std::find(arg_options.begin(), arg_options.end(), arg)) {
                     // TODO FIXME What about the forward option?
                     // Find the effects of for this argument.
@@ -412,6 +417,7 @@ namespace Behavior {
                         }
                     }
                 }
+                // Match an arbitrary string for a <target>
                 else if (expected_args.end() != std::find(expected_args.begin(), expected_args.end(), ("<target>"))) {
                     // Going to have to search for this target in range.
                     std::string target_name = "";
@@ -423,6 +429,10 @@ namespace Behavior {
                     }
                     // Assign the target.
                     target = ws.findEntity(target_name);
+                    // If this wasn't a name, try searching for a trait
+                    if (target == ws.entities.end()) {
+                        target = ws.findEntity(std::vector<std::string>{target_name}, entity.y, entity.x, attack_range);
+                    }
                 }
             }
             if (target != ws.entities.end()) {
@@ -599,7 +609,8 @@ namespace Behavior {
                 // Check if this rule is a hit point condition
                 if (std::regex_match(rule, matches, hp_condition)) {
                     std::string comparison = matches[1].str();
-                    double threshold = stod(matches[2].str());
+                    // Read the threshold and convert from percent.
+                    double threshold = stod(matches[2].str())/100.0;
                     if (entity.stats) {
                         Stats& stats = entity.stats.value();
                         double hp_percent = (double)stats.health / stats.maxHealth();
@@ -662,7 +673,6 @@ namespace Behavior {
                         //TODO it would be nice if we got world state changes in between
                         //actions.
                         //Easy enough to craft the AI rules around this limitation though.
-                        std::cerr<<"Entity "<<entity.name<<" going to do: "<<rule_actions.at(idx)<<'\n';
                         comham.enqueueEntityCommand(entity, rule_actions.at(idx));
                     }
                 }
