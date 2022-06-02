@@ -5,7 +5,7 @@
 #include "uicomponent.hpp"
 
 UIComponent::UIComponent(WorldState& ws, size_t rows, size_t columns, size_t begin_y, size_t begin_x) :
-    ws(ws) {
+    ws(ws), rows(rows), columns(columns) {
     window = newwin(rows, columns, begin_y, begin_x);
     panel = new_panel(window);
     // No weird flush handling
@@ -25,7 +25,7 @@ UIComponent::~UIComponent() {
     }
 }
 
-UIComponent::UIComponent(UIComponent&& other) : ws(other.ws) {
+UIComponent::UIComponent(UIComponent&& other) : ws(other.ws), rows(other.rows), columns(other.columns) {
     this->window = other.window;
     this->panel = other.panel;
     other.window = nullptr;

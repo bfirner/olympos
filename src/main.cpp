@@ -5,7 +5,7 @@
  */
 
 // C headers
-#include <locale.h>
+#include <clocale>
 #include <ncurses.h>
 #include <panel.h>
 
@@ -19,7 +19,7 @@
 
 #include "command_handler.hpp"
 #include "entity.hpp"
-#include "formatting.hpp"
+#include "user_interface.hpp"
 #include "world_state.hpp"
 #include "behavior.hpp"
 #include "uicomponent.hpp"
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
         tick_rate = std::stod(argv[1]);
     }
 
-    setlocale(LC_ALL, "");
+    std::setlocale(LC_ALL, "en_US.utf8");
 
     // Set up an ncurses screen and turn off echoing what the user writes.
     initscr();
@@ -112,7 +112,8 @@ int main(int argc, char** argv) {
     // Keep an easy handle to access the player
     // TODO If we keep this here is there any reason for the world state to bother tracking some
     // named entities?
-    auto player_i = ws.named_entities["player"];
+    //auto player_i = ws.named_entities["player"];
+    auto player_i = ws.findEntity(std::vector<std::string>{"player"});
 
     std::vector<std::string> function_shortcuts;
     std::set<std::string> nav_shortcuts{"north", "east", "south", "west"};
@@ -186,6 +187,10 @@ int main(int argc, char** argv) {
         // TODO Add a description to the json.
     }
 
+    // Create a panel that will be used for generic dialog.
+    UIComponent dialog_box(ws, 38, 76, 1, 2);
+    UserInterface::renderDialogue(dialog_box.window, "introduction", dialog_box.rows, dialog_box.columns);
+
     // Draw the player's status in the window
     size_t status_row = UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
     UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
@@ -203,10 +208,16 @@ int main(int argc, char** argv) {
     auto last_update = std::chrono::steady_clock::now();
 
     bool quit = false;
+    // TODO So bloated! A variable per dialog box?
     bool has_command = false;
     bool game_paused = false;
+    bool in_dialog = false;
     decltype(help_components)::iterator help_displayed = help_components.end();
     std::string command = "";
+
+    // The introduction should be displayed immediately.
+    in_dialog = true;
+    dialog_box.show();
 
     while(not quit) {
         int in_c = wgetch(window);
@@ -334,6 +345,10 @@ int main(int argc, char** argv) {
                     help_displayed->second.hide();
                     help_displayed = help_components.end();
                 }
+                if (in_dialog) {
+                    in_dialog = false;
+                    dialog_box.hide();
+                }
                 // TODO Add user aliases.
                 // Queue up actions and take them at the action tick.
                 comham.enqueueNamedEntityCommand("player", command);
@@ -349,7 +364,7 @@ int main(int argc, char** argv) {
             command.push_back(in_c);
         }
 
-        if (not game_paused and help_displayed == help_components.end()) {
+        if (not game_paused and help_displayed == help_components.end() and ws.entities.end() != player_i ) {
             auto cur_time = std::chrono::steady_clock::now();
             std::chrono::duration<double> time_diff = cur_time - last_update;
             if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or
@@ -376,7 +391,7 @@ int main(int argc, char** argv) {
                 // Tick update
                 ws.update();
                 // Find the user visible events.
-                std::vector<std::string> player_events = ws.getLocalEvents(player_i->y, player_i->x, 10);
+                std::vector<std::string> player_events = ws.getLocalEvents(player_i->y, player_i->x, player_i->stats.value().detectionRange());
                 for (std::string& event : player_events) {
                     event_strings.push_front(event);
                 }
@@ -393,6 +408,16 @@ int main(int argc, char** argv) {
                 UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
             }
         }
+
+        // Update the player in case they have died or the trait has transferred to a new entity.
+        player_i = ws.findEntity(std::vector<std::string>{"player"});
+        // See if the player has died.
+        if (ws.entities.end() == player_i and not in_dialog) {
+            UserInterface::renderDialogue(dialog_box.window, "game over", dialog_box.rows, dialog_box.columns);
+            dialog_box.show();
+            in_dialog = true;
+        }
+
         // TODO Add any visual effects that occur faster than ticks here.
         // Update panels, refresh the screen, and reset the cursor position
         UserInterface::updateDisplay(window, ws.entities);

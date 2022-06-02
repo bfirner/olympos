@@ -1,0 +1,18 @@
+{
+    "game over": {
+        "upper left": ["You have died!🪦", "Better luck next time."],
+        "options": ["quit", "restart"]
+    },
+    "introduction": {
+        "upper left": [
+            "Welcome to Olympos!",
+            "Congratulations!",
+            "⯓ has decided to reincarnate your soul as their champion.",
+            "You must battle your way to the heart of Olympos.",
+            "Once you reach the heart, you must control it for 5 minutes.",
+            "If you succeed, ⯓ will be sure to reward you handsomely!",
+            "Until then, good luck!"
+        ],
+        "options": ["begin"]
+    }
+}

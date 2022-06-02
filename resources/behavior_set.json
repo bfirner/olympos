@@ -13,6 +13,7 @@
         "rules": [
             ["distance:player < 2", "attack player"],
             ["distance:player > 2", "seek player", "seek player"],
+            ["distance:player < 2", "attack player"],
             ["distance:player > 1", "seek player"],
             ["else", "wander"]
         ]

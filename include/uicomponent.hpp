@@ -15,6 +15,9 @@ struct UIComponent {
     PANEL* panel = nullptr;
     WINDOW* window = nullptr;
 
+    size_t rows;
+    size_t columns;
+
     WorldState& ws;
 
     UIComponent(WorldState& ws, size_t rows, size_t columns, size_t begin_y, size_t begin_x);

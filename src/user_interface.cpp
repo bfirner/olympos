@@ -4,11 +4,39 @@
  * Handles display formatting of different objects in the game.
  */
 
+#include <nlohmann/json.hpp>
+
 #include <cctype>
 #include <cmath>
+#include <cwchar>
+#include <codecvt>
+#include <fstream>
+#include <iostream>
+#include <clocale>
 #include <sstream>
 
-#include "formatting.hpp"
+using json = nlohmann::json;
+
+#include "user_interface.hpp"
+
+
+json json_dialogue;
+
+json& getDialogue() {
+    // Read in the file if it hasn't already been done.
+    const std::filesystem::path dialogue_path{"resources/dialogue.json"};
+    if (0 == json_dialogue.size()) {
+        if (std::filesystem::exists(dialogue_path)) {
+            std::ifstream istream(dialogue_path.string(), std::ios::binary);
+            if (istream) {
+                std::string contents;
+                std::getline(istream, contents, '\0');
+                json_dialogue = json::parse(contents);
+            }
+        }
+    }
+    return json_dialogue;
+}
 
 /*
  COLOR_BLACK
@@ -141,10 +169,7 @@ void UserInterface::clearInput(WINDOW* window, size_t field_height, size_t field
 
 void drawString(WINDOW* window, const std::wstring& str) {
     // Draw the string
-    for (wchar_t c : str) {
-        //wadd_wch(window, c);
-        waddch(window, c);
-    }
+    wprintw(window, "%ls", str.data());
 }
 
 void drawString(WINDOW* window, const std::string& str) {
@@ -157,10 +182,12 @@ void drawString(WINDOW* window, const std::string& str) {
 void drawBar(WINDOW* window, double percent) {
     // Store the current settings
     attr_t orig_attrs;
-    short orig_color;
+    short orig_color = 0;
     wattr_get(window, &orig_attrs, &orig_color, nullptr);
     for (int step = 0; step < 20; ++step) {
         short bar_color = Colors::green_on_black;
+        const std::wstring full_box = L"■";
+        const std::wstring half_box = L"□";
         if (step < 4) {
             bar_color = Colors::red_on_black;
         }
@@ -168,8 +195,13 @@ void drawBar(WINDOW* window, double percent) {
             bar_color = Colors::yellow_on_black;
         }
         wattr_set(window, A_BOLD, bar_color, nullptr);
+        // At or above this 5% increment
         if (20 * percent >= step) {
-            waddch(window, '#');
+            drawString(window, full_box);
+        }
+        // Between the previous increment and this one.
+        else if (20 * percent > (step - 1)) {
+            drawString(window, half_box);
         }
         else {
             waddch(window, ' ');
@@ -298,4 +330,89 @@ void drawPause(WINDOW* window, size_t rows, size_t columns) {
     // Clear the window, then draw the pause message.
     werase(window);
     mvwprintw(window, rows / 2, columns / 2 - message.size() / 2, "%s", message.data());
+}
+
+void UserInterface::renderDialogue(WINDOW* window, const std::string& dialogue_name, size_t rows, size_t columns) {
+    json& dialogue = getDialogue();
+
+    // Clear the window and render the text as instructed in the json.
+    werase(window);
+
+    if (not dialogue.contains(dialogue_name)) {
+        // TODO FIXME Some kind of error is required here.
+        return;
+    }
+
+    // Text the begins in the upper left.
+    if (dialogue.at(dialogue_name).contains("upper left")) {
+        json& text = dialogue.at(dialogue_name).at("upper left");
+        size_t cur_row = 0;
+        // TODO Cannot parse wstring from nlohmann::json
+        for (const std::string line : text) {
+            // Opting for this conversion over what is in codecvt due to some deprecations.
+            // Otherwise we could do this:
+            //   std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(line);
+            std::mbstate_t state = std::mbstate_t();
+            const char* in_data = line.c_str();
+            // First find the number of characters in the sequence
+            std::size_t converted_len = mbsrtowcs(nullptr, &in_data, 0, &state);
+            std::wstring w_line(converted_len, L'\0');
+            std::size_t written = mbsrtowcs(&w_line[0], &in_data, w_line.size(), &state);
+            drawString(window, w_line, cur_row++, 0);
+        }
+    }
+
+    // Options for the lower right.
+    if (dialogue.at(dialogue_name).contains("options")) {
+        // TODO FIXME Need some kind of callback here I guess.
+        json& options = dialogue.at(dialogue_name).at("options");
+
+        // Draw boxes around each option
+        // That means a top line, a bottom line, and the options in the middle.
+        const wchar_t upper_left = L'╭';
+        const wchar_t lower_left = L'╰';
+        const wchar_t upper_right = L'╮';
+        const wchar_t lower_right = L'╯';
+        const wchar_t top_partition    = L'┬';
+        const wchar_t bottom_partition = L'┴';
+        const wchar_t horizontal = L'─';
+        const wchar_t vertical = L'│';
+
+        std::wstring top_line(1, upper_left);
+        std::wstring middle_line(1, vertical);
+        std::wstring bottom_line(1, lower_left);
+
+        // TODO Cannot parse wstring from nlohmann::json
+        for (const std::string option : options) {
+            // Opting for this conversion over what is in codecvt due to some deprecations.
+            // Otherwise we could do this:
+            //   std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(option);
+            std::mbstate_t state = std::mbstate_t();
+            const char* in_data = option.c_str();
+            // Find the number of characters for the sequence.
+            std::size_t converted_len = mbsrtowcs(nullptr, &in_data, 0, &state);
+            std::wstring w_option(converted_len, L'\0');
+            std::size_t written = mbsrtowcs(&w_option[0], &in_data, w_option.size(), &state);
+
+            // Add a partition if this wasn't the first option
+            if (1 != top_line.size()) {
+                top_line = top_line + top_partition;
+                middle_line = middle_line + vertical;
+                bottom_line = bottom_line + bottom_partition;
+            }
+            top_line = top_line + std::wstring(w_option.size() + 2, horizontal);
+            middle_line = L" " + w_option + L" ";
+            bottom_line = bottom_line + std::wstring(w_option.size() + 2, horizontal);
+        }
+        // Close the box
+        top_line = top_line + upper_right;
+        middle_line = middle_line + vertical;
+        bottom_line = bottom_line + lower_right;
+
+        // Now draw the options
+        size_t col_start = columns / 2 - top_line.size() / 2;
+        drawString(window, top_line, rows-3, col_start);
+        drawString(window, middle_line, rows-2, col_start);
+        drawString(window, bottom_line, rows-1, col_start);
+    }
 }

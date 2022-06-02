@@ -39,4 +39,6 @@ namespace UserInterface {
     // Draw hotkey shortcuts and return the last row used.
     size_t drawHotkeys(WINDOW* window, size_t row, const std::vector<std::string>& shortcuts);
     void drawPause(WINDOW* window, size_t rows, size_t columns);
+
+    void renderDialogue(WINDOW* window, const std::string& dialogue_name, size_t rows, size_t columns);
 }

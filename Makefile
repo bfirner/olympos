@@ -2,8 +2,8 @@ VPATH = src:include
 
 CXX := g++
 # The -MD and -MP flags generate dependencies for .o files.
-CXXFLAGS := --std=c++20 -Wall -O3 -pedantic -Wextra -MD -MP -Iinclude 
-DEBUGFLAGS := --std=c++20 -Wall -pedantic -Wextra -MD -MP --debug -g3 -Iinclude 
+CXXFLAGS := --std=c++20 -Wall -O3 -pedantic -Wextra -MD -MP -Iinclude
+DEBUGFLAGS := --std=c++20 -Wall -pedantic -Wextra -MD -MP --debug -g3 -Iinclude
 
 SOURCES := $(wildcard src/*.cpp)
 OBJECTS := $(SOURCES:.cpp=.o)
