@@ -28,7 +28,7 @@
         "starting attributes": {
             "channel rate": 1,
             "strength": 1,
-            "dexterity": 1,
+            "reflexes": 1,
             "vitality": 1,
             "aura": 1,
             "domain": 1
@@ -36,7 +36,7 @@
         "attribute growth": {
             "channel rate": 0.1,
             "strength": 1,
-            "dexterity": 1,
+            "reflexes": 1,
             "vitality": 1,
             "aura": 0.15,
             "domain": 1
@@ -64,7 +64,7 @@
         "starting attributes": {
             "channel rate": 1,
             "strength": 1,
-            "dexterity": 1,
+            "reflexes": 1,
             "vitality": 1,
             "aura": 1,
             "domain": 1
@@ -72,7 +72,7 @@
         "attribute growth": {
             "channel rate": 0.1,
             "strength": 1,
-            "dexterity": 1.5,
+            "reflexes": 1.5,
             "vitality": 0.5,
             "aura": 0.5,
             "domain": 0.5
@@ -100,7 +100,7 @@
         "starting attributes": {
             "channel rate": 0,
             "strength": 0.5,
-            "dexterity": 1.5,
+            "reflexes": 1.5,
             "vitality": 0.5,
             "aura": 0.5,
             "domain": 0.5
@@ -108,7 +108,7 @@
         "attribute growth": {
             "channel rate": 0.01,
             "strength": 0.5,
-            "dexterity": 2.0,
+            "reflexes": 2.0,
             "vitality": 0.5,
             "aura": 0.25,
             "domain": 0.25
@@ -137,7 +137,7 @@
         "starting attributes": {
             "channel rate": 0,
             "strength": 0.5,
-            "dexterity": 1.5,
+            "reflexes": 1.5,
             "vitality": 0.5,
             "aura": 0.5,
             "domain": 0.5
@@ -145,7 +145,7 @@
         "attribute growth": {
             "channel rate": 0.01,
             "strength": 0.5,
-            "dexterity": 2.0,
+            "reflexes": 2.0,
             "vitality": 0.5,
             "aura": 0.25,
             "domain": 0.5
@@ -171,7 +171,7 @@
         "starting attributes": {
             "channel rate": 0,
             "strength": 0.5,
-            "dexterity": 0.5,
+            "reflexes": 0.5,
             "vitality": 0.5,
             "aura": 1.5,
             "domain": 1.5
@@ -179,7 +179,7 @@
         "attribute growth": {
             "channel rate": 0.5,
             "strength": 0.5,
-            "dexterity": 0.5,
+            "reflexes": 0.5,
             "vitality": 0.5,
             "aura": 0.5,
             "domain": 2.0

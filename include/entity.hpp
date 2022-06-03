@@ -22,7 +22,7 @@ struct Entity;
 struct Stats {
     // Physical
     size_t strength;
-    size_t dexterity;
+    size_t reflexes;
     size_t vitality;
     // Metaphysical
     size_t aura;

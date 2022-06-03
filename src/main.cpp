@@ -135,11 +135,11 @@ int main(int argc, char** argv) {
     // Create (and hide) a dialog window for help screens.
     std::map<std::string, UIComponent> help_components;
     {
-        auto insert_stat = help_components.emplace(std::make_pair("help", UIComponent(ws, 38, 76, 1, 2)));
+        auto insert_stat = help_components.emplace(std::make_pair("abilities", UIComponent(ws, 38, 76, 1, 2)));
         UIComponent& uic = insert_stat.first->second;
         UserInterface::drawString(uic.window, "help", 0, 0);
-        UserInterface::drawString(uic.window, "Type 'help' and a command for more information.", 2, 0);
-        UserInterface::drawString(uic.window, "Available commands are:", 3, 0);
+        UserInterface::drawString(uic.window, "Type `help' and an ability name for more information.", 2, 0);
+        UserInterface::drawString(uic.window, "Available abilities are:", 3, 0);
         size_t cur_row = 3;
         for (auto& [cmd_name, ability] : player_i->command_details) {
             UserInterface::drawString(uic.window, cmd_name, ++cur_row, 5);
@@ -323,6 +323,11 @@ int main(int argc, char** argv) {
                 if (help_components.contains(help_target)) {
                     help_displayed = help_components.find(help_target);
                     help_displayed->second.show();
+                }
+                else if (UserInterface::hasDialogue(command)) {
+                    UserInterface::renderDialogue(dialog_box.window, command, dialog_box.rows, dialog_box.columns);
+                    dialog_box.show();
+                    in_dialog = true;
                 }
             }
             else if (0 < command.size() and std::string("pause").starts_with(command)) {

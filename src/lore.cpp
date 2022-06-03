@@ -88,7 +88,7 @@ std::optional<Stats> OlymposLore::getStats(const Entity& entity) {
 
     stats.channel_rate = std::floor(base["channel rate"].get<double>() + stats.species_level * growth["channel rate"].get<double>());
     stats.strength     = std::floor(base["strength"].get<double>() + stats.species_level * growth["strength"].get<double>());
-    stats.dexterity    = std::floor(base["dexterity"].get<double>() + stats.species_level * growth["dexterity"].get<double>());
+    stats.reflexes    = std::floor(base["reflexes"].get<double>() + stats.species_level * growth["reflexes"].get<double>());
     stats.vitality     = std::floor(base["vitality"].get<double>() + stats.species_level * growth["vitality"].get<double>());
     stats.aura         = std::floor(base["aura"].get<double>() + stats.species_level * growth["aura"].get<double>());
     stats.domain       = std::floor(base["domain"].get<double>() + stats.species_level * growth["domain"].get<double>());

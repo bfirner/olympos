@@ -9,26 +9,26 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Handle the player getting killed.
-* * Restart after death.
+* help topics
+* * help actions
+* * help abilities
+* * help stats, statistics, attributes
 * Add more dialog handling
 * * Plus animations in the dialog!
 * Aliases
-* Change "dexterity" to "reflexes"
+* Ability to hotkey commands
+* Keep updating the "help" menu with game commands (e.g. alias and hotkey)
 * Add visual effects
 * * Color-code the event log
 * * Some kind of motion indicator?
 * * Some kind of attack indicator?
-* Create behavior sets, which represent how entities should behave, in json
-* * For example, define modes based upon proximity or visibility
-* * * HP below some threshold: heal, flee
-* * * Adjacent to player: attack
-* * * Within x steps of player: chase
-* * * Within x steps of player: kite
-* * * Within x steps of player: ranged attacks
-* * Define priority of different skills based upon the current mode
-* Ability to hotkey commands
-* Add skills for all of the basic sensors (listen, taste, look, touch/feel, smell)
+* Create category aliases for the behavior sets
+* * Like attack, but for other stuff as well.
+* * Or add more conditions to check if general abilities exist
+* * Need compound logic as well I suppose
+* Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
+* Handle the player getting killed.
+* * Restart after death.
 * Utility and tool commands
 * * Pick up
 * * Throw

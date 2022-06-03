@@ -40,5 +40,6 @@ namespace UserInterface {
     size_t drawHotkeys(WINDOW* window, size_t row, const std::vector<std::string>& shortcuts);
     void drawPause(WINDOW* window, size_t rows, size_t columns);
 
+    bool hasDialogue(const std::string& dialogue_name);
     void renderDialogue(WINDOW* window, const std::string& dialogue_name, size_t rows, size_t columns);
 }

@@ -14,5 +14,25 @@
             "Until then, good luck!"
         ],
         "options": ["begin"]
+    },
+    "help actions": {
+        "upper left": [
+            "Words you type appear in the text field below the map.",
+            "After typing a command the return key will execute it.",
+            "The arrow keys are aliased to the four movement directions.",
+            "Additionally, the arrow keys will also send a return signal.",
+            "This means that arrow keys can be used to finish a command:",
+            "    `kick →' will immediately execute a kick to the east.",
+            "Type `help abilities' to see a list of your abilities."
+        ],
+        "options": ["ok"]
+    },
+    "help": {
+        "upper left": [
+            "Type `help <topic>' for more information on that topic.",
+            "Topics are:",
+            "actions abilities attributes quit"
+        ],
+        "options": ["ok"]
     }
 }

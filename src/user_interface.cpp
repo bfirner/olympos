@@ -257,7 +257,7 @@ size_t UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t ro
     drawString(window, "[Physical]");
     wmove(window, cur_row++, column);
     line.str("");
-    line << stats.strength << " STR # " << stats.dexterity << " DEX # " << stats.vitality << " VIT";
+    line << stats.strength << " STR # " << stats.reflexes << " RFLX # " << stats.vitality << " VIT";
     drawString(window, line.str());
 
     // Metaphysical status
@@ -321,6 +321,11 @@ void drawPause(WINDOW* window, size_t rows, size_t columns) {
     // Clear the window, then draw the pause message.
     werase(window);
     mvwprintw(window, rows / 2, columns / 2 - message.size() / 2, "%s", message.data());
+}
+
+bool UserInterface::hasDialogue(const std::string& dialogue_name) {
+    json& dialogue = getDialogue();
+    return dialogue.contains(dialogue_name);
 }
 
 void UserInterface::renderDialogue(WINDOW* window, const std::string& dialogue_name, size_t rows, size_t columns) {

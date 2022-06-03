@@ -349,7 +349,7 @@ namespace Behavior {
         double strength = 0;
         double domain = 0;
         double aura = 0;
-        double dexterity = 0;
+        double reflexes = 0;
         if (effects.contains("damage")) {
             auto& damage_effects = effects.at("damage");
             if (damage_effects.contains("base")) {
@@ -364,8 +364,8 @@ namespace Behavior {
             if (damage_effects.contains("aura")) {
                 aura = damage_effects.at("aura");
             }
-            if (damage_effects.contains("dexterity")) {
-                dexterity = damage_effects.at("dexterity");
+            if (damage_effects.contains("reflexes")) {
+                reflexes = damage_effects.at("reflexes");
             }
         }
         size_t attack_range = 0;
@@ -383,7 +383,7 @@ namespace Behavior {
 
         return [=,&entity,effects=this->effects,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
             size_t damage = floor(base + strength * entity.stats.value().strength + domain * entity.stats.value().domain +
-                aura * entity.stats.value().aura + dexterity * entity.stats.value().dexterity);
+                aura * entity.stats.value().aura + reflexes * entity.stats.value().reflexes);
             // Now parse the arguments to see what is getting hit.
             auto target = ws.entities.end();
             if (0 < expected_args.size() and expected_args[0] == "or") {
