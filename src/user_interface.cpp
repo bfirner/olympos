@@ -376,7 +376,7 @@ void UserInterface::renderDialogue(WINDOW* window, const std::string& dialogue_n
                 bottom_line = bottom_line + bottom_partition;
             }
             top_line = top_line + std::wstring(w_option.size() + 2, horizontal);
-            middle_line = L" " + w_option + L" ";
+            middle_line = middle_line + L" " + w_option + L" ";
             bottom_line = bottom_line + std::wstring(w_option.size() + 2, horizontal);
         }
         // Close the box
