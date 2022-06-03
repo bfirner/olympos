@@ -9,7 +9,6 @@
 #include <cctype>
 #include <cmath>
 #include <cwchar>
-#include <codecvt>
 #include <fstream>
 #include <iostream>
 #include <clocale>
@@ -17,6 +16,7 @@
 
 using json = nlohmann::json;
 
+#include "olympos_utility.hpp"
 #include "user_interface.hpp"
 
 
@@ -81,26 +81,16 @@ VIDEO ATTRIBUTES
               WA_VERTICAL     Vertical highlight
 */
 
-char UserInterface::getEntityChar(const Entity& ent) {
+std::wstring UserInterface::getEntityChar(const Entity& ent) {
     if (ent.traits.contains("player")) {
-        return '@';
+        return L"@";
     }
     else if (ent.traits.contains("wall")) {
-        return '#';
+        return L"#";
     }
-    else if (ent.traits.contains("mob")) {
-        char c = 'M';
-        if (ent.traits.contains("flying")) {
-            c = 'W';
-        }
-
-        if (ent.traits.contains("small")) {
-            c = tolower(c);
-        }
-        return c;
+    else {
+        return ent.character;
     }
-    // Default is an empty space.
-    return ' ';
 }
 
 attr_t UserInterface::getEntityAttr(const Entity& ent) {
@@ -152,7 +142,8 @@ void UserInterface::updateDisplay(WINDOW* window, const std::list<Entity>& entit
     werase(window);
     for (const Entity& ent : entities) {
         wattr_set(window, getEntityAttr(ent), getEntityColor(ent), nullptr);
-        mvwaddch(window, ent.y, ent.x, getEntityChar(ent));
+        //mvwaddch(window, ent.y, ent.x, getEntityChar(ent));
+        drawString(window, getEntityChar(ent), ent.y, ent.x);
     }
     // Back to the original setting
     wattr_set(window, orig_attrs, orig_color, nullptr);
@@ -349,15 +340,7 @@ void UserInterface::renderDialogue(WINDOW* window, const std::string& dialogue_n
         size_t cur_row = 0;
         // TODO Cannot parse wstring from nlohmann::json
         for (const std::string line : text) {
-            // Opting for this conversion over what is in codecvt due to some deprecations.
-            // Otherwise we could do this:
-            //   std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(line);
-            std::mbstate_t state = std::mbstate_t();
-            const char* in_data = line.c_str();
-            // First find the number of characters in the sequence
-            std::size_t converted_len = mbsrtowcs(nullptr, &in_data, 0, &state);
-            std::wstring w_line(converted_len, L'\0');
-            std::size_t written = mbsrtowcs(&w_line[0], &in_data, w_line.size(), &state);
+            std::wstring w_line = OlymposUtility::utf8ToWString(line);
             drawString(window, w_line, cur_row++, 0);
         }
     }
@@ -384,15 +367,7 @@ void UserInterface::renderDialogue(WINDOW* window, const std::string& dialogue_n
 
         // TODO Cannot parse wstring from nlohmann::json
         for (const std::string option : options) {
-            // Opting for this conversion over what is in codecvt due to some deprecations.
-            // Otherwise we could do this:
-            //   std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(option);
-            std::mbstate_t state = std::mbstate_t();
-            const char* in_data = option.c_str();
-            // Find the number of characters for the sequence.
-            std::size_t converted_len = mbsrtowcs(nullptr, &in_data, 0, &state);
-            std::wstring w_option(converted_len, L'\0');
-            std::size_t written = mbsrtowcs(&w_option[0], &in_data, w_option.size(), &state);
+            std::wstring w_option = OlymposUtility::utf8ToWString(option);
 
             // Add a partition if this wasn't the first option
             if (1 != top_line.size()) {

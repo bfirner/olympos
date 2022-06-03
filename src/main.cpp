@@ -364,19 +364,11 @@ int main(int argc, char** argv) {
             command.push_back(in_c);
         }
 
-        if (not game_paused and help_displayed == help_components.end() and ws.entities.end() != player_i ) {
+        if (not game_paused and not in_dialog and help_displayed == help_components.end() and ws.entities.end() != player_i ) {
             auto cur_time = std::chrono::steady_clock::now();
             std::chrono::duration<double> time_diff = cur_time - last_update;
             if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or
                 (0.0 >= tick_rate and has_command)) {
-                /*
-                 * Examples of manual commands
-                comham.enqueueTraitCommand({"small", "aggro"}, "flee player");
-                comham.enqueueNamedEntityCommand("Ralph", "seek Bob");
-                comham.enqueueTraitCommand({"species:arachnid"}, "kite Bob 3");
-                comham.enqueueTraitCommand({"species:bat"}, "flee player");
-                comham.enqueueTraitCommand({"species:slime"}, "wander");
-                */
                 // Handle automated behaviors.
                 const std::map<std::string, Behavior::BehaviorSet>& behaviors = Behavior::getBehaviors();
                 for (Entity& entity : ws.entities) {

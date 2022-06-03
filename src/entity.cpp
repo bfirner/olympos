@@ -12,6 +12,7 @@
 
 #include "entity.hpp"
 #include "lore.hpp"
+#include "olympos_utility.hpp"
 
 // Initialize the class-wide variable.
 std::atomic_size_t Entity::next_entity_id = 0;
@@ -80,6 +81,14 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
 
     std::string species = getSpecies();
 
+    // Get the character used to display this creature.
+    std::string repr = OlymposLore::getSpeciesString(species, "character");
+    if (0 == repr.size()) {
+        repr = ".";
+    }
+    character = OlymposUtility::utf8ToWString(repr);
+
+
     // Get the "is a" and "has a" relationships to expand traits.
     std::set<std::string> has_a = OlymposLore::getSpeciesField(species, "has a");
     this->traits.insert(has_a.begin(), has_a.end());
@@ -95,7 +104,7 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     behavior_set_name = OlymposLore::getSpeciesString(species, "base behavior");
 }
 
-Entity::Entity(const Entity& other) : entity_id(other.entity_id), y(other.y), x(other.x), name(other.name), traits(other.traits), stats(other.stats), behavior_set_name(other.behavior_set_name) {
+Entity::Entity(const Entity& other) : entity_id(other.entity_id), y(other.y), x(other.x), name(other.name), traits(other.traits), stats(other.stats), behavior_set_name(other.behavior_set_name), character(other.character) {
 }
 
 std::string Entity::getDescription() const {

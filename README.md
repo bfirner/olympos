@@ -10,6 +10,9 @@ C++ compiler that supports the C++20 standard.
 ## TODOs
 
 * Handle the player getting killed.
+* * Restart after death.
+* Add more dialog handling
+* * Plus animations in the dialog!
 * Aliases
 * Change "dexterity" to "reflexes"
 * Add visual effects

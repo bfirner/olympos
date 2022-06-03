@@ -17,7 +17,7 @@
 
 namespace UserInterface {
     // Get the character representation for this entity
-    char getEntityChar(const Entity& ent);
+    std::wstring getEntityChar(const Entity& ent);
     attr_t getEntityAttr(const Entity& ent);
     short getEntityColor(const Entity& ent);
 

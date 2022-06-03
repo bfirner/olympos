@@ -45,7 +45,8 @@
         "has a": ["arm", "hand", "finger"],
         "is a": ["medium", "omnivore", "mammal", "biped", "sentient"],
         "likes": ["caffeine", "sleep", "throwing", "art", "entertainment", "sunset", "sunrise", "tool", "fire"],
-        "hates": ["poop", "corpse", "mosquito", "leech"]
+        "hates": ["poop", "corpse", "mosquito", "leech"],
+        "character": "H"
     },
     "elf": {
         "base physique": {
@@ -80,7 +81,8 @@
         "has a": ["arm", "hand", "finger"],
         "is a": ["medium", "vegetarian", "mammal", "biped", "sentient"],
         "likes": ["plant", "meditation", "art", "flower", "sunset", "sunrise"],
-        "hates": ["poop", "corpse", "concrete", "iron", "mine", "fire"]
+        "hates": ["poop", "corpse", "concrete", "iron", "mine", "fire"],
+        "character": "E"
     },
     "arachnid": {
         "base physique": {
@@ -115,7 +117,8 @@
         "has a": ["fang", "spineret", "carapace"],
         "is a": ["small", "octoped", "carnivore", "arthropod", "bidentate", "venomous"],
         "likes": ["ambush", "sneak", "hide", "lasso", "bolas", "silk", "web"],
-        "hates": ["bird", "bat"]
+        "hates": ["bird", "bat"],
+        "character": "🙸"
     },
     "bat": {
         "base physique": {
@@ -151,7 +154,8 @@
         "has a": ["wing"],
         "is a": ["small", "flying", "biped", "mammal", "insectivore", "frugivore"],
         "likes": ["flying", "fruit"],
-        "hates": ["cat", "fungus", "owl", "hawk", "falcon", "eagle", "crocodile"]
+        "hates": ["cat", "fungus", "owl", "hawk", "falcon", "eagle", "crocodile"],
+        "character": "⧳"
     },
     "slime": {
         "base physique": {
@@ -184,6 +188,7 @@
         "has a": ["pseudopod"],
         "is a": ["medium", "omnivore", "slime"],
         "likes": [],
-        "hates": []
+        "hates": [],
+        "character": "࡞"
     }
 }
