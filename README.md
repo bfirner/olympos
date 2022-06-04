@@ -9,30 +9,15 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* help topics
-* * help actions
-* * help abilities
-* * help stats, statistics, attributes
-* Add more dialog handling
-* * Plus animations in the dialog!
-* Aliases
-* Ability to hotkey commands
-* Keep updating the "help" menu with game commands (e.g. alias and hotkey)
 * Add visual effects
 * * Color-code the event log
 * * Some kind of motion indicator?
 * * Some kind of attack indicator?
-* Create category aliases for the behavior sets
-* * Like attack, but for other stuff as well.
-* * Or add more conditions to check if general abilities exist
-* * Need compound logic as well I suppose
-* Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
-* Handle the player getting killed.
-* * Restart after death.
 * Utility and tool commands
 * * Pick up
 * * Throw
 * * Swing
+* Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
 * Prototype the following
 * * Essence gains (experience) from combat and actions.
 * * Skill gains
@@ -41,9 +26,30 @@ C++ compiler that supports the C++20 standard.
       firebolt)
 * * Class gains
 * * * From associated skill usage
+* * Skills exist under the umbrellas of classes
+* * * Using a skill gives both the skill and the class experience
+* * * The class also gains experience by hitting keywords for the class
+* * * Skills advance by levels, by merging with other skills, or by morphing into new skills
+* * * * Levelling means a straight increase in current skill attributes
+* * * * Merging means a new single skill that does both things with some loss of distant parts
+* * * * * TODO Examples
+* * * * Morphing means changing to a similar skill at the same level that has new abilities
+* * * * * TODO Examples
 * Help command has non-skill help
 * * General help
 * * UI help
+* * status help
+* Add more dialog handling
+* * Plus animations in the dialog!
+* Aliases
+* Ability to hotkey commands
+* Keep updating the "help" menu with game commands (e.g. alias and hotkey)
+* Create category aliases for the behavior sets
+* * Like attack, but for other stuff as well.
+* * Or add more conditions to check if general abilities exist
+* * Need compound logic as well I suppose
+* Handle the player getting killed.
+* * Restart after death.
 * Multiple floors
 * * Start with floor descriptions in json
 * * Make multiple rooms per floor
@@ -51,3 +57,9 @@ C++ compiler that supports the C++20 standard.
 entity when it passes from one room to another.
 * Mouse stuff (click on things to use ability, add hotkeys, etc)
 * * See `curs_mouse`
+
+* Elements and ability sets
+* * Want to have ability sets with broad themes
+* * Then adding an element into them makes them feel diverse and interesting
+* * The entrypoint into the ability set should also have an impact
+* * * (the entrypoint is the general skill(s) that allowed access to the ability set)

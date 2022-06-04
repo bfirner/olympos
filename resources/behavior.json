@@ -93,7 +93,7 @@
                     "minimize distance": {
                     }
                 },
-                "flavor": "<entity> chases after <target>.",
+                "flavor": "<entity> [color:green](chases) after <target>.",
                 "description": "Chase an entity or object.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -108,7 +108,7 @@
                     "maximize distance": {
                     }
                 },
-                "flavor": "<entity> flees from <target>.",
+                "flavor": "<entity> [color:green](flees) from <target>.",
                 "description": "Flee an entity or object.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -123,7 +123,7 @@
                     "maintain distance": {
                     }
                 },
-                "flavor": "<entity> kites around <target>.",
+                "flavor": "<entity> [color:green](kites) around <target>.",
                 "description": "Try to maintain a desired distance from an entity or object.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -163,7 +163,7 @@
                     },
                     "range": 1
                 },
-                "flavor": "<entity> kicks <target>.",
+                "flavor": "<entity> [color:red](kicks) <target>.",
                 "prereqs": {},
                 "constraints": ["or", "leg", "pseudopod"]
             },
@@ -202,7 +202,7 @@
                     },
                     "range": 1
                 },
-                "flavor": "<entity> punches <target>.",
+                "flavor": "<entity> [color:red](punches) <target>.",
                 "prereqs": {},
                 "constraints": ["or", "hand", "pseudopod"]
             },
@@ -241,7 +241,7 @@
                     },
                     "range": 1
                 },
-                "flavor": "<entity> bites <target>.",
+                "flavor": "<entity> [color:red](bites) <target>.",
                 "prereqs": {},
                 "constraints": ["or", "tooth", "fang", "beak"]
             }

@@ -12,7 +12,9 @@
 #include <fstream>
 #include <iostream>
 #include <clocale>
+#include <regex>
 #include <sstream>
+#include <tuple>
 
 using json = nlohmann::json;
 
@@ -125,6 +127,32 @@ short UserInterface::getEntityColor(const Entity& ent) {
     return Colors::white_on_black;
 }
 
+std::tuple<attr_t, Colors> strToAttrCode(const std::string& color) {
+    // Default to white in case this isn't a recognized color.
+    Colors the_color = white_on_black;
+    if ("blue" == color) {
+        the_color = blue_on_black;
+    }
+    else if ("red" == color) {
+        the_color = red_on_black;
+    }
+    else if ("green" == color) {
+        the_color = green_on_black;
+    }
+    else if ("yellow" == color) {
+        the_color = yellow_on_black;
+    }
+    else if ("magenta" == color) {
+        the_color = magenta_on_black;
+    }
+    else if ("cyan" == color) {
+        the_color = cyan_on_black;
+    }
+
+    // TODO Defaulting to normal text for now.
+    return std::make_tuple(A_NORMAL, the_color);
+}
+
 void UserInterface::setupColors() {
     init_pair(Colors::white_on_black, COLOR_WHITE, COLOR_BLACK);
     init_pair(Colors::blue_on_black, COLOR_BLUE, COLOR_BLACK);
@@ -136,6 +164,7 @@ void UserInterface::setupColors() {
 }
 
 void UserInterface::updateDisplay(WINDOW* window, const std::list<Entity>& entities) {
+    // Store the original colors so that they can be easily restored.
     attr_t orig_attrs;
     short orig_color;
     wattr_get(window, &orig_attrs, &orig_color, nullptr);
@@ -163,11 +192,55 @@ void drawString(WINDOW* window, const std::wstring& str) {
     wprintw(window, "%ls", str.data());
 }
 
+void drawString(WINDOW* window, const std::string& str, const std::string& color) {
+    // Store the original colors so that they can be easily restored.
+    attr_t orig_attrs;
+    short orig_color;
+    wattr_get(window, &orig_attrs, &orig_color, nullptr);
+
+    // Switch to the desired color
+    auto [attr_code, color_code] = strToAttrCode(color);
+    wattr_set(window, attr_code, color_code, nullptr);
+
+    // Draw the string
+    wprintw(window, "%s", str.data());
+
+    // Reset the color
+    wattr_set(window, orig_attrs, orig_color, nullptr);
+}
+
+void drawString(WINDOW* window, const std::wstring& str, const std::string& color) {
+    // Store the original colors so that they can be easily restored.
+    attr_t orig_attrs;
+    short orig_color;
+    wattr_get(window, &orig_attrs, &orig_color, nullptr);
+
+    // Switch to the desired color
+    auto [attr_code, color_code] = strToAttrCode(color);
+    wattr_set(window, attr_code, color_code, nullptr);
+
+    // Draw the string
+    wprintw(window, "%ls", str.data());
+
+    // Reset the color
+    wattr_set(window, orig_attrs, orig_color, nullptr);
+}
+
 void drawString(WINDOW* window, const std::string& str) {
     // Draw the string
     for (char c : str) {
         waddch(window, c);
     }
+}
+
+void UserInterface::drawString(WINDOW* window, const std::wstring& str, size_t row, size_t column) {
+    mvwprintw(window, row, column, "%ls", str.data());
+}
+
+void UserInterface::drawString(WINDOW* window, const std::string& str, size_t row, size_t column) {
+    // Set the cursor
+    wmove(window, row, column);
+    drawString(window, str);
 }
 
 void drawBar(WINDOW* window, double percent) {
@@ -200,16 +273,6 @@ void drawBar(WINDOW* window, double percent) {
     }
     // Restore the original settings
     wattr_set(window, orig_attrs, orig_color, nullptr);
-}
-
-void UserInterface::drawString(WINDOW* window, const std::wstring& str, size_t row, size_t column) {
-    mvwprintw(window, row, column, "%ls", str.data());
-}
-
-void UserInterface::drawString(WINDOW* window, const std::string& str, size_t row, size_t column) {
-    // Set the cursor
-    wmove(window, row, column);
-    drawString(window, str);
 }
 
 size_t UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column) {
@@ -285,13 +348,37 @@ size_t UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t ro
 }
 
 void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer, size_t line_size) {
-    // First clear the existing text from the window?
-    // Now redraw the text in the event window.
+    // Redraw the text in the event window, padding out to the end of the line.
     for (size_t row = 0; row < buffer.size(); ++row) {
-        drawString(window, buffer[row], row, 0);
+        // Get the cursor to the correct location.
+        wmove(window, row, 0);
+        // Add support for color commands. Tags are stored in [] and the target string follows in ()
+        // Trying to match strings like this: "<entity> [color:red](kicks) <target>."
+        const std::regex color_tags("\\[color:([a-z]+)\\]\\(([[:alnum:]]+)\\)");
+
+        // Need to hold on to the unmatched portion of the string.
+        std::string rest = buffer[row];
+        size_t printed_chars = 0;
+        std::smatch matches;
+        while (std::regex_search(rest, matches, color_tags)) {
+            std::string comparison = matches[1].str();
+            // Print the prefix.
+            drawString(window, matches.prefix().str());
+            // Get the color.
+            const std::string& color = matches[1].str();
+            // Print the match.
+            drawString(window, matches[2].str(), color);
+            // Set rest to the rest of the string
+            rest = matches.suffix().str();
+            printed_chars += matches.prefix().str().size() + matches[2].str().size();
+        }
+
+        // Now print the unmatched part of the string.
+        drawString(window, rest);
+
         if (buffer[row].size() < line_size) {
-            std::string padding(line_size - buffer[row].size(), ' ');
-            drawString(window, padding, row, buffer[row].size());
+            std::string padding(line_size - printed_chars, ' ');
+            drawString(window, padding);
         }
     }
 }
