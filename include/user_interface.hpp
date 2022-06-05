@@ -34,7 +34,7 @@ namespace UserInterface {
     // Update the status and return the last row used.
     size_t drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column);
 
-    void updateEvents(WINDOW* window, std::deque<std::string>& buffer, size_t line_size);
+    void updateEvents(WINDOW* window, std::deque<std::string>& buffer);
 
     // Draw hotkey shortcuts and return the last row used.
     size_t drawHotkeys(WINDOW* window, size_t row, const std::vector<std::string>& shortcuts);

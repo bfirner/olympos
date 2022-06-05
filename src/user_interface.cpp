@@ -347,11 +347,12 @@ size_t UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t ro
     return cur_row;
 }
 
-void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer, size_t line_size) {
+void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer) {
+    werase(window);
     // Redraw the text in the event window, padding out to the end of the line.
     for (size_t row = 0; row < buffer.size(); ++row) {
         // Get the cursor to the correct location.
-        wmove(window, row+1, 0);
+        wmove(window, row, 0);
         // Add support for color commands. Tags are stored in [] and the target string follows in ()
         // Trying to match strings like this: "<entity> [color:red](kicks) <target>."
         const std::regex color_tags("\\[color:([a-z]+)\\]\\(([[:alnum:]]+)\\)");
@@ -376,10 +377,12 @@ void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer
         // Now print the unmatched part of the string.
         drawString(window, rest);
 
+        /*
         if (buffer[row].size() < line_size) {
             std::string padding(line_size - printed_chars, ' ');
             drawString(window, padding);
         }
+        */
     }
 }
 

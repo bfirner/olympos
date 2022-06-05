@@ -43,7 +43,8 @@ int main(int argc, char** argv) {
     cbreak();
     // Don't echo what the user types.
     noecho();
-    WINDOW* window = newwin(42, 80, 0, 0);
+    size_t main_window_height = 42;
+    WINDOW* window = newwin(main_window_height, 80, 0, 0);
     if (has_colors()) {
         // TODO start_color() and then do stuff
         start_color();
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
     UserInterface::drawString(stat_window, "Heart of Olympos", 1, 1);
 
     // Create another window for the event log.
-    WINDOW* event_window = newwin(40, 80, 41, 0);
+    WINDOW* event_window = newwin(40, 80, main_window_height, 0);
     std::deque<std::string> event_strings;
 
     std::vector<PANEL*> panels;
@@ -402,7 +403,7 @@ int main(int argc, char** argv) {
                     // Clear the events after the user-visible ones have been dealt with.
                     ws.clearEvents();
                     // Draw the user visible events
-                    UserInterface::updateEvents(event_window, event_strings, 30);
+                    UserInterface::updateEvents(event_window, event_strings);
                     // Update the player's status in the window
                     size_t status_row = UserInterface::drawStatus(stat_window, *player_entity, 3, 1);
                     UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
