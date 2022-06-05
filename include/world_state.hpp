@@ -23,7 +23,6 @@ struct WorldEvent {
 
 struct WorldState {
     std::list<Entity> entities;
-    std::map<std::string, decltype(entities)::iterator> named_entities;
 
     std::vector<WorldEvent> events;
 
@@ -47,16 +46,16 @@ struct WorldState {
     // Damage entity_i for damage health points. Repercussions may happen to the attacker.
     void damageEntity(decltype(entities)::iterator entity_i, size_t damage, Entity& attacker);
 
-    // Find the named entity, or named_entities.end()
+    // Find the named entity, or entities.end()
     decltype(entities)::iterator findEntity(const std::string& name);
 
-    // Find an entity with the given traits, or named_entities.end()
+    // Find an entity with the given traits, or entities.end()
     decltype(entities)::iterator findEntity(const std::vector<std::string>& traits);
 
-    // Find the named entity within the given range, or named_entities.end()
+    // Find the named entity within the given range, or entities.end()
     decltype(entities)::iterator findEntity(const std::string& name, int64_t y, int64_t x, size_t range);
 
-    // Find an entity with the given traits within the given range, or named_entities.end()
+    // Find an entity with the given traits within the given range, or entities.end()
     decltype(entities)::iterator findEntity(const std::vector<std::string>& traits, int64_t y, int64_t x, size_t range);
 
     // Find an entity with the given entity ID number.

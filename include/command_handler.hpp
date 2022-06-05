@@ -19,12 +19,13 @@ class CommandHandler;
 
 class CommandHandler {
     private:
-        // TODO FIXME These could all look up the entity iterators and then there would be only one
-        // queue instead of three.
+        // The queue of commands
+        // Commands of type <enity ID, command string, command arguments>
+        // TODO Eventually, this should become sorted by the reflexes attribute.
+        std::vector<std::tuple<size_t, std::string, std::vector<std::string>>> entity_commands;
+        // Commands stored for entity names or traits.
         std::vector<std::tuple<std::string, std::string, std::vector<std::string>>> named_entity_commands;
         std::vector<std::tuple<std::vector<std::string>, std::string, std::vector<std::string>>> trait_commands;
-        std::vector<std::tuple<std::list<Entity>::iterator, std::string, std::vector<std::string>>> entity_ref_commands;
-        std::vector<std::tuple<size_t, std::string, std::vector<std::string>>> entity_commands;
 
     public:
         CommandHandler();

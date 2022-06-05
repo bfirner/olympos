@@ -9,15 +9,17 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Add visual effects
-* * Color-code the event log
-* * Some kind of motion indicator?
-* * Some kind of attack indicator?
+* Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
 * Utility and tool commands
 * * Pick up
 * * Throw
 * * Swing
-* Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
+* * * This all imply adding objects and an inventory
+* Add visual effects
+* * Some kind of motion indicator?
+* * Some kind of attack indicator?
+* * Thrown objects should show up.
+* * * These all imply animations that occur during "sub ticks"
 * Prototype the following
 * * Essence gains (experience) from combat and actions.
 * * Skill gains

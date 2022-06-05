@@ -161,9 +161,6 @@ void WorldState::initialize() {
     // Get the player entity
     decltype(entities)::iterator player = std::find_if(entities.begin(), entities.end(),
             [](auto& ent) {return (ent.traits.contains("player"));});
-    if (player != entities.end()) {
-        named_entities["player"] = player;
-    }
 
     // Make the walls
     for (size_t x = 0; x < field_width; ++x) {
@@ -221,8 +218,9 @@ void WorldState::update() {
             if (ent.stats) {
             ent.stats.value().ticHealthManaStamina(cur_tick);
         }});
-    if (named_entities.contains("player")) {
-        auto player = named_entities["player"];
-        logEvent({"==========Tick " + std::to_string(cur_tick) + "========", player->y, player->x});
+    // TODO FIXME The event queue should be handled a bit differently
+    auto player_i = findEntity(std::vector<std::string>{"player"});
+    if (player_i != entities.end()) {
+        logEvent({"==========Tick " + std::to_string(cur_tick) + "========", player_i->y, player_i->x});
     }
 }

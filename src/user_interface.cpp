@@ -351,7 +351,7 @@ void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer
     // Redraw the text in the event window, padding out to the end of the line.
     for (size_t row = 0; row < buffer.size(); ++row) {
         // Get the cursor to the correct location.
-        wmove(window, row, 0);
+        wmove(window, row+1, 0);
         // Add support for color commands. Tags are stored in [] and the target string follows in ()
         // Trying to match strings like this: "<entity> [color:red](kicks) <target>."
         const std::regex color_tags("\\[color:([a-z]+)\\]\\(([[:alnum:]]+)\\)");

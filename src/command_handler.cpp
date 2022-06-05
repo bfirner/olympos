@@ -146,18 +146,15 @@ void CommandHandler::enqueueEntityCommand(const Entity& entity, const std::strin
 
 // Execute all enqueued commands. Entity commands will always occur before trait commands.
 void CommandHandler::executeCommands(WorldState& ws) {
+    // First handle commands to entity names and traits by putting them into the regular
+    // entity_commands queue. Sort the queue by reflex speed, and then take all actions.
+
     // Handle all {name, command} pairs if they both exist
     for (const auto& [entity_name, command, arguments] : named_entity_commands) {
-        if (ws.named_entities.contains(entity_name) and
-                ws.named_entities.at(entity_name)->command_handlers.contains(command)) {
-            ws.named_entities.at(entity_name)->command_handlers.at(command)(ws, arguments);
-        }
-        // If this wasn't a "special" entity then look for one with this given name.
-        else {
-            auto entity_i = ws.findEntity(entity_name);
-            if (entity_i != ws.entities.end() and entity_i->command_handlers.contains(command)) {
-                entity_i->command_handlers.at(command)(ws, arguments);
-            }
+        auto entity_i = ws.findEntity(entity_name);
+        if (entity_i != ws.entities.end() and entity_i->command_handlers.contains(command)) {
+            //entity_i->command_handlers.at(command)(ws, arguments);
+            entity_commands.push_back({entity_i->entity_id, command, arguments});
         }
     }
     named_entity_commands.clear();
@@ -171,13 +168,17 @@ void CommandHandler::executeCommands(WorldState& ws) {
                 // This entity has all of the necessary traits, so execute the command if it is
                 // supported.
                 if (entity.command_handlers.contains(command)) {
-                    // TODO Arguments
-                    entity.command_handlers.at(command)(ws, arguments);
+                    //entity.command_handlers.at(command)(ws, arguments);
+                    entity_commands.push_back({entity.entity_id, command, arguments});
                 }
             }
         }
     }
     trait_commands.clear();
+
+    // TODO Sort commands by reflexes
+    // TODO Sort commands by reflexes, but successive commands by the same entity happen later in
+    // the round.
 
     // Handle all {entity iterator, command, arguments}
     for (const auto& [entity_id, command, arguments] : entity_commands) {

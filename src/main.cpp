@@ -112,7 +112,6 @@ int main(int argc, char** argv) {
     // Keep an easy handle to access the player
     // TODO If we keep this here is there any reason for the world state to bother tracking some
     // named entities?
-    //auto player_i = ws.named_entities["player"];
     auto player_i = ws.findEntity(std::vector<std::string>{"player"});
 
     std::vector<std::string> function_shortcuts;
@@ -192,8 +191,10 @@ int main(int argc, char** argv) {
     UserInterface::renderDialogue(dialog_box.window, "introduction", dialog_box.rows, dialog_box.columns);
 
     // Draw the player's status in the window
-    size_t status_row = UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
-    UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
+    {
+        size_t status_row = UserInterface::drawStatus(stat_window, *player_i, 3, 1);
+        UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
+    }
 
     // Update the world state.
     ws.update();
@@ -356,7 +357,7 @@ int main(int argc, char** argv) {
                 }
                 // TODO Add user aliases.
                 // Queue up actions and take them at the action tick.
-                comham.enqueueNamedEntityCommand("player", command);
+                comham.enqueueTraitCommand({"player"}, command);
                 has_command = true;
             }
             //Update the cursor and clear the input field
@@ -387,22 +388,29 @@ int main(int argc, char** argv) {
                 comham.executeCommands(ws);
                 // Tick update
                 ws.update();
+                auto player_entity = ws.findEntity(std::vector<std::string>{"player"});
+                if (player_entity != ws.entities.end()) {
                 // Find the user visible events.
-                std::vector<std::string> player_events = ws.getLocalEvents(player_i->y, player_i->x, player_i->stats.value().detectionRange());
-                for (std::string& event : player_events) {
-                    event_strings.push_front(event);
+                std::vector<std::string> player_events = ws.getLocalEvents(player_entity->y, player_entity->x, player_entity->stats.value().detectionRange());
+                    for (std::string& event : player_events) {
+                        event_strings.push_front(event);
+                    }
+                    // Limit to 40 events in the event window.
+                    while (40 < event_strings.size()) {
+                        event_strings.pop_back();
+                    }
+                    // Clear the events after the user-visible ones have been dealt with.
+                    ws.clearEvents();
+                    // Draw the user visible events
+                    UserInterface::updateEvents(event_window, event_strings, 30);
+                    // Update the player's status in the window
+                    size_t status_row = UserInterface::drawStatus(stat_window, *player_entity, 3, 1);
+                    UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
                 }
-                // Limit to 40 events in the event window.
-                while (40 < event_strings.size()) {
-                    event_strings.pop_back();
+                else {
+                    // TODO Should play the last events that the player could have seen, since they
+                    // will probably include the player's death.
                 }
-                // Clear the events after the user-visible ones have been dealt with.
-                ws.clearEvents();
-                // Draw the user visible events
-                UserInterface::updateEvents(event_window, event_strings, 30);
-                // Update the player's status in the window
-                size_t status_row = UserInterface::drawStatus(stat_window, *ws.named_entities["player"], 3, 1);
-                UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
             }
         }
 
