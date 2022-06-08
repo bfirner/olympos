@@ -180,10 +180,8 @@ void UserInterface::updateDisplay(WINDOW* window, const std::list<Entity>& entit
 }
 
 void UserInterface::clearInput(WINDOW* window, size_t field_height, size_t field_width) {
-    mvwaddch(window, field_height, 0, '>');
-    for (size_t x = 1; x < field_width; ++x) {
-        mvwaddch(window, field_height, x, ' ');
-    }
+    std::string line = ">" + std::string(field_width-1, ' ');
+    mvwprintw(window, field_height, 0, "%s", line.c_str());
     // Reset the cursor, leaving the '>' character to indicate where typing occurs.
     wmove(window, field_height, 1);
 }
