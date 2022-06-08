@@ -10,10 +10,10 @@ OBJECTS := $(SOURCES:.cpp=.o)
 DEPFILES := $(OBJECTS:.o=.d)
 
 olympos: $(OBJECTS)
-	g++ $(CXXFLAGS) $^ -lpanel -lncursesw -o $@
+	g++ $(CXXFLAGS) $^ -lpanelw -lncursesw -o $@
 
 debug: src/*.cpp
-	g++ $(DEBUGFLAGS) $^ -lpanel -lncursesw -o olympos
+	g++ $(DEBUGFLAGS) $^ -lpanelw -lncursesw -o olympos
 
 -include $(DEPFILES)
 
