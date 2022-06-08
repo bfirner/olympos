@@ -62,20 +62,6 @@ int main(int argc, char** argv) {
     // Initialize the world state with the desired size.
     WorldState ws(40, 80);
 
-    // Create a new window to display status.
-    WINDOW* stat_window = newwin(40, 30, 0, ws.field_width + 10);
-    box(stat_window, 0, 0);
-    UserInterface::drawString(stat_window, "Heart of Olympos", 1, 1);
-
-    // Create another window for the event log.
-    WINDOW* event_window = newwin(40, 80, main_window_height, 0);
-    std::deque<std::string> event_strings;
-
-    std::vector<PANEL*> panels;
-    panels.push_back(new_panel(event_window));
-    panels.push_back(new_panel(stat_window));
-    panels.push_back(new_panel(window));
-
     // Get the abilities so that they can be assigned to the mobs.
     const std::vector<Behavior::AbilitySet>& abilities = Behavior::getAbilities();
 
@@ -99,33 +85,28 @@ int main(int argc, char** argv) {
         }
     }
 
-    // Turn cursor visibility to normal.
-    curs_set(1);
-
-    // Wait 50 ms for user input and then handle any of the background game stuff that should be
-    // happening. Unless the user has disabled ticking.
-    if (0.0 < tick_rate) {
-        wtimeout(window, 50);
-    }
-
-    ws.initialize();
-
     // Keep an easy handle to access the player
     // TODO If we keep this here is there any reason for the world state to bother tracking some
     // named entities?
     auto player_i = ws.findEntity(std::vector<std::string>{"player"});
 
-    std::vector<std::string> function_shortcuts;
-    std::set<std::string> nav_shortcuts{"north", "east", "south", "west"};
-    // Doesn't seem to be easy for someone to use a function 0 key.
-    function_shortcuts.push_back("");
-    for (auto& [key, value] : player_i->command_handlers) {
-        if (12 > function_shortcuts.size() and not nav_shortcuts.contains(key)) {
-            function_shortcuts.push_back(key);
-        }
-    }
-    while (function_shortcuts.size() < 12) {
-        function_shortcuts.push_back("");
+    // Create a new window to display status.
+    WINDOW* stat_window = newwin(40, 30, 0, ws.field_width + 10);
+    box(stat_window, 0, 0);
+    UserInterface::drawString(stat_window, "Heart of Olympos", 1, 1);
+
+    // Create another window for the event log.
+    WINDOW* event_window = newwin(40, 80, main_window_height, 0);
+    std::deque<std::string> event_strings;
+
+    std::vector<PANEL*> panels;
+    panels.push_back(new_panel(event_window));
+    panels.push_back(new_panel(stat_window));
+    panels.push_back(new_panel(window));
+
+    for (PANEL* panel : panels) {
+        show_panel(panel);
+        top_panel(panel);
     }
 
     // Create a pause panel.
@@ -191,6 +172,33 @@ int main(int argc, char** argv) {
     UIComponent dialog_box(ws, 38, 76, 1, 2);
     UserInterface::renderDialogue(dialog_box.window, "introduction", dialog_box.rows, dialog_box.columns);
 
+    // update_panels should be called before rendering to any of the panels.
+    update_panels();
+
+    // Turn cursor visibility to normal.
+    curs_set(1);
+
+    // Wait 50 ms for user input and then handle any of the background game stuff that should be
+    // happening. Unless the user has disabled ticking.
+    if (0.0 < tick_rate) {
+        wtimeout(window, 50);
+    }
+
+    ws.initialize();
+
+    std::vector<std::string> function_shortcuts;
+    std::set<std::string> nav_shortcuts{"north", "east", "south", "west"};
+    // Doesn't seem to be easy for someone to use a function 0 key.
+    function_shortcuts.push_back("");
+    for (auto& [key, value] : player_i->command_handlers) {
+        if (12 > function_shortcuts.size() and not nav_shortcuts.contains(key)) {
+            function_shortcuts.push_back(key);
+        }
+    }
+    while (function_shortcuts.size() < 12) {
+        function_shortcuts.push_back("");
+    }
+
     // Draw the player's status in the window
     {
         size_t status_row = UserInterface::drawStatus(stat_window, *player_i, 3, 1);
@@ -203,7 +211,6 @@ int main(int argc, char** argv) {
     // Update panels, refresh the screen, and reset the cursor position
     UserInterface::updateDisplay(window, ws.entities);
     UserInterface::clearInput(window, ws.field_height, ws.field_width);
-    update_panels();
     doupdate();
 
     // Initialize time stuff for the ticks
@@ -220,6 +227,10 @@ int main(int argc, char** argv) {
     // The introduction should be displayed immediately.
     in_dialog = true;
     dialog_box.show();
+
+    // update_panels should be called before rendering to any of the panels.
+    update_panels();
+    doupdate();
 
     while(not quit) {
         int in_c = wgetch(window);
@@ -361,6 +372,8 @@ int main(int argc, char** argv) {
                 comham.enqueueTraitCommand({"player"}, command);
                 has_command = true;
             }
+            // Update panel ordering.
+            update_panels();
             //Update the cursor and clear the input field
             UserInterface::clearInput(window, ws.field_height, ws.field_width);
             command = "";
@@ -407,6 +420,7 @@ int main(int argc, char** argv) {
                     // Update the player's status in the window
                     size_t status_row = UserInterface::drawStatus(stat_window, *player_entity, 3, 1);
                     UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
+                    update_panels();
                 }
                 else {
                     // TODO Should play the last events that the player could have seen, since they
@@ -422,18 +436,22 @@ int main(int argc, char** argv) {
             UserInterface::renderDialogue(dialog_box.window, "game over", dialog_box.rows, dialog_box.columns);
             dialog_box.show();
             in_dialog = true;
+            update_panels();
         }
 
         // TODO Add any visual effects that occur faster than ticks here.
         // Update panels, refresh the screen, and reset the cursor position
-        UserInterface::updateDisplay(window, ws.entities);
+        if (not in_dialog) {
+            // In some systems this overwrites the dialog, even though its panel should be on top of
+            // the game window.
+            UserInterface::updateDisplay(window, ws.entities);
+        }
         // Need to redraw the command since we've just erased the window.
         UserInterface::clearInput(window, ws.field_height, ws.field_width);
         for (char c : command) {
             waddch(window, c);
         }
-        // Update panels and refresh the screen
-        update_panels();
+        // Refresh the screen
         doupdate();
     }
 
