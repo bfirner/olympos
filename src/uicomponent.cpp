@@ -12,7 +12,7 @@ UIComponent::UIComponent(WorldState& ws, size_t rows, size_t columns, size_t beg
     intrflush(window, false);
     // Enable keypad inputs (arrow and function keys)
     keypad(window, true);
-    // Hidden by default
+    // Hidden on the bottom by default
     hide();
 }
 
@@ -33,10 +33,12 @@ UIComponent::UIComponent(UIComponent&& other) : ws(other.ws), rows(other.rows), 
 }
 
 void UIComponent::hide() {
+    bottom_panel(panel);
     hide_panel(panel);
 }
 
 void UIComponent::show() {
+    top_panel(panel);
     show_panel(panel);
 }
 
