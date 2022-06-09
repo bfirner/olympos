@@ -230,12 +230,16 @@ namespace Behavior {
     std::vector<std::list<Entity>::iterator> findConeTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
             const vector<string>& expected_args, const vector<string>& default_args, const vector<string>& args) {
         // Read in the information about the cone area of effect
-        std::vector<double> range = effects.at("area").at("range").get<std::vector<double>>();
-        double width_base = effects.at("area").at("width_base").get<double>();
-        double width_slope = effects.at("area").at("width_slope").get<double>();
+        const json& area_effects = effects.at("area");
+        std::vector<double> range = area_effects.at("range").get<std::vector<double>>();
+        double width_base = area_effects.at("width_base").get<double>();
+        double width_slope = area_effects.at("width_slope").get<double>();
         // Calculate modifiers from entity attributes
         // TODO Modifiers from other attributes
-        double vitality_mod = effects.at("area").at("vitality_mode").get<double>();
+        double vitality_mod = 0;
+        if (area_effects.contains("vitality_mod")) {
+            vitality_mod = area_effects.at("vitality_mod").get<double>();
+        }
         range[1] = floor(vitality_mod * actor.stats.value().vitality + range[1]);
 
         // Default to having no target.
@@ -245,7 +249,10 @@ namespace Behavior {
         if (0 < expected_args.size() and expected_args[0] == "or") {
             // Expecting a single argument. Start with the default, but replace it with any supplied
             // argument if present.
-            std::string arg = default_args.at(0);
+            std::string arg = "";
+            if (not default_args.empty()) {
+                arg = default_args.at(0);
+            }
             if (0 < args.size()) {
                 arg = args.at(0);
             }
@@ -271,7 +278,7 @@ namespace Behavior {
                             // Now find targets at that location if they exist.
                             std::list<Entity>::iterator target = ws.entities.begin();
                             while (target != ws.entities.end()) {
-                                target = std::find_if(ws.entities.begin(), ws.entities.end(),
+                                target = std::find_if(target, ws.entities.end(),
                                     [=](Entity& ent) { return ent.y == target_y and ent.x == target_x;});
                                 // If we found another match then add it to the targets.
                                 if (target != ws.entities.end()) {
@@ -423,8 +430,8 @@ namespace Behavior {
         std::string fail_string = fail_flavor;
         // If this is the player then use "You" instead of the entity name.
         if (entity.traits.contains("player")) {
-            replaceSubstring(event_string, "You", entity.name);
-            replaceSubstring(fail_string, "You", entity.name);
+            replaceSubstring(event_string, "<entity>", "You");
+            replaceSubstring(fail_string, "<entity>", "You");
         }
         else {
             replaceSubstring(event_string, "<entity>", entity.name);
@@ -558,7 +565,7 @@ namespace Behavior {
             actor.stats.value().stamina -= ability.stamina;
             // Handle each observed target.
             for (auto target : targets) {
-                std::string target_event_string;
+                std::string target_event_string = event_string;
                 replaceSubstring(target_event_string, "<target>", target->name);
                 // Log the success event
                 ws.logEvent({target_event_string, actor.y, actor.x});
@@ -589,8 +596,8 @@ namespace Behavior {
         std::string fail_string = fail_flavor;
         // If this is the player then use "You" instead of the entity name.
         if (entity.traits.contains("player")) {
-            replaceSubstring(event_string, "You", entity.name);
-            replaceSubstring(fail_string, "You", entity.name);
+            replaceSubstring(event_string, "<entity>", "You");
+            replaceSubstring(fail_string, "<entity>", "You");
         }
         else {
             replaceSubstring(event_string, "<entity>", entity.name);
