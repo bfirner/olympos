@@ -109,10 +109,6 @@ int main(int argc, char** argv) {
         top_panel(panel);
     }
 
-    // Create a pause panel.
-    UIComponent pause_panel(ws, 38, 76, 1, 2);
-    UserInterface::drawString(pause_panel.window, "===Game Paused===", 38/2, 76/2 - std::string("===Game Paused===").size()/2);
-
     // Create (and hide) a dialog window for help screens.
     std::map<std::string, UIComponent> help_components;
     {
@@ -219,7 +215,6 @@ int main(int argc, char** argv) {
     bool quit = false;
     // TODO So bloated! A variable per dialog box?
     bool has_command = false;
-    bool game_paused = false;
     bool in_dialog = false;
     decltype(help_components)::iterator help_displayed = help_components.end();
     std::string command = "";
@@ -322,11 +317,6 @@ int main(int argc, char** argv) {
                 quit = true;
             }
             else if (0 < command.size() and command.starts_with("help")) {
-                // No pausing and helping at the same time.
-                if (game_paused) {
-                    game_paused = false;
-                    pause_panel.hide();
-                }
                 // Show the top level help panel unless an argument was provided.
                 std::string help_target = "help";
                 if (std::string::npos != command.find_last_of(' ')) {
@@ -343,22 +333,13 @@ int main(int argc, char** argv) {
                     in_dialog = true;
                 }
             }
-            else if (0 < command.size() and std::string("pause").starts_with(command)) {
-                // No pausing and helping at the same time.
-                if (help_displayed != help_components.end()) {
-                    help_displayed->second.hide();
-                    help_displayed = help_components.end();
-                }
-                // Pause and display the pause panel.
-                game_paused = true;
-                pause_panel.show();
+            else if (0 < command.size() and UserInterface::hasDialogue(command)) {
+                UserInterface::renderDialogue(dialog_box.window, command, dialog_box.rows, dialog_box.columns);
+                dialog_box.show();
+                in_dialog = true;
             }
             else {
-                // If the user is issuing commands then exit pause or help mode.
-                if (game_paused) {
-                    game_paused = false;
-                    pause_panel.hide();
-                }
+                // If the user is issuing commands then exit help or dialog mode.
                 if (help_displayed != help_components.end()) {
                     help_displayed->second.hide();
                     help_displayed = help_components.end();
@@ -384,7 +365,7 @@ int main(int argc, char** argv) {
             command.push_back(in_c);
         }
 
-        if (not game_paused and not in_dialog and help_displayed == help_components.end() and ws.entities.end() != player_i ) {
+        if (not in_dialog and help_displayed == help_components.end() and ws.entities.end() != player_i ) {
             auto cur_time = std::chrono::steady_clock::now();
             std::chrono::duration<double> time_diff = cur_time - last_update;
             if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or

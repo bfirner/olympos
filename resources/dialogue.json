@@ -1,10 +1,17 @@
 {
     "game over": {
-        "upper left": ["You have died!🪦", "Better luck next time."],
+        "placement": "upper left",
+        "text": ["You have died!🪦", "Better luck next time."],
         "options": ["quit", "restart"]
     },
+    "pause": {
+        "placement": "centered",
+        "text": ["====Game Paused===="],
+        "options": ["resume"]
+    },
     "introduction": {
-        "upper left": [
+        "placement": "upper left",
+        "text": [
             "Welcome to Olympos!",
             "Congratulations!",
             "⯓ has decided to reincarnate your soul as their champion.",
@@ -16,7 +23,8 @@
         "options": ["begin"]
     },
     "help actions": {
-        "upper left": [
+        "placement": "upper left",
+        "text": [
             "Words you type appear in the text field below the map.",
             "After typing a command the return key will execute it.",
             "The arrow keys are aliased to the four movement directions.",
@@ -28,7 +36,8 @@
         "options": ["ok"]
     },
     "help": {
-        "upper left": [
+        "placement": "upper left",
+        "text": [
             "Type `help <topic>' for more information on that topic.",
             "Topics are:",
             "actions abilities attributes quit"

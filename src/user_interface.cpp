@@ -428,18 +428,38 @@ void UserInterface::renderDialogue(WINDOW* window, const std::string& dialogue_n
         return;
     }
 
-    // Text the begins in the upper left.
-    if (dialogue.at(dialogue_name).contains("upper left")) {
-        json& text = dialogue.at(dialogue_name).at("upper left");
-        size_t cur_row = 0;
-        // TODO Cannot parse wstring from nlohmann::json
-        for (const std::string line : text) {
-            std::wstring w_line = OlymposUtility::utf8ToWString(line);
-            drawString(window, w_line, cur_row++, 0);
+    std::vector<std::wstring> text;
+    // Get the text and convert it to wstring format.
+    {
+        json& jtext = dialogue.at(dialogue_name).at("text");
+        for (const std::string line : jtext) {
+            text.push_back(OlymposUtility::utf8ToWString(line));
         }
     }
 
-    // Options for the lower right.
+    std::string placement = dialogue.at(dialogue_name).at("placement");
+
+    // Determine where the text should be drawn.
+    // Text the begins in the upper left.
+    if ("upper left" == placement) {
+        size_t cur_row = 0;
+        // Draw the text
+        for (const std::wstring w_line : text) {
+            drawString(window, w_line, cur_row++, 0);
+        }
+    }
+    else if ("centered" == placement) {
+        size_t cur_row = 0;
+        // Draw the text
+        for (const std::wstring w_line : text) {
+            size_t y = cur_row + (rows - text.size()) / 2;
+            size_t x = (columns - w_line.size()) / 2;
+            drawString(window, w_line, y, x);
+            ++cur_row;
+        }
+    }
+
+    // User options, draw at the bottom of the window.
     if (dialogue.at(dialogue_name).contains("options")) {
         // TODO FIXME Need some kind of callback here I guess.
         json& options = dialogue.at(dialogue_name).at("options");
