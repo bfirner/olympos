@@ -10,6 +10,7 @@
 #include <functional>
 #include <set>
 #include <optional>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -134,8 +135,9 @@ void WorldState::damageEntity(decltype(entities)::iterator entity_i, size_t dama
 }
 
 std::list<Entity>::iterator WorldState::findEntity(const std::string& name) {
+    std::regex pattern(name, std::regex_constants::icase);
     return std::find_if(entities.begin(), entities.end(),
-        [&](Entity& ent) {return ent.name == name;});
+        [&](Entity& ent) {return std::regex_search(ent.name, pattern);});
 }
 
 std::list<Entity>::iterator WorldState::findEntity(const std::vector<std::string>& traits) {
@@ -144,8 +146,9 @@ std::list<Entity>::iterator WorldState::findEntity(const std::vector<std::string
 }
 
 std::list<Entity>::iterator WorldState::findEntity(const std::string& name, int64_t y, int64_t x, size_t range) {
+    std::regex pattern(name, std::regex_constants::icase);
     return std::find_if(entities.begin(), entities.end(),
-        [&](Entity& ent) {return ent.name == name and (abs(y - ent.y) + abs(x - ent.x)) <= range;});
+        [&](Entity& ent) {return std::regex_search(ent.name, pattern) and (abs(y - ent.y) + abs(x - ent.x)) <= range;});
 }
 
 std::list<Entity>::iterator WorldState::findEntity(const std::vector<std::string>& traits, int64_t y, int64_t x, size_t range) {

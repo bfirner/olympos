@@ -9,9 +9,7 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Make the searches in world state case independent.
-* In event messages, if the entity has trait player then replace its name with "You".
-* * Fix the (s) at the end of words (e.g. "You looks", "You kicks", etc)
+* Fix the (s) at the end of words when entity is replaced by "You" (e.g. "You looks", "You kicks", etc)
 * In event messages, if the target entity has trait player then replace its name with "you".
 * Should probably highlight you in a color?
 * Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
