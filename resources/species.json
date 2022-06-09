@@ -46,7 +46,13 @@
         "is a": ["medium", "omnivore", "mammal", "biped", "sentient"],
         "likes": ["caffeine", "sleep", "throwing", "art", "entertainment", "sunset", "sunrise", "tool", "fire"],
         "hates": ["poop", "corpse", "mosquito", "leech"],
-        "character": "H"
+        "character": "H",
+        "description": {
+            "visual": "A bipedal creature with forward facing eyes and dextrous hands.",
+            "aural": "A biped that enjoys muttering to itself.",
+            "smell": "A warm, sweaty creature.",
+            "tactile": "A soft, squishy creature with an internal skeleton."
+        }
     },
     "elf": {
         "base physique": {
@@ -80,9 +86,15 @@
         "base behavior": "persistent mob",
         "has a": ["arm", "hand", "finger"],
         "is a": ["medium", "vegetarian", "mammal", "biped", "sentient"],
-        "likes": ["plant", "meditation", "art", "flower", "sunset", "sunrise"],
-        "hates": ["poop", "corpse", "concrete", "iron", "mine", "fire"],
-        "character": "E"
+        "likes": ["plant", "meditation", "art", "flower", "sunset", "sunrise", "stone"],
+        "hates": ["poop", "corpse", "concrete", "iron", "mine"],
+        "character": "E",
+        "description": {
+            "visual": "A bipedal creature with a broad face, forward facing eyes, and dextrous hands.",
+            "aural": "A biped that hums happily to fill the silence.",
+            "smell": "A warm, sweaty creature that smells of honey and grass.",
+            "tactile": "A large and soft, squishy creature with an internal skeleton."
+        }
     },
     "arachnid": {
         "base physique": {
@@ -118,7 +130,13 @@
         "is a": ["small", "octoped", "carnivore", "arthropod", "bidentate", "venomous"],
         "likes": ["ambush", "sneak", "hide", "lasso", "bolas", "silk", "web"],
         "hates": ["bird", "bat"],
-        "character": "🙸"
+        "character": "🙸",
+        "description": {
+            "visual": "An eight-legged creature with multiple eyes and a wicked pair of fangs.",
+            "aural": "A hunter, silent but for the pattering of its eight legs.",
+            "smell": "Little odor comes from this creature.",
+            "tactile": "A creature whose exterior is hard and chitinous."
+        }
     },
     "bat": {
         "base physique": {
@@ -155,7 +173,13 @@
         "is a": ["small", "flying", "biped", "mammal", "insectivore", "frugivore"],
         "likes": ["flying", "fruit"],
         "hates": ["cat", "fungus", "owl", "hawk", "falcon", "eagle", "crocodile"],
-        "character": "⧳"
+        "character": "⧳",
+        "description": {
+            "visual": "A bat looks like a mouse with wings as it flitters about.",
+            "aural": "Fluttering sounds and high-pitched vocalizations identify this creature as a bat.",
+            "smell": "A creature that smells like burnt oranges with a hint of ammonia.",
+            "tactile": "A creature that is small, soft, and has relatively large, leathery wings."
+        }
     },
     "slime": {
         "base physique": {
@@ -189,6 +213,12 @@
         "is a": ["medium", "omnivore", "slime"],
         "likes": [],
         "hates": [],
-        "character": "o"
+        "character": "o",
+        "description": {
+            "visual": "A large blob of liquid, seemingly held together by surface tension.",
+            "aural": "A quiet scraping noise is the only sound this creature makes as it moves.",
+            "smell": "A creature whose unique smell can only be likened to swamp gas.",
+            "tactile": "It jiggles and squishes when you touch it."
+        }
     }
 }

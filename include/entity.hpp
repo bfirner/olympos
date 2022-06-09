@@ -73,7 +73,11 @@ struct Entity {
     // Optional stats. Generally only for non-objects.
     std::optional<Stats> stats;
 
+    // The character to display for this entity.
     std::wstring character;
+
+    // The descriptions of this entity, from multiple senses.
+    std::map<std::string, std::wstring> description;
 
     // Convenience function to find the species from the entity's traits
     // TODO Should this return optional<string> instead for safety?

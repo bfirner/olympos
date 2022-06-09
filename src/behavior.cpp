@@ -62,6 +62,9 @@ namespace Behavior {
         else if (str == "attack") {
             return AbilityType::attack;
         }
+        else if (str == "utility") {
+            return AbilityType::utility;
+        }
         return AbilityType::unknown;
     }
 
@@ -99,10 +102,10 @@ namespace Behavior {
         // ability conversion?
         this->name = name;
         type = ability_json.at("type").get<AbilityType>();
-        //type = stoType(ability_json.at("type").get<string>());
         area = stoArea(ability_json.at("area").get<string>());
         range = stoRange(ability_json.at("range").get<string>());
         ability_json.at("flavor").get_to(flavor);
+        ability_json.at("fail_flavor").get_to(fail_flavor);
 
         ability_json.at("stamina").get_to(stamina);
 
@@ -133,17 +136,189 @@ namespace Behavior {
         }
     }
 
-    // A function meant for binding that increases or decreases one entity's distance from another.
-    void changeDistance(Entity& actor, const Ability& ability, std::string event_string, size_t desired_distance, WorldState& ws, const std::vector<std::string>& arguments) {
+    bool actionBoilerplateCheck(Entity& actor, WorldState& ws, const Ability& ability, const std::vector<std::string>& arguments, size_t min_arguments, const std::string& event_string, const std::string& fail_string) {
         // Verify that the actor can take this action
         if (ability.stamina > actor.stats.value().stamina) {
-            return;
+            // TODO Should there be a generic low stamina failure string?
+            ws.logEvent({fail_string, actor.y, actor.x});
+            return false;
         }
 
         // Find the target from the arguments.
-        if (arguments.size() < 1) {
+        if (arguments.size() < min_arguments) {
+            // TODO Should there be a generic "improper arguments" failure string?
+            ws.logEvent({fail_string, actor.y, actor.x});
+            return false;
+        }
+        return true;
+    }
+
+    // Find the target of a range 1 skill or ability, or end iterator if there is no target.
+    // TODO FIXME multiple arguments are just members of an ability, just pass that here.
+    // TODO FIXME Or maybe this should just be a member function of Ability?
+    std::list<Entity>::iterator findOneTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
+            const vector<string>& expected_args, const vector<string>& default_args, const vector<string>& args) {
+        // Default to having no target.
+        auto target = ws.entities.end();
+        bool argument_consumed = false;
+        // Find the ability range
+        size_t ability_range = 0;
+        if (effects.contains("range")) {
+            ability_range = effects.at("range");
+        }
+        // Are there argument options?
+        if (0 < expected_args.size() and expected_args[0] == "or") {
+            // Expecting a single argument. Start with the default, but replace it with any supplied
+            // argument if present.
+            std::string arg = default_args.at(0);
+            if (0 < args.size()) {
+                arg = args.at(0);
+            }
+            // Skip the "or" when looking at possible arguments.
+            auto arg_options = std::ranges::subrange(expected_args.begin()+1, expected_args.end());
+            // See if we match an argument
+            if (arg_options.end() != std::find(arg_options.begin(), arg_options.end(), arg)) {
+                argument_consumed = true;
+                // TODO FIXME What about the forward option?
+                // Find the effects of this argument.
+                if (effects.contains(arg)) {
+                    // The arguments should control which direction to check for a target.
+                    if (effects.at(arg).contains("distance")) {
+                        size_t target_y = actor.y;
+                        size_t target_x = actor.x;
+                        auto& distances = effects.at(arg).at("distance");
+                        if (distances.contains("y")) {
+                            target_y += distances.at("y").get<int>();
+                        }
+                        if (distances.contains("x")) {
+                            target_x += distances.at("x").get<int>();
+                        }
+                        // Now find the target at that location if one exists.
+                        // It is possible that there are multiple entities in that tile. This
+                        // will find the first one arbitrarily.
+                        target = std::find_if(ws.entities.begin(), ws.entities.end(),
+                            [=](Entity& ent) { return ent.y == target_y and ent.x == target_x;});
+                    }
+                }
+            }
+        }
+        // Match an arbitrary string for a <target>
+        if (not argument_consumed and expected_args.end() != std::find(expected_args.begin(), expected_args.end(), ("<target>"))) {
+            // Going to have to search for this target by name. Check for a passed argument, and if
+            // there is none present used the default if it exists.
+            std::string target_name = "";
+            if (0 < args.size()) {
+                target_name = args[0];
+            }
+            else if (0 < default_args.size()) {
+                target_name = default_args[0];
+            }
+            // Assign the target.
+            target = ws.findEntity(target_name, actor.y, actor.x, ability_range);
+            // If this wasn't a name, try searching for a trait
+            if (target == ws.entities.end()) {
+                target = ws.findEntity(std::vector<std::string>{target_name}, actor.y, actor.x, ability_range);
+            }
+        }
+        // Finally return whatever iterator location was discovered.
+        return target;
+    }
+
+    // Find the target of a cone shaped skill or ability, or end iterator if there are no targets.
+    // TODO FIXME multiple arguments are just members of an ability, just pass that here.
+    // TODO FIXME Or maybe this should just be a member function of Ability?
+    std::vector<std::list<Entity>::iterator> findConeTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
+            const vector<string>& expected_args, const vector<string>& default_args, const vector<string>& args) {
+        // Read in the information about the cone area of effect
+        std::vector<double> range = effects.at("area").at("range").get<std::vector<double>>();
+        double width_base = effects.at("area").at("width_base").get<double>();
+        double width_slope = effects.at("area").at("width_slope").get<double>();
+        // Calculate modifiers from entity attributes
+        // TODO Modifiers from other attributes
+        double vitality_mod = effects.at("area").at("vitality_mode").get<double>();
+        range[1] = floor(vitality_mod * actor.stats.value().vitality + range[1]);
+
+        // Default to having no target.
+        std::vector<std::list<Entity>::iterator> targets;
+        bool argument_consumed = false;
+        // Are there argument options?
+        if (0 < expected_args.size() and expected_args[0] == "or") {
+            // Expecting a single argument. Start with the default, but replace it with any supplied
+            // argument if present.
+            std::string arg = default_args.at(0);
+            if (0 < args.size()) {
+                arg = args.at(0);
+            }
+            // Skip the "or" when looking at possible arguments.
+            auto arg_options = std::ranges::subrange(expected_args.begin()+1, expected_args.end());
+            // See if we match an argument
+            if (arg_options.end() != std::find(arg_options.begin(), arg_options.end(), arg)) {
+                argument_consumed = true;
+                // TODO FIXME What about the forward option?
+                // Find the effects of this argument.
+                if (effects.contains(arg)) {
+                    // The direction (in [y component, x component]) and the vector direction of the
+                    // left and right sides.
+                    std::vector<double> direction = effects.at(arg).at("direction").get<std::vector<double>>();
+                    std::vector<double> side_direction = effects.at(arg).at("side_direction").get<std::vector<double>>();
+
+                    for (int distance = floor(range[0]); distance <= range[1]; ++distance) {
+                        int width = floor(width_base) + floor(width_slope * (distance - 1));
+                        for (int lateral = -std::trunc((width-1) / 2); lateral <= std::trunc((width-1) / 2); ++lateral) {
+                            // Use the directions to calculate the point being searched.
+                            size_t target_y = actor.y + distance * direction[0] + lateral * side_direction[0];
+                            size_t target_x = actor.x + distance * direction[1] + lateral * side_direction[1];
+                            // Now find targets at that location if they exist.
+                            std::list<Entity>::iterator target = ws.entities.begin();
+                            while (target != ws.entities.end()) {
+                                target = std::find_if(ws.entities.begin(), ws.entities.end(),
+                                    [=](Entity& ent) { return ent.y == target_y and ent.x == target_x;});
+                                // If we found another match then add it to the targets.
+                                if (target != ws.entities.end()) {
+                                    targets.push_back(target);
+                                    // Prepare for the next iteration of the loop
+                                    target = std::next(target);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Match an arbitrary string for a <target>
+        if (not argument_consumed and expected_args.end() != std::find(expected_args.begin(), expected_args.end(), ("<target>"))) {
+            // Going to have to search for this target by name. Check for a passed argument, and if
+            // there is none present used the default if it exists.
+            std::string target_name = "";
+            if (0 < args.size()) {
+                target_name = args[0];
+            }
+            else if (0 < default_args.size()) {
+                target_name = default_args[0];
+            }
+            // Assign the target.
+            auto target = ws.findEntity(target_name, actor.y, actor.x, range[1]);
+            // If this wasn't a name, try searching for a trait
+            // TODO FIXME Should this match multiples?
+            if (target == ws.entities.end()) {
+                target = ws.findEntity(std::vector<std::string>{target_name}, actor.y, actor.x, range[1]);
+            }
+            if (target != ws.entities.end()) {
+                targets.push_back(target);
+            }
+        }
+        // Finally return whatever iterator locations were discovered.
+        return targets;
+    }
+
+
+    // A function meant for binding that increases or decreases one entity's distance from another.
+    void changeDistance(Entity& actor, const Ability& ability, std::string event_string, std::string fail_string, size_t desired_distance, WorldState& ws, const std::vector<std::string>& arguments) {
+        // Verify that this action could be taken.
+        if (not actionBoilerplateCheck(actor, ws, ability, arguments, 1, event_string, fail_string)) {
             return;
         }
+
         const std::string& target_name = arguments.at(0);
 
         // First, check if the actor can see or sense the target.
@@ -234,23 +409,37 @@ namespace Behavior {
                 ws.logEvent({event_string, actor.y, actor.x});
             }
         }
+        else {
+            // TODO The failure comes from being unable to move. Is it necessary to have this string
+            // set in the json?
+            ws.logEvent({fail_string, actor.y, actor.x});
+        }
     }
 
     std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeConditionalMoveFunction(Entity& entity) const {
         // Prepare a flavor string to go into the event log whenever this behavior occurs.
         // Fill in some fields in advance.
         std::string event_string = flavor;
-        replaceSubstring(event_string, "<entity>", entity.name);
+        std::string fail_string = fail_flavor;
+        // If this is the player then use "You" instead of the entity name.
+        if (entity.traits.contains("player")) {
+            replaceSubstring(event_string, "You", entity.name);
+            replaceSubstring(fail_string, "You", entity.name);
+        }
+        else {
+            replaceSubstring(event_string, "<entity>", entity.name);
+            replaceSubstring(fail_string, "<entity>", entity.name);
+        }
 
         if (effects.contains("minimize distance") and arguments.at(0) == "<target>") {
-            return std::bind_front(changeDistance, std::ref(entity), std::cref(*this), event_string, 0);
+            return std::bind_front(changeDistance, std::ref(entity), std::cref(*this), event_string, fail_string, 0);
         }
         else if (effects.contains("maximize distance") and arguments.at(0) == "<target>") {
-            return std::bind_front(changeDistance, std::ref(entity), std::cref(*this), event_string, std::numeric_limits<size_t>::max()/2);
+            return std::bind_front(changeDistance, std::ref(entity), std::cref(*this), event_string, fail_string, std::numeric_limits<size_t>::max()/2);
         }
         else if (effects.contains("maintain distance") and
                  arguments == vector<string>{"<target>", "range"}) {
-            auto bound_fun = std::bind_front(changeDistance, std::ref(entity), std::cref(*this), event_string);
+            auto bound_fun = std::bind_front(changeDistance, std::ref(entity), std::cref(*this), event_string, fail_string);
             return [=](WorldState& ws, const std::vector<std::string>& args) {
                 size_t desired_distance = std::stoull(args.at(1));
                 return bound_fun(desired_distance, ws, args);
@@ -342,6 +531,85 @@ namespace Behavior {
         return noop_function;
     }
 
+    void informationFunction(Entity& actor, const Ability& ability, std::vector<std::string> info_types, std::string event_string, std::string fail_string, WorldState& ws, const std::vector<std::string>& arguments) {
+        // Verify that this action could be taken.
+        if (not actionBoilerplateCheck(actor, ws, ability, arguments, 1, event_string, fail_string)) {
+            return;
+        }
+
+        // Keep track of detected entities and update them in the information section of the status
+        // window.
+        // TODO FIXME World state needs an information section I guess.
+
+        std::vector<std::list<Entity>::iterator> targets;
+        if (AbilityArea::single == ability.area) {
+            auto target = findOneTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+            if (ws.entities.end() != target) {
+                targets.push_back(target);
+            }
+        }
+        else if (AbilityArea::cone == ability.area) {
+            targets = findConeTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+        }
+
+        // Handle targets if there are any.
+        if (not targets.empty()) {
+            // Subtract the ability's stamina cost.
+            actor.stats.value().stamina -= ability.stamina;
+            // Handle each observed target.
+            for (auto target : targets) {
+                std::string target_event_string;
+                replaceSubstring(target_event_string, "<target>", target->name);
+                // Log the success event
+                ws.logEvent({target_event_string, actor.y, actor.x});
+                // Now log any observable information.
+                // Pull out traits that are observable with the given information_types.
+                std::vector<std::wstring> target_information;
+                for (const std::string& info_type : info_types) {
+                    if (target->description.contains(info_type)) {
+                        target_information.push_back(target->description.at(info_type));
+                    }
+                }
+                // Send this information to the status window
+                if (not target_information.empty()) {
+                    ws.logInformation(target_information);
+                }
+            }
+        }
+        else {
+            // Otherwise log the failure string
+            ws.logEvent({fail_string, actor.y, actor.x});
+        }
+    }
+
+    std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeUtilityFunction(Entity& entity) const {
+        // Prepare a flavor string to go into the event log whenever this behavior occurs.
+        // Fill in some fields in advance.
+        std::string event_string = flavor;
+        std::string fail_string = fail_flavor;
+        // If this is the player then use "You" instead of the entity name.
+        if (entity.traits.contains("player")) {
+            replaceSubstring(event_string, "You", entity.name);
+            replaceSubstring(fail_string, "You", entity.name);
+        }
+        else {
+            replaceSubstring(event_string, "<entity>", entity.name);
+            replaceSubstring(fail_string, "<entity>", entity.name);
+        }
+
+
+        // See if this is an information skill
+        if (effects.contains("information")) {
+            std::vector<std::string> information_types = effects.at("information");
+
+            // Information utility function.
+            return std::bind_front(informationFunction, std::ref(entity), std::cref(*this), information_types, event_string, fail_string);
+
+        }
+        // Otherwise return a nothing
+        return noop_function;
+    }
+
     std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeAttackFunction(Entity& entity) const {
         // Lambda functions do not capture member variables, so shadow stamina with a
         // local variable.
@@ -368,10 +636,6 @@ namespace Behavior {
                 reflexes = damage_effects.at("reflexes");
             }
         }
-        size_t attack_range = 0;
-        if (effects.contains("range")) {
-            attack_range = effects.at("range");
-        }
         // TODO Or maybe just copy over any effects that are also in the expected arguments?
         std::vector<std::string> expected_args = arguments;
         std::vector<std::string> default_args = this->default_args;
@@ -385,56 +649,7 @@ namespace Behavior {
             size_t damage = floor(base + strength * entity.stats.value().strength + domain * entity.stats.value().domain +
                 aura * entity.stats.value().aura + reflexes * entity.stats.value().reflexes);
             // Now parse the arguments to see what is getting hit.
-            auto target = ws.entities.end();
-            if (0 < expected_args.size() and expected_args[0] == "or") {
-                // Expecting a single argument
-                std::string arg = default_args.at(0);
-                if (0 < args.size()) {
-                    arg = args.at(0);
-                }
-                auto arg_options = std::ranges::subrange(expected_args.begin()+1, expected_args.end());
-                // See if we match an argument
-                // Match a static argument with set distance (e.g. east or west)
-                if (arg_options.end() != std::find(arg_options.begin(), arg_options.end(), arg)) {
-                    // TODO FIXME What about the forward option?
-                    // Find the effects of for this argument.
-                    if (effects.contains(arg)) {
-                        if (effects.at(arg).contains("distance")) {
-                            size_t target_y = entity.y;
-                            size_t target_x = entity.x;
-                            auto& distances = effects.at(arg).at("distance");
-                            if (distances.contains("y")) {
-                                target_y += distances.at("y").get<int>();
-                            }
-                            if (distances.contains("x")) {
-                                target_x += distances.at("x").get<int>();
-                            }
-                            // Now find the target at that location if one exists.
-                            // It is possible that there are multiple entities in that tile. This
-                            // will find the first one arbitrarily.
-                            target = std::find_if(ws.entities.begin(), ws.entities.end(),
-                                [=](Entity& ent) { return ent.y == target_y and ent.x == target_x;});
-                        }
-                    }
-                }
-                // Match an arbitrary string for a <target>
-                else if (expected_args.end() != std::find(expected_args.begin(), expected_args.end(), ("<target>"))) {
-                    // Going to have to search for this target in range.
-                    std::string target_name = "";
-                    if (0 < args.size()) {
-                        target_name = args[0];
-                    }
-                    else if (0 < default_args.size()) {
-                        target_name = default_args[0];
-                    }
-                    // Assign the target.
-                    target = ws.findEntity(target_name);
-                    // If this wasn't a name, try searching for a trait
-                    if (target == ws.entities.end()) {
-                        target = ws.findEntity(std::vector<std::string>{target_name}, entity.y, entity.x, attack_range);
-                    }
-                }
-            }
+            auto target = findOneTarget(ws, entity, effects, expected_args, default_args, args);
             if (target != ws.entities.end()) {
                 std::string log_string = event_string;
                 replaceSubstring(log_string, "<target>", target->name);
@@ -457,6 +672,9 @@ namespace Behavior {
         }
         else if (type == AbilityType::attack) {
             return makeAttackFunction(entity);
+        }
+        else if (type == AbilityType::utility) {
+            return makeUtilityFunction(entity);
         }
         // Otherwise return a nothing
         return noop_function;

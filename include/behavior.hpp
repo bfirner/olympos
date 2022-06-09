@@ -41,6 +41,7 @@ namespace Behavior {
     enum class AbilityType {
         unknown,
         movement,
+        utility,
         attack
     };
 
@@ -50,6 +51,7 @@ namespace Behavior {
             {AbilityType::unknown, nullptr},
             {AbilityType::movement, "movement"},
             {AbilityType::attack, "attack"},
+            {AbilityType::utility, "utility"},
         })
 
     enum class AbilityArea {
@@ -106,12 +108,14 @@ namespace Behavior {
         std::vector<std::string> constraints;
         // Flavor text when this ability is used.
         std::string flavor;
+        std::string fail_flavor;
 
         // TODO FIXME If these are being handled separately anyway, then the Ability class should be
         // subclassed for each of them anyway and a factory can decide which one to create.
         // TODO FIXME Should these just be objects instead of lambda functions? The lambda functions
         // can't be queried for information, which is annoying.
         // Make a movement type of function.
+        std::function<void(WorldState&, const std::vector<std::string>&)> makeUtilityFunction(Entity& entity) const;
         std::function<void(WorldState&, const std::vector<std::string>&)> makeMoveFunction(Entity& entity) const;
         std::function<void(WorldState&, const std::vector<std::string>&)> makeConditionalMoveFunction(Entity& entity) const;
         std::function<void(WorldState&, const std::vector<std::string>&)> makeLinearMoveFunction(Entity& entity) const;

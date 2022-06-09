@@ -23,7 +23,7 @@ json species;
 
 std::mt19937 randgen{std::random_device{}()};
 
-json& getSpecies() {
+json& OlymposLore::getSpeciesLore() {
     // Read in the file if it hasn't already been done.
     const std::filesystem::path species_path{"resources/species.json"};
     if (0 == species.size()) {
@@ -40,7 +40,7 @@ json& getSpecies() {
 }
 
 std::string OlymposLore::getDescription(const Entity& entity) {
-    json& species = getSpecies();
+    json& species = getSpeciesLore();
     std::string species_name = entity.getSpecies();
     // Don't try anything if there is no species name.
     if ("" == species_name or not species.contains(species_name)) {
@@ -65,7 +65,7 @@ std::string OlymposLore::getDescription(const Entity& entity) {
 }
 
 std::optional<Stats> OlymposLore::getStats(const Entity& entity) {
-    json& species = getSpecies();
+    json& species = getSpeciesLore();
     std::string species_name = entity.getSpecies();
     // Don't try anything if there is no species name.
     if ("" == species_name or not species.contains(species_name)) {
@@ -102,7 +102,7 @@ std::optional<Stats> OlymposLore::getStats(const Entity& entity) {
 //fetch an entity from the json based upon a string.
 
 std::set<std::string> OlymposLore::getSpeciesField(const std::string species_name, const std::string& field) {
-    json& species = getSpecies();
+    json& species = getSpeciesLore();
     // Don't try anything if there is no species name.
     if ("" == species_name or not species.contains(species_name)) {
         return std::set<std::string>{};
@@ -112,7 +112,7 @@ std::set<std::string> OlymposLore::getSpeciesField(const std::string species_nam
 }
 
 std::string OlymposLore::getSpeciesString(const std::string species_name, const std::string& field) {
-    json& species = getSpecies();
+    json& species = getSpeciesLore();
     // Don't try anything if there is no species name.
     if ("" == species_name or not species.contains(species_name)) {
         return "";
@@ -121,7 +121,7 @@ std::string OlymposLore::getSpeciesString(const std::string species_name, const 
 }
 
 std::set<std::string> OlymposLore::getNamedEntry(const Entity& entity, const std::string& field) {
-    json& species = getSpecies();
+    json& species = getSpeciesLore();
     std::string species_name = entity.getSpecies();
     // Don't try anything if there is no species name.
     if ("" == species_name or not species.contains(species_name)) {

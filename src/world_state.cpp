@@ -186,6 +186,10 @@ void WorldState::initialize() {
     updatePassable(entities, passable);
 }
 
+void WorldState::logInformation(const std::vector<std::wstring>& information) {
+    info_log.push_front(information);
+}
+
 void WorldState::logEvent(WorldEvent event) {
     if (event.y >= this->field_height or event.x >= this->field_width) {
         throw std::runtime_error("Cannot log event at "+std::to_string(event.y)+", "+std::to_string(event.x)+": out of bounds.");

@@ -9,7 +9,24 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
+* In event messages, if the entity has trait player then replace its name with "You".
+* In event messages, if the target entity has trait player then replace its name with "you".
+* Should probably highlight you in a color?
 * Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
+* * look ["or", "north", "east", "south", "west", "<target>"]
+* * * Should bring up entity information in the status window
+* * listen []
+* * * ???
+* * taste ["<target>"]
+* * * Should work with things in inventory
+* * touch ["<target>"]
+* * * Should work with things in inventory
+* * smell ["<target>"]
+* * * Should work with things in inventory, or in general
+* * Each sense should have a list of traits that can be picked up.
+* * If an entity has those traits then it will trigger that sense
+* * * e.g. if Orcs have the "rotten" trait then "smell" could detect them.
+* * * e.g. "smell" -> "You smell the rotten stench of an Orc."
 * Utility and tool commands
 * * Pick up
 * * Throw

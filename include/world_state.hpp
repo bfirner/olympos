@@ -24,7 +24,11 @@ struct WorldEvent {
 struct WorldState {
     std::list<Entity> entities;
 
+    // Transient events that occur with each tick of the world.
     std::vector<WorldEvent> events;
+
+    // Tick-persistent information and observations made by the player.
+    std::list<std::vector<std::wstring>> info_log;
 
     size_t field_height;
     size_t field_width;
@@ -63,6 +67,9 @@ struct WorldState {
 
     // Initialize layers, such as passable areas, and named entities.
     void initialize();
+
+    // Log information observed by the entity. Information remains present until cleared.
+    void logInformation(const std::vector<std::wstring>& information);
 
     // Log an event at the given location.
     void logEvent(WorldEvent event);

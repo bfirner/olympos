@@ -14,6 +14,7 @@
                     }
                 },
                 "flavor": "<entity> moves West.",
+                "fail_flavor": "<entity> wiggles around aimlessly.",
                 "description": "Move one space west (to the left)",
                 "prereqs": {},
                 "constraints": []
@@ -30,6 +31,7 @@
                     }
                 },
                 "flavor": "<entity> moves South.",
+                "fail_flavor": "<entity> wiggles around aimlessly.",
                 "description": "Move one space south (down)",
                 "prereqs": {},
                 "constraints": []
@@ -46,6 +48,7 @@
                     }
                 },
                 "flavor": "<entity> moves East.",
+                "fail_flavor": "<entity> wiggles around aimlessly.",
                 "description": "Move one space east (to the right)",
                 "prereqs": {},
                 "constraints": []
@@ -62,6 +65,7 @@
                     }
                 },
                 "flavor": "<entity> moves North.",
+                "fail_flavor": "<entity> wiggles around aimlessly.",
                 "description": "Move one space north (to the north)",
                 "prereqs": {},
                 "constraints": []
@@ -79,6 +83,7 @@
                     }
                 },
                 "flavor": "<entity> wanders.",
+                "fail_flavor": "<entity> wiggles around aimlessly.",
                 "description": "Wander one space in a random direction.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -94,6 +99,7 @@
                     }
                 },
                 "flavor": "<entity> [color:green](chases) after <target>.",
+                "fail_flavor": "<entity> focuses on <target> but remains still.",
                 "description": "Chase an entity or object.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -109,6 +115,7 @@
                     }
                 },
                 "flavor": "<entity> [color:green](flees) from <target>.",
+                "fail_flavor": "<entity> squirms away from <target> but doesn't move.",
                 "description": "Flee an entity or object.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -124,6 +131,7 @@
                     }
                 },
                 "flavor": "<entity> [color:green](kites) around <target>.",
+                "fail_flavor": "<entity> tries to kite around <target>, but fails.",
                 "description": "Try to maintain a desired distance from an entity or object.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -164,6 +172,7 @@
                     "range": 1
                 },
                 "flavor": "<entity> [color:red](kicks) <target>.",
+                "fail_flavor": "<entity> aims a [color:red](kick), but doesn't connect.",
                 "prereqs": {},
                 "constraints": ["or", "leg", "pseudopod"]
             },
@@ -203,6 +212,7 @@
                     "range": 1
                 },
                 "flavor": "<entity> [color:red](punches) <target>.",
+                "fail_flavor": "<entity> swings a [color:red](punch), but doesn't connect.",
                 "prereqs": {},
                 "constraints": ["or", "hand", "pseudopod"]
             },
@@ -242,8 +252,46 @@
                     "range": 1
                 },
                 "flavor": "<entity> [color:red](bites) <target>.",
+                "fail_flavor": "<entity> [color:red](bites) the air.",
                 "prereqs": {},
                 "constraints": ["or", "tooth", "fang", "beak"]
+            },
+            "look": {
+                "type": "utility",
+                "range": "close",
+                "area": "cone",
+                "stamina": 1,
+                "arguments": ["or", "north", "east", "south", "west", "<target>"],
+                "effects": {
+                    "area": {
+                        "range": [1, 4],
+                        "vitality_mod": 0.01,
+                        "width_base": 1,
+                        "width_slope": 1
+                    },
+                    "north": {
+                        "direction": [-1, 0],
+                        "side_direction": [0, 1]
+                    },
+                    "south": {
+                        "direction": [1, 0],
+                        "side_direction": [0, 1]
+                    },
+                    "east": {
+                        "direction": [0, 1],
+                        "side_direction": [1, 0]
+                    },
+                    "west": {
+                        "direction": [0, -1],
+                        "side_direction": [1, 0]
+                    },
+                    "information": ["visual"]
+                },
+                "flavor": "<entity> [color:cyan](looks) at <target>.",
+                "fail_flavor": "<entity> [color:cyan](looks) around, but nothing is there.",
+                "description": "Look over a conical area to gain information about entities there. Distance increases with vitality.",
+                "prereqs": {},
+                "constraints": ["eye"]
             }
         }
     }

@@ -88,6 +88,12 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     }
     character = OlymposUtility::utf8ToWString(repr);
 
+    std::map<std::string, std::string> str_description =
+        OlymposLore::getSpeciesData<std::map<std::string, std::string>>(species, "description");
+    // Convert the strings to wstring and insert into this entity's description.
+    for (auto [sense, str] : str_description) {
+        description.insert(std::make_pair(sense, OlymposUtility::utf8ToWString(str)));
+    }
 
     // Get the "is a" and "has a" relationships to expand traits.
     std::set<std::string> has_a = OlymposLore::getSpeciesField(species, "has a");
