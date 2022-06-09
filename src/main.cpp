@@ -51,6 +51,12 @@ int main(int argc, char** argv) {
         UserInterface::setupColors();
     }
 
+    // Enable mouse button press and release events
+    if (has_mouse()) {
+        // TODO Check for success or failure
+        mousemask(BUTTON1_CLICKED, nullptr);
+    }
+
     // No weird flush handling
     intrflush(window, false);
     // Enable keypad inputs (arrow and function keys)
@@ -166,7 +172,7 @@ int main(int argc, char** argv) {
 
     // Create a panel that will be used for generic dialog.
     UIComponent dialog_box(ws, 38, 76, 1, 2);
-    UserInterface::renderDialogue(dialog_box.window, "introduction", dialog_box.rows, dialog_box.columns);
+    dialog_box.renderDialogue(UserInterface::getDialogue("introduction"));
 
     // update_panels should be called before rendering to any of the panels.
     update_panels();
@@ -328,13 +334,13 @@ int main(int argc, char** argv) {
                     help_displayed->second.show();
                 }
                 else if (UserInterface::hasDialogue(command)) {
-                    UserInterface::renderDialogue(dialog_box.window, command, dialog_box.rows, dialog_box.columns);
+                    dialog_box.renderDialogue(UserInterface::getDialogue(command));
                     dialog_box.show();
                     in_dialog = true;
                 }
             }
             else if (0 < command.size() and UserInterface::hasDialogue(command)) {
-                UserInterface::renderDialogue(dialog_box.window, command, dialog_box.rows, dialog_box.columns);
+                dialog_box.renderDialogue(UserInterface::getDialogue(command));
                 dialog_box.show();
                 in_dialog = true;
             }
@@ -364,6 +370,20 @@ int main(int argc, char** argv) {
             wechochar(window, in_c);
             command.push_back(in_c);
         }
+
+        // Check for mouse events
+        /*
+        if (in_dialog) {
+            int in_c = wgetch(dialog_box.window);
+            if (in_c == KEY_MOUSE) {
+                MEVENT mevent;
+                // We are only listening to click events.
+                if (getmouse(&mevent)) {
+                    // See if the mouse click was in the dialog_box button area.
+                }
+            }
+        }
+        */
 
         if (not in_dialog and help_displayed == help_components.end() and ws.entities.end() != player_i ) {
             auto cur_time = std::chrono::steady_clock::now();
@@ -414,7 +434,7 @@ int main(int argc, char** argv) {
         player_i = ws.findEntity(std::vector<std::string>{"player"});
         // See if the player has died.
         if (ws.entities.end() == player_i and not in_dialog) {
-            UserInterface::renderDialogue(dialog_box.window, "game over", dialog_box.rows, dialog_box.columns);
+            dialog_box.renderDialogue(UserInterface::getDialogue("game over"));
             dialog_box.show();
             in_dialog = true;
             update_panels();

@@ -9,9 +9,10 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
+* Mouse stuff (click on things to use ability, add hotkeys, etc)
+* * See `curs_mouse`
 * Fix the (s) at the end of words when entity is replaced by "You" (e.g. "You looks", "You kicks", etc)
-* In event messages, if the target entity has trait player then replace its name with "you".
-* Should probably highlight you in a color?
+* Should the word "You" or "you" be highlighted in a color?
 * Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
 * * look ["or", "north", "east", "south", "west", "<target>"]
 * * * Should bring up entity information in the status window
@@ -31,7 +32,7 @@ C++ compiler that supports the C++20 standard.
 * * Pick up
 * * Throw
 * * Swing
-* * * This all imply adding objects and an inventory
+* * * This all implies having and wielding objects and an inventory
 * Add visual effects
 * * Some kind of motion indicator?
 * * Some kind of attack indicator?
@@ -74,8 +75,6 @@ C++ compiler that supports the C++20 standard.
 * * Make multiple rooms per floor
 * * World state to world state communication at "doorways". Can also go from entity -> world state -> world state ->
 entity when it passes from one room to another.
-* Mouse stuff (click on things to use ability, add hotkeys, etc)
-* * See `curs_mouse`
 
 * Elements and ability sets
 * * Want to have ability sets with broad themes

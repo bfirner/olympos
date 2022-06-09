@@ -25,7 +25,7 @@ using json = nlohmann::json;
 
 json json_dialogue;
 
-json& getDialogue() {
+json& getDialogueJson() {
     // Read in the file if it hasn't already been done.
     const std::filesystem::path dialogue_path{"resources/dialogue.json"};
     if (0 == json_dialogue.size()) {
@@ -405,103 +405,12 @@ size_t UserInterface::drawHotkeys(WINDOW* window, size_t row, const std::vector<
     return row;
 }
 
-void drawPause(WINDOW* window, size_t rows, size_t columns) {
-    const std::string message = "===PAUSED===";
-    // Clear the window, then draw the pause message.
-    werase(window);
-    mvwprintw(window, rows / 2, columns / 2 - message.size() / 2, "%s", message.data());
-}
-
 bool UserInterface::hasDialogue(const std::string& dialogue_name) {
-    json& dialogue = getDialogue();
+    json& dialogue = getDialogueJson();
     return dialogue.contains(dialogue_name);
 }
 
-void UserInterface::renderDialogue(WINDOW* window, const std::string& dialogue_name, size_t rows, size_t columns) {
-    json& dialogue = getDialogue();
-
-    // Clear the window and render the text as instructed in the json.
-    werase(window);
-
-    if (not dialogue.contains(dialogue_name)) {
-        // TODO FIXME Some kind of error is required here.
-        return;
-    }
-
-    std::vector<std::wstring> text;
-    // Get the text and convert it to wstring format.
-    {
-        json& jtext = dialogue.at(dialogue_name).at("text");
-        for (const std::string line : jtext) {
-            text.push_back(OlymposUtility::utf8ToWString(line));
-        }
-    }
-
-    std::string placement = dialogue.at(dialogue_name).at("placement");
-
-    // Determine where the text should be drawn.
-    // Text the begins in the upper left.
-    if ("upper left" == placement) {
-        size_t cur_row = 0;
-        // Draw the text
-        for (const std::wstring w_line : text) {
-            drawString(window, w_line, cur_row++, 0);
-        }
-    }
-    else if ("centered" == placement) {
-        size_t cur_row = 0;
-        // Draw the text
-        for (const std::wstring w_line : text) {
-            size_t y = cur_row + (rows - text.size()) / 2;
-            size_t x = (columns - w_line.size()) / 2;
-            drawString(window, w_line, y, x);
-            ++cur_row;
-        }
-    }
-
-    // User options, draw at the bottom of the window.
-    if (dialogue.at(dialogue_name).contains("options")) {
-        // TODO FIXME Need some kind of callback here I guess.
-        json& options = dialogue.at(dialogue_name).at("options");
-
-        // Draw boxes around each option
-        // That means a top line, a bottom line, and the options in the middle.
-        const wchar_t upper_left = L'╭';
-        const wchar_t lower_left = L'╰';
-        const wchar_t upper_right = L'╮';
-        const wchar_t lower_right = L'╯';
-        const wchar_t top_partition    = L'┬';
-        const wchar_t bottom_partition = L'┴';
-        const wchar_t horizontal = L'─';
-        const wchar_t vertical = L'│';
-
-        std::wstring top_line(1, upper_left);
-        std::wstring middle_line(1, vertical);
-        std::wstring bottom_line(1, lower_left);
-
-        // TODO Cannot parse wstring from nlohmann::json
-        for (const std::string option : options) {
-            std::wstring w_option = OlymposUtility::utf8ToWString(option);
-
-            // Add a partition if this wasn't the first option
-            if (1 != top_line.size()) {
-                top_line = top_line + top_partition;
-                middle_line = middle_line + vertical;
-                bottom_line = bottom_line + bottom_partition;
-            }
-            top_line = top_line + std::wstring(w_option.size() + 2, horizontal);
-            middle_line = middle_line + L" " + w_option + L" ";
-            bottom_line = bottom_line + std::wstring(w_option.size() + 2, horizontal);
-        }
-        // Close the box
-        top_line = top_line + upper_right;
-        middle_line = middle_line + vertical;
-        bottom_line = bottom_line + lower_right;
-
-        // Now draw the options
-        size_t col_start = columns / 2 - top_line.size() / 2;
-        drawString(window, top_line, rows-3, col_start);
-        drawString(window, middle_line, rows-2, col_start);
-        drawString(window, bottom_line, rows-1, col_start);
-    }
+json& UserInterface::getDialogue(const std::string& dialogue_name) {
+    json& dialogue = getDialogueJson();
+    return dialogue.at(dialogue_name);
 }
