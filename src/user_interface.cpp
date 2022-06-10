@@ -275,6 +275,7 @@ void drawBar(WINDOW* window, double percent) {
 }
 
 size_t UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column) {
+    werase(window);
     // Set the cursor
     wmove(window, row, column);
     // Draw the name
@@ -383,6 +384,25 @@ void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer
         }
         */
     }
+}
+
+size_t UserInterface::drawInfolog(WINDOW* window, size_t row, std::deque<std::vector<std::wstring>> info_log) {
+    // Section Label
+    // TODO Use actual lines to subdivide the event window.
+    drawString(window, "Information::", row, 1);
+    row += 1;
+
+    for (std::vector<std::wstring>& info : info_log) {
+        for (std::wstring& line : info) {
+            drawString(window, line, row, 1);
+            // This string could have actually taken up more than one line, so update the position
+            // variable.
+            row = getcury(window) + 1;
+        }
+        // Leave a space between different info log messages.
+        row = getcury(window) + 2;
+    }
+    return row;
 }
 
 size_t UserInterface::drawHotkeys(WINDOW* window, size_t row, const std::vector<std::string>& shortcuts) {

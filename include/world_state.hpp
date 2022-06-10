@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <deque>
 #include <list>
 #include <map>
 #include <string>
@@ -28,7 +29,7 @@ struct WorldState {
     std::vector<WorldEvent> events;
 
     // Tick-persistent information and observations made by the player.
-    std::list<std::vector<std::wstring>> info_log;
+    std::deque<std::vector<std::wstring>> info_log;
 
     size_t field_height;
     size_t field_width;

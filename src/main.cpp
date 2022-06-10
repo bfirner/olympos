@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <chrono>
 #include <deque>
+#include <iostream>
 #include <list>
 #include <utility>
 #include <vector>
@@ -75,13 +76,13 @@ int main(int argc, char** argv) {
     ws.addEntity(10, 1, "Bob", {"player", "species:human", "mob"});
     // The player shouldn't have an automatic behavior set.
     ws.entities.back().behavior_set_name = "none";
-    ws.addEntity(10, 10, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
-    ws.addEntity(10, 12, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
-    ws.addEntity(8, 10, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
-    ws.addEntity(10, 14, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
+    ws.addEntity(10, 10, "Blue Slime", {"species:slime", "mob", "auto"});
+    ws.addEntity(10, 12, "Green Slime", {"species:slime", "mob", "auto"});
+    ws.addEntity(8, 10, "Purple Slime", {"species:slime", "mob", "auto"});
+    ws.addEntity(10, 14, "Jiggling Slime", {"species:slime", "mob", "auto"});
     ws.addEntity(4, 6, "Bat", {"species:bat", "mob", "aggro", "auto"});
     ws.addEntity(17, 14, "Bat", {"species:bat", "mob", "aggro", "auto"});
-    ws.addEntity(20, 20, "Slime", {"species:slime", "mob", "auto"});
+    ws.addEntity(20, 20, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
     ws.addEntity(30, 30, "Ralph", {"species:elf", "mob", "auto"});
 
     // Add command handlers for all entities.
@@ -173,6 +174,8 @@ int main(int argc, char** argv) {
     // Create a panel that will be used for generic dialog.
     UIComponent dialog_box(ws, 38, 76, 1, 2);
     dialog_box.renderDialogue(UserInterface::getDialogue("introduction"));
+    // Don't block when checking for mouse clicks in the dialog window.
+    wtimeout(dialog_box.window, 0);
 
     // update_panels should be called before rendering to any of the panels.
     update_panels();
@@ -372,18 +375,24 @@ int main(int argc, char** argv) {
         }
 
         // Check for mouse events
-        /*
         if (in_dialog) {
             int in_c = wgetch(dialog_box.window);
             if (in_c == KEY_MOUSE) {
                 MEVENT mevent;
                 // We are only listening to click events.
                 if (getmouse(&mevent)) {
+                    std::cerr<<"Mouse click at "<<mevent.y<<", "<<mevent.x<<'\n';
                     // See if the mouse click was in the dialog_box button area.
+                    std::string button_name = dialog_box.getButton(mevent.y, mevent.x);
+                    if (button_name != "") {
+                        // TODO FIXME The ui component should have logic associated with the
+                        // buttons, but for now just continue.
+                        in_dialog = false;
+                        dialog_box.hide();
+                    }
                 }
             }
         }
-        */
 
         if (not in_dialog and help_displayed == help_components.end() and ws.entities.end() != player_i ) {
             auto cur_time = std::chrono::steady_clock::now();
@@ -420,6 +429,7 @@ int main(int argc, char** argv) {
                     UserInterface::updateEvents(event_window, event_strings);
                     // Update the player's status in the window
                     size_t status_row = UserInterface::drawStatus(stat_window, *player_entity, 3, 1);
+                    status_row = UserInterface::drawInfolog(stat_window, status_row + 2, ws.info_log);
                     UserInterface::drawHotkeys(stat_window, status_row+2, function_shortcuts);
                     update_panels();
                 }

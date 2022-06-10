@@ -67,6 +67,7 @@ void UIComponent::renderDialogue(const json& dialogue) {
 
     // Clear the window and render the text as instructed in the json.
     werase(window);
+    clearButtons();
 
     std::vector<std::wstring> text;
     // Get the text and convert it to wstring format.
@@ -143,5 +144,12 @@ void UIComponent::renderDialogue(const json& dialogue) {
         UserInterface::drawString(window, top_line, rows-3, col_start);
         UserInterface::drawString(window, middle_line, rows-2, col_start);
         UserInterface::drawString(window, bottom_line, rows-1, col_start);
+
+        // Register the buttons to handle mouse clicks later.
+        size_t button_offset = 0;
+        for (const std::string option : options) {
+            registerButton(rows-3, col_start + button_offset, 3, option.size()+2, option);
+            button_offset += 2;
+        }
     }
 }

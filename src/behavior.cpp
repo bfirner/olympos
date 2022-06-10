@@ -136,7 +136,7 @@ namespace Behavior {
         }
     }
 
-    bool actionBoilerplateCheck(Entity& actor, WorldState& ws, const Ability& ability, const std::vector<std::string>& arguments, size_t min_arguments, const std::string& event_string, const std::string& fail_string) {
+    bool actionBoilerplateCheck(Entity& actor, WorldState& ws, const Ability& ability, const std::vector<std::string>& arguments, size_t min_arguments, const std::string& fail_string) {
         // Verify that the actor can take this action
         if (ability.stamina > actor.stats.value().stamina) {
             // TODO Should there be a generic low stamina failure string?
@@ -322,7 +322,7 @@ namespace Behavior {
     // A function meant for binding that increases or decreases one entity's distance from another.
     void changeDistance(Entity& actor, const Ability& ability, std::string event_string, std::string fail_string, size_t desired_distance, WorldState& ws, const std::vector<std::string>& arguments) {
         // Verify that this action could be taken.
-        if (not actionBoilerplateCheck(actor, ws, ability, arguments, 1, event_string, fail_string)) {
+        if (not actionBoilerplateCheck(actor, ws, ability, arguments, 1, fail_string)) {
             return;
         }
 
@@ -540,7 +540,7 @@ namespace Behavior {
 
     void informationFunction(Entity& actor, const Ability& ability, std::vector<std::string> info_types, std::string event_string, std::string fail_string, WorldState& ws, const std::vector<std::string>& arguments) {
         // Verify that this action could be taken.
-        if (not actionBoilerplateCheck(actor, ws, ability, arguments, 1, event_string, fail_string)) {
+        if (not actionBoilerplateCheck(actor, ws, ability, arguments, 1, fail_string)) {
             return;
         }
 
@@ -572,6 +572,7 @@ namespace Behavior {
                 // Now log any observable information.
                 // Pull out traits that are observable with the given information_types.
                 std::vector<std::wstring> target_information;
+                target_information.push_back(std::wstring(target->name.begin(), target->name.end()));
                 for (const std::string& info_type : info_types) {
                     if (target->description.contains(info_type)) {
                         target_information.push_back(target->description.at(info_type));

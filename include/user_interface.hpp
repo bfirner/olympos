@@ -35,15 +35,24 @@ namespace UserInterface {
 
     void drawString(WINDOW* window, const std::string& str, size_t row, size_t column);
     void drawString(WINDOW* window, const std::wstring& str, size_t row, size_t column);
+
+    // TODO FIXME The status, infolog, and hotkeys are all status window specific. UIComponent could
+    // be specialized to support a status window class instead of these window specific items living
+    // here.
     // Update the status and return the last row used.
     size_t drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column);
 
-    void updateEvents(WINDOW* window, std::deque<std::string>& buffer);
+    size_t drawInfolog(WINDOW* window, size_t row, std::deque<std::vector<std::wstring>> info_log);
 
     // Draw hotkey shortcuts and return the last row used.
     size_t drawHotkeys(WINDOW* window, size_t row, const std::vector<std::string>& shortcuts);
-    void drawPause(WINDOW* window, size_t rows, size_t columns);
 
+    void updateEvents(WINDOW* window, std::deque<std::string>& buffer);
+
+    // Check if there is dialogue available for the given string.
     bool hasDialogue(const std::string& dialogue_name);
+
+    // Fetch available dialogue for the given string. This should not be called unless hasDialogue
+    // returns true for the given dialogue_name.
     json& getDialogue(const std::string& dialogue_name);
 }

@@ -191,6 +191,9 @@ void WorldState::initialize() {
 
 void WorldState::logInformation(const std::vector<std::wstring>& information) {
     info_log.push_front(information);
+    if (3 < info_log.size()) {
+        info_log.pop_back();
+    }
 }
 
 void WorldState::logEvent(WorldEvent event) {
@@ -219,7 +222,7 @@ void WorldState::update() {
     cur_tick += 1;
     // Need to handle events that occur every tick.
 
-    // Tic updates are independent per entity and car be done in parallel and in any order.
+    // Tic updates are independent per entity and can be done in parallel and in any order.
     std::for_each(std::execution::par_unseq, entities.begin(), entities.end(),
         [cur_tick=cur_tick](Entity& ent) {
             if (ent.stats) {
