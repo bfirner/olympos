@@ -13,6 +13,7 @@
 #include <deque>
 #include <list>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "entity.hpp"
@@ -23,11 +24,12 @@ namespace UserInterface {
     // Get the character representation for this entity
     std::wstring getEntityChar(const Entity& ent);
     attr_t getEntityAttr(const Entity& ent);
-    short getEntityColor(const Entity& ent);
+    short getEntityColor(const Entity& ent, const std::string& bg_color = "black");
 
 
-    // Update all of the entities onto the given window
-    void updateDisplay(WINDOW* window, const std::list<Entity>& entities);
+    // Update all of the entities onto the given window. Also color the backgrounds of tiles to
+    // indicate effect areas.
+    void updateDisplay(WINDOW* window, const std::list<Entity>& entities, const std::map<std::tuple<size_t, size_t>, std::string>& background_effects = {});
     // Clear the user input area
     void clearInput(WINDOW* window, size_t field_height, size_t field_width);
     // Setup colors

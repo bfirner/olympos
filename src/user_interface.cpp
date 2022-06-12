@@ -118,15 +118,28 @@ enum Colors : short {
     yellow_on_black = 5,
     magenta_on_black = 6,
     cyan_on_black = 7,
+    white_on_cyan,
+    blue_on_cyan,
+    red_on_cyan,
+    green_on_cyan,
+    yellow_on_cyan,
+    magenta_on_cyan,
+    cyan_on_cyan,
+    white_on_red,
+    blue_on_red,
+    red_on_red,
+    green_on_red,
+    yellow_on_red,
+    magenta_on_red,
+    cyan_on_red,
+    white_on_green,
+    blue_on_green,
+    red_on_green,
+    green_on_green,
+    yellow_on_green,
+    magenta_on_green,
+    cyan_on_green,
 };
-
-short UserInterface::getEntityColor(const Entity& ent) {
-    if (ent.traits.contains("aggro")) {
-        return Colors::red_on_black;
-    }
-    // Default is white
-    return Colors::white_on_black;
-}
 
 std::tuple<attr_t, Colors> strToAttrCode(const std::string& color) {
     // Default to white in case this isn't a recognized color.
@@ -149,6 +162,69 @@ std::tuple<attr_t, Colors> strToAttrCode(const std::string& color) {
     else if ("cyan" == color) {
         the_color = cyan_on_black;
     }
+    else if ("white on cyan" == color) {
+        the_color = white_on_cyan;
+    }
+    else if ("blue on cyan" == color) {
+        the_color = blue_on_cyan;
+    }
+    else if ("red on cyan" == color) {
+        the_color = red_on_cyan;
+    }
+    else if ("green on cyan" == color) {
+        the_color = green_on_cyan;
+    }
+    else if ("yellow on cyan" == color) {
+        the_color = yellow_on_cyan;
+    }
+    else if ("magenta on cyan" == color) {
+        the_color = magenta_on_cyan;
+    }
+    else if ("cyan on cyan" == color) {
+        the_color = cyan_on_cyan;
+    }
+    else if ("white on red" == color) {
+        the_color = white_on_red;
+    }
+    else if ("blue on red" == color) {
+        the_color = blue_on_red;
+    }
+    else if ("red on red" == color) {
+        the_color = red_on_red;
+    }
+    else if ("green on red" == color) {
+        the_color = green_on_red;
+    }
+    else if ("yellow on red" == color) {
+        the_color = yellow_on_red;
+    }
+    else if ("magenta on red" == color) {
+        the_color = magenta_on_red;
+    }
+    else if ("cyan on red" == color) {
+        the_color = cyan_on_red;
+    }
+    else if ("white on green" == color) {
+        the_color = white_on_green;
+    }
+    else if ("blue on green" == color) {
+        the_color = blue_on_green;
+    }
+    else if ("red on green" == color) {
+        the_color = red_on_green;
+    }
+    else if ("green on green" == color) {
+        the_color = green_on_green;
+    }
+    else if ("yellow on green" == color) {
+        the_color = yellow_on_green;
+    }
+    else if ("magenta on green" == color) {
+        the_color = magenta_on_green;
+    }
+    else if ("cyan on green" == color) {
+        the_color = cyan_on_green;
+    }
 
     // TODO Defaulting to normal text for now.
     return std::make_tuple(A_NORMAL, the_color);
@@ -162,18 +238,78 @@ void UserInterface::setupColors() {
     init_pair(Colors::yellow_on_black, COLOR_YELLOW, COLOR_BLACK);
     init_pair(Colors::magenta_on_black, COLOR_MAGENTA, COLOR_BLACK);
     init_pair(Colors::cyan_on_black, COLOR_CYAN, COLOR_BLACK);
+
+    init_pair(Colors::white_on_cyan, COLOR_WHITE, COLOR_CYAN);
+    init_pair(Colors::blue_on_cyan, COLOR_BLUE, COLOR_CYAN);
+    init_pair(Colors::red_on_cyan, COLOR_RED, COLOR_CYAN);
+    init_pair(Colors::green_on_cyan, COLOR_GREEN, COLOR_CYAN);
+    init_pair(Colors::yellow_on_cyan, COLOR_YELLOW, COLOR_CYAN);
+    init_pair(Colors::magenta_on_cyan, COLOR_MAGENTA, COLOR_CYAN);
+    init_pair(Colors::cyan_on_cyan, COLOR_CYAN, COLOR_CYAN);
+
+    init_pair(Colors::white_on_red, COLOR_WHITE, COLOR_RED);
+    init_pair(Colors::blue_on_red, COLOR_BLUE, COLOR_RED);
+    init_pair(Colors::red_on_red, COLOR_RED, COLOR_RED);
+    init_pair(Colors::green_on_red, COLOR_GREEN, COLOR_RED);
+    init_pair(Colors::yellow_on_red, COLOR_YELLOW, COLOR_RED);
+    init_pair(Colors::magenta_on_red, COLOR_MAGENTA, COLOR_RED);
+    init_pair(Colors::cyan_on_red, COLOR_CYAN, COLOR_RED);
+
+    init_pair(Colors::white_on_green, COLOR_WHITE, COLOR_GREEN);
+    init_pair(Colors::blue_on_green, COLOR_BLUE, COLOR_GREEN);
+    init_pair(Colors::red_on_green, COLOR_RED, COLOR_GREEN);
+    init_pair(Colors::green_on_green, COLOR_GREEN, COLOR_GREEN);
+    init_pair(Colors::yellow_on_green, COLOR_YELLOW, COLOR_GREEN);
+    init_pair(Colors::magenta_on_green, COLOR_MAGENTA, COLOR_GREEN);
+    init_pair(Colors::cyan_on_green, COLOR_CYAN, COLOR_GREEN);
 }
 
-void UserInterface::updateDisplay(WINDOW* window, const std::list<Entity>& entities) {
+short UserInterface::getEntityColor(const Entity& ent, const std::string& bg_color) {
+    if (ent.traits.contains("aggro")) {
+        if ("black" == bg_color) {
+            return Colors::red_on_black;
+        }
+        else {
+            return std::get<1>(strToAttrCode("red on " + bg_color));
+        }
+    }
+    else if ("black" != bg_color) {
+        return std::get<1>(strToAttrCode("white on " + bg_color));
+    }
+    // Default is white
+    return Colors::white_on_black;
+}
+
+void UserInterface::updateDisplay(WINDOW* window, const std::list<Entity>& entities,
+        const std::map<std::tuple<size_t, size_t>, std::string>& background_effects) {
     // Store the original colors so that they can be easily restored.
     attr_t orig_attrs;
     short orig_color;
     wattr_get(window, &orig_attrs, &orig_color, nullptr);
     werase(window);
+    // Print all of the entities then add in effects. Don't let an effect overwrite an entity.
+    std::set<std::tuple<size_t, size_t>> drawn;
     for (const Entity& ent : entities) {
-        wattr_set(window, getEntityAttr(ent), getEntityColor(ent), nullptr);
+        auto location = std::make_tuple(ent.y, ent.x);
+        if (not background_effects.contains(location)) {
+            wattr_set(window, getEntityAttr(ent), getEntityColor(ent), nullptr);
+        }
+        else {
+            std::cerr<<"Getting background color for tile "<<ent.y<<", "<<ent.x<<'\n';
+            wattr_set(window, getEntityAttr(ent), getEntityColor(ent, background_effects.at(location)), nullptr);
+        }
         //mvwaddch(window, ent.y, ent.x, getEntityChar(ent));
         drawString(window, getEntityChar(ent), ent.y, ent.x);
+
+        drawn.insert({ent.y, ent.x});
+    }
+    // Now draw the background effects for any locations not already drawn.
+    for (auto& [location, color] : background_effects) {
+        if (not drawn.contains(location)) {
+            wattr_set(window, A_NORMAL, std::get<1>(strToAttrCode("white on " + color)), nullptr);
+            std::cerr<<"Drawing background color for empty tile "<<std::get<0>(location)<<", "<<std::get<1>(location)<<'\n';
+            drawString(window, " ", std::get<0>(location), std::get<1>(location));
+        }
     }
     // Back to the original setting
     wattr_set(window, orig_attrs, orig_color, nullptr);
@@ -276,6 +412,11 @@ void drawBar(WINDOW* window, double percent) {
 
 size_t UserInterface::drawStatus(WINDOW* window, const Entity& entity, size_t row, size_t column) {
     werase(window);
+    // TODO This should just be a specialization of UIComponent so there isn't hidden knowledge
+    // inside of the function.
+    box(window, 0, 0);
+    UserInterface::drawString(window, "Heart of Olympos", 1, 1);
+
     // Set the cursor
     wmove(window, row, column);
     // Draw the name
@@ -389,7 +530,7 @@ void UserInterface::updateEvents(WINDOW* window, std::deque<std::string>& buffer
 size_t UserInterface::drawInfolog(WINDOW* window, size_t row, std::deque<std::vector<std::wstring>> info_log) {
     // Section Label
     // TODO Use actual lines to subdivide the event window.
-    drawString(window, "Information::", row, 1);
+    drawString(window, "Information:", row, 1);
     row += 1;
 
     for (std::vector<std::wstring>& info : info_log) {

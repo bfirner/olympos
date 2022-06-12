@@ -99,8 +99,6 @@ int main(int argc, char** argv) {
 
     // Create a new window to display status.
     WINDOW* stat_window = newwin(40, 30, 0, ws.field_width + 10);
-    box(stat_window, 0, 0);
-    UserInterface::drawString(stat_window, "Heart of Olympos", 1, 1);
 
     // Create another window for the event log.
     WINDOW* event_window = newwin(40, 80, main_window_height, 0);
@@ -394,9 +392,9 @@ int main(int argc, char** argv) {
             }
         }
 
+        auto cur_time = std::chrono::steady_clock::now();
+        std::chrono::duration<double> time_diff = cur_time - last_update;
         if (not in_dialog and help_displayed == help_components.end() and ws.entities.end() != player_i ) {
-            auto cur_time = std::chrono::steady_clock::now();
-            std::chrono::duration<double> time_diff = cur_time - last_update;
             if ((0.0 != tick_rate and tick_rate <= time_diff.count()) or
                 (0.0 >= tick_rate and has_command)) {
                 // Handle automated behaviors.
@@ -407,7 +405,10 @@ int main(int argc, char** argv) {
                     }
                 }
                 has_command = false;
+                // Update the last updated time and the time diff since it is used in some later
+                // logic.
                 last_update = cur_time;
+                time_diff = cur_time - last_update;
                 // execute all commands every tick
                 comham.executeCommands(ws);
                 // Tick update
@@ -450,12 +451,24 @@ int main(int argc, char** argv) {
             update_panels();
         }
 
-        // TODO Add any visual effects that occur faster than ticks here.
         // Update panels, refresh the screen, and reset the cursor position
+
+        // In some systems writing to the game panel overwrites the dialog, even though its panel
+        // should be on top of the game window.
         if (not in_dialog) {
-            // In some systems this overwrites the dialog, even though its panel should be on top of
-            // the game window.
-            UserInterface::updateDisplay(window, ws.entities);
+            // Draw background effects in the first half of the tic.
+            if (time_diff.count() < tick_rate / 2) {
+                std::cerr<<"updating with "<<ws.background_effects.size()<<" background effects.\n";
+                for (auto& [location, color] : ws.background_effects) {
+                    std::cerr<<"\tlocation "<<std::get<0>(location)<<", "<<std::get<1>(location)<<" is "<<color<<'\n';
+                }
+                UserInterface::updateDisplay(window, ws.entities, ws.background_effects);
+            }
+            else {
+                // Clear things that don't persist
+                ws.background_effects.clear();
+                UserInterface::updateDisplay(window, ws.entities);
+            }
         }
         // Need to redraw the command since we've just erased the window.
         UserInterface::clearInput(window, ws.field_height, ws.field_width);

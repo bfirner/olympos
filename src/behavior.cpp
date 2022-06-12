@@ -15,6 +15,7 @@
 #include <random>
 #include <ranges>
 #include <regex>
+#include <tuple>
 
 #include "behavior.hpp"
 
@@ -156,10 +157,12 @@ namespace Behavior {
     // Find the target of a range 1 skill or ability, or end iterator if there is no target.
     // TODO FIXME multiple arguments are just members of an ability, just pass that here.
     // TODO FIXME Or maybe this should just be a member function of Ability?
-    std::list<Entity>::iterator findOneTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
+    std::tuple<std::list<Entity>::iterator, std::tuple<size_t, size_t>> findOneTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
             const vector<string>& expected_args, const vector<string>& default_args, const vector<string>& args) {
         // Default to having no target.
-        auto target = ws.entities.end();
+        std::list<Entity>::iterator target = ws.entities.end();
+        std::tuple<size_t, size_t> target_location{std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()};
+
         bool argument_consumed = false;
         // Find the ability range
         size_t ability_range = 0;
@@ -193,6 +196,7 @@ namespace Behavior {
                         if (distances.contains("x")) {
                             target_x += distances.at("x").get<int>();
                         }
+                        target_location = std::make_tuple(target_y, target_x);
                         // Now find the target at that location if one exists.
                         // It is possible that there are multiple entities in that tile. This
                         // will find the first one arbitrarily.
@@ -219,15 +223,18 @@ namespace Behavior {
             if (target == ws.entities.end()) {
                 target = ws.findEntity(std::vector<std::string>{target_name}, actor.y, actor.x, ability_range);
             }
+            if (target != ws.entities.end()) {
+                target_location = std::make_tuple(target->y, target->x);
+            }
         }
         // Finally return whatever iterator location was discovered.
-        return target;
+        return {target, target_location};
     }
 
     // Find the target of a cone shaped skill or ability, or end iterator if there are no targets.
     // TODO FIXME multiple arguments are just members of an ability, just pass that here.
     // TODO FIXME Or maybe this should just be a member function of Ability?
-    std::vector<std::list<Entity>::iterator> findConeTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
+    std::tuple<std::vector<std::list<Entity>::iterator>, std::vector<std::tuple<size_t, size_t>>> findConeTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
             const vector<string>& expected_args, const vector<string>& default_args, const vector<string>& args) {
         // Read in the information about the cone area of effect
         const json& area_effects = effects.at("area");
@@ -244,6 +251,7 @@ namespace Behavior {
 
         // Default to having no target.
         std::vector<std::list<Entity>::iterator> targets;
+        std::vector<std::tuple<size_t, size_t>> area_of_effect;
         bool argument_consumed = false;
         // Are there argument options?
         if (0 < expected_args.size() and expected_args[0] == "or") {
@@ -275,6 +283,7 @@ namespace Behavior {
                             // Use the directions to calculate the point being searched.
                             size_t target_y = actor.y + distance * direction[0] + lateral * side_direction[0];
                             size_t target_x = actor.x + distance * direction[1] + lateral * side_direction[1];
+                            area_of_effect.push_back({target_y, target_x});
                             // Now find targets at that location if they exist.
                             std::list<Entity>::iterator target = ws.entities.begin();
                             while (target != ws.entities.end()) {
@@ -315,7 +324,7 @@ namespace Behavior {
             }
         }
         // Finally return whatever iterator locations were discovered.
-        return targets;
+        return {targets, area_of_effect};
     }
 
 
@@ -549,14 +558,24 @@ namespace Behavior {
         // TODO FIXME World state needs an information section I guess.
 
         std::vector<std::list<Entity>::iterator> targets;
+        std::vector<std::tuple<size_t, size_t>> area_of_effect;
         if (AbilityArea::single == ability.area) {
-            auto target = findOneTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+            auto [target, target_location] = findOneTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+
             if (ws.entities.end() != target) {
                 targets.push_back(target);
             }
         }
         else if (AbilityArea::cone == ability.area) {
-            targets = findConeTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+            std::tie(targets, area_of_effect) = findConeTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+        }
+
+        // Mark background colors for the area of effect
+        for (auto& location : area_of_effect) {
+            if (std::get<0>(location) < ws.field_height and std::get<1>(location) < ws.field_width) {
+                // TODO Hard-coding the utility color to be cyan here.
+                ws.background_effects.insert({location, "cyan"});
+            }
         }
 
         // Handle targets if there are any.
@@ -651,13 +670,22 @@ namespace Behavior {
         // Prepare a flavor string to go into the event log whenever this behavior occurs.
         // Fill in some fields in advance.
         std::string event_string = flavor;
-        replaceSubstring(event_string, "<entity>", entity.name);
+        std::string fail_string = fail_flavor;
+        // If this is the player then use "You" instead of the entity name.
+        if (entity.traits.contains("player")) {
+            replaceSubstring(event_string, "<entity>", "You");
+            replaceSubstring(fail_string, "<entity>", "You");
+        }
+        else {
+            replaceSubstring(event_string, "<entity>", entity.name);
+            replaceSubstring(fail_string, "<entity>", entity.name);
+        }
 
         return [=,&entity,effects=this->effects,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
             size_t damage = floor(base + strength * entity.stats.value().strength + domain * entity.stats.value().domain +
                 aura * entity.stats.value().aura + reflexes * entity.stats.value().reflexes);
             // Now parse the arguments to see what is getting hit.
-            auto target = findOneTarget(ws, entity, effects, expected_args, default_args, args);
+            auto [target, target_location] = findOneTarget(ws, entity, effects, expected_args, default_args, args);
             if (target != ws.entities.end()) {
                 std::string log_string = event_string;
                 replaceSubstring(log_string, "<target>", target->name);
@@ -665,6 +693,14 @@ namespace Behavior {
 
                 // Deal damage to the target
                 ws.damageEntity(target, damage, entity);
+            }
+            else {
+                ws.logEvent({fail_string, entity.y, entity.x});
+            }
+            // Visually mark the tile if it is on the map
+            if (std::get<0>(target_location) < ws.field_height and std::get<1>(target_location) < ws.field_width) {
+                // TODO Hard-coding the attack color to be red here.
+                ws.background_effects.insert({target_location, "red"});
             }
             // The attack always consumes stamina
             entity.stats.value().stamina -= stamina;

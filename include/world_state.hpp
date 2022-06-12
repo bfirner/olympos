@@ -25,6 +25,11 @@ struct WorldEvent {
 struct WorldState {
     std::list<Entity> entities;
 
+    // Background colors representing effects.
+    // TODO FIXME HERE Update in the behavior.cpp functions, pass to UserInterface::updateDisplay in
+    // main, and clear in the update function.
+    std::map<std::tuple<size_t, size_t>, std::string> background_effects;
+
     // Transient events that occur with each tick of the world.
     std::vector<WorldEvent> events;
 
