@@ -267,7 +267,7 @@
                         "range": [1, 4],
                         "vitality_mod": 0.01,
                         "width_base": 1,
-                        "width_slope": 1
+                        "width_slope": 2
                     },
                     "north": {
                         "direction": [-1, 0],

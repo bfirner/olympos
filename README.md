@@ -9,10 +9,9 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Mouse stuff (click on things to use ability, add hotkeys, etc)
-* * See `curs_mouse`
+* Issue multiple commands by separating them with semicolons
 * Fix the (s) at the end of words when entity is replaced by "You" (e.g. "You looks", "You kicks", etc)
-* Should the word "You" or "you" be highlighted in a color?
+* * Should the word "You" or "you" be highlighted in a color?
 * Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
 * * look ["or", "north", "east", "south", "west", "<target>"]
 * * * Should bring up entity information in the status window
@@ -55,6 +54,11 @@ C++ compiler that supports the C++20 standard.
 * * * * * TODO Examples
 * * * * Morphing means changing to a similar skill at the same level that has new abilities
 * * * * * TODO Examples
+* Add a tutorial
+* * Go over the UI
+* * Go over commands
+* * Go over skills and classes
+* * Demonstration of skill learning
 * Help command has non-skill help
 * * General help
 * * UI help
@@ -75,6 +79,8 @@ C++ compiler that supports the C++20 standard.
 * * Make multiple rooms per floor
 * * World state to world state communication at "doorways". Can also go from entity -> world state -> world state ->
 entity when it passes from one room to another.
+* Mouse stuff (click on things to use ability, add hotkeys, etc)
+* * See `curs_mouse`
 
 * Elements and ability sets
 * * Want to have ability sets with broad themes
