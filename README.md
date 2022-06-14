@@ -9,12 +9,13 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Issue multiple commands by separating them with semicolons
+* Compartmentalize activities in main into separate functions
 * Fix the (s) at the end of words when entity is replaced by "You" (e.g. "You looks", "You kicks", etc)
 * * Should the word "You" or "you" be highlighted in a color?
 * Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
 * * look ["or", "north", "east", "south", "west", "<target>"]
 * * * Should bring up entity information in the status window
+* * * * Clean this up
 * * listen []
 * * * ???
 * * taste ["<target>"]

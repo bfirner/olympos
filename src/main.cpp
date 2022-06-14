@@ -15,6 +15,7 @@
 #include <deque>
 #include <iostream>
 #include <list>
+#include <regex>
 #include <utility>
 #include <vector>
 
@@ -355,9 +356,21 @@ int main(int argc, char** argv) {
                     in_dialog = false;
                     dialog_box.hide();
                 }
-                // TODO Add user aliases.
                 // Queue up actions and take them at the action tick.
-                comham.enqueueTraitCommand({"player"}, command);
+                // TODO Support user aliases. Expand user aliases in the command string.
+                // If there are semicolons then split the command into multiple at the semicolon
+                // characters
+                std::regex semicolon_or_end("(;|$)");
+                std::smatch matches;
+                while (0 < command.size() and std::regex_search(command, matches, semicolon_or_end)) {
+                    comham.enqueueTraitCommand({"player"}, matches.prefix().str());
+                    // Try to process the rest of the command
+                    command = matches.suffix().str();
+                }
+                if (0 < command.size()) {
+                    comham.enqueueTraitCommand({"player"}, command);
+                }
+                // There is a command to process.
                 has_command = true;
             }
             // Update panel ordering.
