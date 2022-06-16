@@ -19,12 +19,10 @@ struct UIComponent {
     PANEL* panel = nullptr;
     WINDOW* window = nullptr;
 
-    WorldState& ws;
-
     size_t rows;
     size_t columns;
 
-    UIComponent(WorldState& ws, size_t rows, size_t columns, size_t begin_y, size_t begin_x);
+    UIComponent(size_t rows, size_t columns, size_t begin_y, size_t begin_x);
     ~UIComponent();
 
     UIComponent(const UIComponent&) = delete;

@@ -6,8 +6,8 @@
 #include "uicomponent.hpp"
 #include "user_interface.hpp"
 
-UIComponent::UIComponent(WorldState& ws, size_t rows, size_t columns, size_t begin_y, size_t begin_x) :
-    ws(ws), rows(rows), columns(columns) {
+UIComponent::UIComponent(size_t rows, size_t columns, size_t begin_y, size_t begin_x) :
+    rows(rows), columns(columns) {
     window = newwin(rows, columns, begin_y, begin_x);
     panel = new_panel(window);
     // No weird flush handling
@@ -27,7 +27,7 @@ UIComponent::~UIComponent() {
     }
 }
 
-UIComponent::UIComponent(UIComponent&& other) : ws(other.ws), rows(other.rows), columns(other.columns) {
+UIComponent::UIComponent(UIComponent&& other) : rows(other.rows), columns(other.columns) {
     this->window = other.window;
     this->panel = other.panel;
     other.window = nullptr;
@@ -85,14 +85,14 @@ void UIComponent::renderDialogue(const json& dialogue) {
     if ("upper left" == placement) {
         size_t cur_row = 0;
         // Draw the text
-        for (const std::wstring w_line : text) {
+        for (const std::wstring& w_line : text) {
             UserInterface::drawString(window, w_line, cur_row++, 0);
         }
     }
     else if ("centered" == placement) {
         size_t cur_row = 0;
         // Draw the text
-        for (const std::wstring w_line : text) {
+        for (const std::wstring& w_line : text) {
             size_t y = cur_row + (rows - text.size()) / 2;
             size_t x = (columns - w_line.size()) / 2;
             UserInterface::drawString(window, w_line, y, x);

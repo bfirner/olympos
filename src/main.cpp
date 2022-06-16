@@ -29,14 +29,9 @@
 using std::string;
 using std::vector;
 
-int main(int argc, char** argv) {
-    // The tick rate for the game
-    // TODO Allow the user the option to set all time to their inputs.
-    double tick_rate = 0.25;
-    if (2 == argc) {
-        tick_rate = std::stod(argv[1]);
-    }
 
+void setupCursesEnv() {
+    // Set up the locale to allow for utf8 encoded characters.
     std::setlocale(LC_ALL, "en_US.utf8");
 
     // Set up an ncurses screen and turn off echoing what the user writes.
@@ -45,80 +40,27 @@ int main(int argc, char** argv) {
     cbreak();
     // Don't echo what the user types.
     noecho();
-    size_t main_window_height = 42;
-    WINDOW* window = newwin(main_window_height, 80, 0, 0);
     if (has_colors()) {
         // TODO start_color() and then do stuff
         start_color();
         UserInterface::setupColors();
     }
 
+    // Turn cursor visibility to normal.
+    curs_set(1);
+
     // Enable mouse button press and release events
     if (has_mouse()) {
         // TODO Check for success or failure
         mousemask(BUTTON1_CLICKED, nullptr);
     }
+}
 
-    // No weird flush handling
-    intrflush(window, false);
-    // Enable keypad inputs (arrow and function keys)
-    keypad(window, true);
 
-    // Our generic command handler
-    CommandHandler comham;
-
-    // Initialize the world state with the desired size.
-    WorldState ws(40, 80);
-
-    // Get the abilities so that they can be assigned to the mobs.
-    const std::vector<Behavior::AbilitySet>& abilities = Behavior::getAbilities();
-
-    // Make some mobs
-    ws.addEntity(10, 1, "Bob", {"player", "species:human", "mob"});
-    // The player shouldn't have an automatic behavior set.
-    ws.entities.back().behavior_set_name = "none";
-    ws.addEntity(10, 10, "Blue Slime", {"species:slime", "mob", "auto"});
-    ws.addEntity(10, 12, "Green Slime", {"species:slime", "mob", "auto"});
-    ws.addEntity(8, 10, "Purple Slime", {"species:slime", "mob", "auto"});
-    ws.addEntity(10, 14, "Jiggling Slime", {"species:slime", "mob", "auto"});
-    ws.addEntity(4, 6, "Bat", {"species:bat", "mob", "aggro", "auto"});
-    ws.addEntity(17, 14, "Bat", {"species:bat", "mob", "aggro", "auto"});
-    ws.addEntity(20, 20, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
-    ws.addEntity(30, 30, "Ralph", {"species:elf", "mob", "auto"});
-
-    // Add command handlers for all entities.
-    for (Entity& entity : ws.entities) {
-        for (const Behavior::AbilitySet& abset : abilities) {
-            std::vector<std::string> updated = abset.updateAvailable(entity);
-        }
-    }
-
-    // Keep an easy handle to access the player
-    // TODO If we keep this here is there any reason for the world state to bother tracking some
-    // named entities?
-    auto player_i = ws.findEntity(std::vector<std::string>{"player"});
-
-    // Create a new window to display status.
-    WINDOW* stat_window = newwin(40, 30, 0, ws.field_width + 10);
-
-    // Create another window for the event log.
-    WINDOW* event_window = newwin(40, 80, main_window_height, 0);
-    std::deque<std::string> event_strings;
-
-    std::vector<PANEL*> panels;
-    panels.push_back(new_panel(event_window));
-    panels.push_back(new_panel(stat_window));
-    panels.push_back(new_panel(window));
-
-    for (PANEL* panel : panels) {
-        show_panel(panel);
-        top_panel(panel);
-    }
-
-    // Create (and hide) a dialog window for help screens.
+std::map<std::string, UIComponent> createPlayerHelp(const std::list<Entity>::iterator player_i) {
     std::map<std::string, UIComponent> help_components;
     {
-        auto insert_stat = help_components.emplace(std::make_pair("abilities", UIComponent(ws, 38, 76, 1, 2)));
+        auto insert_stat = help_components.emplace(std::make_pair("abilities", UIComponent(38, 76, 1, 2)));
         UIComponent& uic = insert_stat.first->second;
         UserInterface::drawString(uic.window, "help", 0, 0);
         UserInterface::drawString(uic.window, "Type `help' and an ability name for more information.", 2, 0);
@@ -130,7 +72,7 @@ int main(int argc, char** argv) {
     }
     for (auto& [cmd_name, ability] : player_i->command_details) {
         // Insert a tuple for this key.
-        auto insert_stat = help_components.emplace(std::make_pair(cmd_name, UIComponent(ws, 38, 76, 1, 2)));
+        auto insert_stat = help_components.emplace(std::make_pair(cmd_name, UIComponent(38, 76, 1, 2)));
         UIComponent& uic = insert_stat.first->second;
         // If this element already existed then clear it before drawing text.
         if (not insert_stat.second) {
@@ -169,18 +111,176 @@ int main(int argc, char** argv) {
         // TODO Describe effects
         // TODO Add a description to the json.
     }
+    return help_components;
+}
+
+int processUserInput(WINDOW* window, string& command, std::vector<std::string>& function_shortcuts) {
+    int in_c = wgetch(window);
+    std::string shortcut_str = "";
+    int function_hotkey = -1;
+    switch (in_c) {
+        // Check for arrow keys and treat them as an immediately commanded direction and enter
+        // key.
+        case KEY_UP:
+            shortcut_str = "north";
+            break;
+        case KEY_DOWN:
+            shortcut_str = "south";
+            break;
+        case KEY_LEFT:
+            shortcut_str = "west";
+            break;
+        case KEY_RIGHT:
+            shortcut_str = "east";
+            break;
+        case KEY_F(0):
+            function_hotkey = 0;
+            break;
+        case KEY_F(1):
+            function_hotkey = 1;
+            break;
+        case KEY_F(2):
+            function_hotkey = 2;
+            break;
+        case KEY_F(3):
+            function_hotkey = 3;
+            break;
+        case KEY_F(4):
+            function_hotkey = 4;
+            break;
+        case KEY_F(5):
+            function_hotkey = 5;
+            break;
+        case KEY_F(6):
+            function_hotkey = 6;
+            break;
+        case KEY_F(7):
+            function_hotkey = 7;
+            break;
+        case KEY_F(8):
+            function_hotkey = 8;
+            break;
+        case KEY_F(9):
+            function_hotkey = 9;
+            break;
+        case KEY_F(10):
+            function_hotkey = 10;
+            break;
+        case KEY_F(11):
+            function_hotkey = 11;
+            break;
+        case KEY_F(12):
+            function_hotkey = 12;
+            break;
+        case KEY_BACKSPACE:
+        case 127:
+            // Remove a character from the command.
+            if (not command.empty()) {
+                command.pop_back();
+                // Remove it from the display as well.
+                wdelch(window);
+            }
+            in_c = ERR;
+            break;
+    }
+    if (0 < shortcut_str.size()) {
+        if (0 < command.size() and command.back() != ' ') {
+            command.push_back(' ');
+        }
+        command += shortcut_str;
+        in_c = '\n';
+    }
+    if (0 <= function_hotkey and 0 < function_shortcuts.at(function_hotkey).size()) {
+        if (0 < command.size() and command.back() != ' ') {
+            command.push_back(' ');
+        }
+        command += function_shortcuts.at(function_hotkey);
+        // Don't process the character.
+        in_c = ERR;
+    }
+    return in_c;
+}
+
+int main(int argc, char** argv) {
+    // The tick rate for the game
+    // TODO Allow the user the option to set all time to their inputs.
+    double tick_rate = 0.25;
+    if (2 == argc) {
+        tick_rate = std::stod(argv[1]);
+    }
+
+    setupCursesEnv();
+
+    size_t main_window_height = 42;
+    WINDOW* window = newwin(main_window_height, 80, 0, 0);
+
+    // No weird flush handling
+    intrflush(window, false);
+    // Enable keypad inputs (arrow and function keys)
+    keypad(window, true);
+
+    // Our generic command handler
+    CommandHandler comham;
+
+    // Initialize the world state with the desired size.
+    WorldState ws(40, 80);
+
+    // Get the abilities so that they can be assigned to the mobs.
+    const std::vector<Behavior::AbilitySet>& abilities = Behavior::getAbilities();
+
+    // Make some mobs
+    ws.addEntity(10, 1, "Bob", {"player", "species:human", "mob"});
+    // The player shouldn't have an automatic behavior set.
+    ws.entities.back().behavior_set_name = "none";
+    ws.addEntity(10, 10, "Blue Slime", {"species:slime", "mob", "auto"});
+    ws.addEntity(10, 12, "Green Slime", {"species:slime", "mob", "auto"});
+    ws.addEntity(8, 10, "Purple Slime", {"species:slime", "mob", "auto"});
+    ws.addEntity(10, 14, "Jiggling Slime", {"species:slime", "mob", "auto"});
+    ws.addEntity(4, 6, "Bat", {"species:bat", "mob", "aggro", "auto"});
+    ws.addEntity(17, 14, "Bat", {"species:bat", "mob", "aggro", "auto"});
+    ws.addEntity(20, 20, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
+    ws.addEntity(30, 30, "Ralph", {"species:elf", "mob", "auto"});
+
+    // Add command handlers for all entities.
+    for (const Behavior::AbilitySet& abset : abilities) {
+        for (Entity& entity : ws.entities) {
+            std::vector<std::string> updated = abset.updateAvailable(entity);
+        }
+    }
+
+    // Keep an easy handle to access the player
+    // TODO If we keep this here is there any reason for the world state to bother tracking some
+    // named entities?
+    auto player_i = ws.findEntity(std::vector<std::string>{"player"});
+
+    // Create a new window to display status.
+    WINDOW* stat_window = newwin(40, 30, 0, ws.field_width + 10);
+
+    // Create another window for the event log.
+    WINDOW* event_window = newwin(40, 80, main_window_height, 0);
+    std::deque<std::string> event_strings;
+
+    std::vector<PANEL*> panels;
+    panels.push_back(new_panel(event_window));
+    panels.push_back(new_panel(stat_window));
+    panels.push_back(new_panel(window));
+
+    for (PANEL* panel : panels) {
+        show_panel(panel);
+        top_panel(panel);
+    }
+
+    // Create (and hide) a dialog window for help screens.
+    std::map<std::string, UIComponent> help_components = createPlayerHelp(player_i);
 
     // Create a panel that will be used for generic dialog.
-    UIComponent dialog_box(ws, 38, 76, 1, 2);
+    UIComponent dialog_box(38, 76, 1, 2);
     dialog_box.renderDialogue(UserInterface::getDialogue("introduction"));
     // Don't block when checking for mouse clicks in the dialog window.
     wtimeout(dialog_box.window, 0);
 
     // update_panels should be called before rendering to any of the panels.
     update_panels();
-
-    // Turn cursor visibility to normal.
-    curs_set(1);
 
     // Wait 50 ms for user input and then handle any of the background game stuff that should be
     // happening. Unless the user has disabled ticking.
@@ -236,88 +336,7 @@ int main(int argc, char** argv) {
     doupdate();
 
     while(not quit) {
-        int in_c = wgetch(window);
-        std::string shortcut_str = "";
-        int function_hotkey = -1;
-        switch (in_c) {
-            // Check for arrow keys and treat them as an immediately commanded direction and enter
-            // key.
-            case KEY_UP:
-                shortcut_str = "north";
-                break;
-            case KEY_DOWN:
-                shortcut_str = "south";
-                break;
-            case KEY_LEFT:
-                shortcut_str = "west";
-                break;
-            case KEY_RIGHT:
-                shortcut_str = "east";
-                break;
-            case KEY_F(0):
-                function_hotkey = 0;
-                break;
-            case KEY_F(1):
-                function_hotkey = 1;
-                break;
-            case KEY_F(2):
-                function_hotkey = 2;
-                break;
-            case KEY_F(3):
-                function_hotkey = 3;
-                break;
-            case KEY_F(4):
-                function_hotkey = 4;
-                break;
-            case KEY_F(5):
-                function_hotkey = 5;
-                break;
-            case KEY_F(6):
-                function_hotkey = 6;
-                break;
-            case KEY_F(7):
-                function_hotkey = 7;
-                break;
-            case KEY_F(8):
-                function_hotkey = 8;
-                break;
-            case KEY_F(9):
-                function_hotkey = 9;
-                break;
-            case KEY_F(10):
-                function_hotkey = 10;
-                break;
-            case KEY_F(11):
-                function_hotkey = 11;
-                break;
-            case KEY_F(12):
-                function_hotkey = 12;
-                break;
-            case KEY_BACKSPACE:
-            case 127:
-                // Remove a character from the command.
-                if (not command.empty()) {
-                    command.pop_back();
-                    wdelch(window);
-                }
-                in_c = ERR;
-                break;
-        }
-        if (0 < shortcut_str.size()) {
-            if (0 < command.size() and command.back() != ' ') {
-                command.push_back(' ');
-            }
-            command += shortcut_str;
-            in_c = '\n';
-        }
-        if (0 <= function_hotkey and 0 < function_shortcuts.at(function_hotkey).size()) {
-            if (0 < command.size() and command.back() != ' ') {
-                command.push_back(' ');
-            }
-            command += function_shortcuts.at(function_hotkey);
-            // Don't process the character.
-            in_c = ERR;
-        }
+        int in_c = processUserInput(window, command, function_shortcuts);
         // Process a command on a new line.
         if ('\n' == in_c) {
             // Accept any abbreviation of quit
