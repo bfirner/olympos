@@ -295,7 +295,6 @@ void UserInterface::updateDisplay(WINDOW* window, const std::list<Entity>& entit
             wattr_set(window, getEntityAttr(ent), getEntityColor(ent), nullptr);
         }
         else {
-            std::cerr<<"Getting background color for tile "<<ent.y<<", "<<ent.x<<'\n';
             wattr_set(window, getEntityAttr(ent), getEntityColor(ent, background_effects.at(location)), nullptr);
         }
         //mvwaddch(window, ent.y, ent.x, getEntityChar(ent));
@@ -307,7 +306,6 @@ void UserInterface::updateDisplay(WINDOW* window, const std::list<Entity>& entit
     for (auto& [location, color] : background_effects) {
         if (not drawn.contains(location)) {
             wattr_set(window, A_NORMAL, std::get<1>(strToAttrCode("white on " + color)), nullptr);
-            std::cerr<<"Drawing background color for empty tile "<<std::get<0>(location)<<", "<<std::get<1>(location)<<'\n';
             drawString(window, " ", std::get<0>(location), std::get<1>(location));
         }
     }

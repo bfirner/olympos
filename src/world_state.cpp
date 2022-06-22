@@ -112,7 +112,8 @@ bool WorldState::moveEntity(Entity& entity, size_t y, size_t x) {
     return true;
 }
 
-void WorldState::damageEntity(decltype(entities)::iterator entity_i, size_t damage, Entity& attacker) {
+void WorldState::damageEntity(decltype(entities)::iterator entity_i, size_t damage, Entity&) {
+    // TODO Attacking entity is not currently used.
     // Out of bounds, nothing happens.
     if (entities.end() == entity_i) {
         return;
@@ -148,23 +149,35 @@ std::list<Entity>::iterator WorldState::findEntity(const std::vector<std::string
 std::list<Entity>::iterator WorldState::findEntity(const std::string& name, int64_t y, int64_t x, size_t range) {
     std::regex pattern(name, std::regex_constants::icase);
     return std::find_if(entities.begin(), entities.end(),
-        [&](Entity& ent) {return std::regex_search(ent.name, pattern) and (abs(y - ent.y) + abs(x - ent.x)) <= range;});
+        [&](Entity& ent) {return std::regex_search(ent.name, pattern) and (abs(y - ent.y) + abs(x - ent.x)) <= (int64_t)range;});
+}
+
+bool hasAllTraits(const std::vector<std::string>& traits, const Entity& ent) {
+    return std::all_of(traits.begin(), traits.end(), [&](const std::string& trait) {return ent.traits.contains(trait);});
 }
 
 std::list<Entity>::iterator WorldState::findEntity(const std::vector<std::string>& traits, int64_t y, int64_t x, size_t range) {
+    auto trait_check = std::bind_front(hasAllTraits, traits);
     return std::find_if(entities.begin(), entities.end(),
-        [&](Entity& ent) {return std::all_of(traits.begin(), traits.end(), [&](const std::string& trait) {return ent.traits.contains(trait);}) and (abs(y - ent.y) + abs(x - ent.x)) <= range;});
+        [&](Entity& ent) {return trait_check(ent) and (abs(y - ent.y) + abs(x - ent.x)) <= (int64_t)range;});
 }
 
 std::list<Entity>::iterator WorldState::findEntity(size_t entity_id) {
     return std::find(entities.begin(), entities.end(), entity_id);
 }
 
-void WorldState::initialize() {
-    // Get the player entity
-    decltype(entities)::iterator player = std::find_if(entities.begin(), entities.end(),
-            [](auto& ent) {return (ent.traits.contains("player"));});
+std::vector<std::list<Entity>::iterator> WorldState::findEntities(const std::vector<std::string>& traits, int64_t y, int64_t x, size_t range) {
+    auto trait_check = std::bind_front(hasAllTraits, traits);
+    std::vector<std::list<Entity>::iterator> found_entities;
+    for (std::list<Entity>::iterator entity_i = entities.begin(); entity_i != entities.end(); ++entity_i) {
+        if (trait_check(*entity_i) and (abs(y - entity_i->y) + abs(x - entity_i->x)) <= (int64_t)range) {
+            found_entities.push_back(entity_i);
+        }
+    }
+    return found_entities;
+}
 
+void WorldState::initialize() {
     // Make the walls
     for (size_t x = 0; x < field_width; ++x) {
         addEntity(0, x, "Wall", {"wall", "impassable"});
@@ -206,7 +219,7 @@ void WorldState::logEvent(WorldEvent event) {
 std::vector<std::string> WorldState::getLocalEvents(size_t y, size_t x, size_t range) {
     std::vector<std::string> local_events;
     for (WorldEvent& event : events) {
-        if (abs(y - event.y) + abs(x - event.x) <= range) {
+        if (abs(y - event.y) + abs(x - event.x) <= (int64_t)range) {
             // Making this a coroutine is possible, but current feels more clunky than it is worth.
             local_events.push_back(event.message);
         }

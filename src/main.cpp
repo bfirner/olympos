@@ -490,10 +490,6 @@ int main(int argc, char** argv) {
         if (not in_dialog) {
             // Draw background effects in the first half of the tic.
             if (time_diff.count() < tick_rate / 2) {
-                std::cerr<<"updating with "<<ws.background_effects.size()<<" background effects.\n";
-                for (auto& [location, color] : ws.background_effects) {
-                    std::cerr<<"\tlocation "<<std::get<0>(location)<<", "<<std::get<1>(location)<<" is "<<color<<'\n';
-                }
                 UserInterface::updateDisplay(window, ws.entities, ws.background_effects);
             }
             else {

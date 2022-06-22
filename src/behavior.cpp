@@ -32,10 +32,8 @@ namespace Behavior {
     std::map<std::string, BehaviorSet> loaded_behaviors;
 
     // No op function
-    void noop_function(WorldState& ws, const vector<string>& args) {
+    void noop_function(WorldState&, const vector<string>&) {
         // Lots of nothing here.
-        (ws);
-        (args);
     }
 
     json loadJson(const std::string& path) {
@@ -173,9 +171,12 @@ namespace Behavior {
         if (0 < expected_args.size() and expected_args[0] == "or") {
             // Expecting a single argument. Start with the default, but replace it with any supplied
             // argument if present.
-            std::string arg = default_args.at(0);
+            std::string arg = "";
             if (0 < args.size()) {
                 arg = args.at(0);
+            }
+            else if (0 < default_args.size()) {
+                arg = default_args.at(0);
             }
             // Skip the "or" when looking at possible arguments.
             auto arg_options = std::ranges::subrange(expected_args.begin()+1, expected_args.end());
@@ -231,10 +232,50 @@ namespace Behavior {
         return {target, target_location};
     }
 
+    // Find the target of a radius skill or ability, or end iterator if there are no targets.
+    std::tuple<std::vector<std::list<Entity>::iterator>, std::set<std::tuple<size_t, size_t>>> findRadiusTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
+            const vector<string>&, const vector<string>&, const vector<string>&) {
+        // Read in the information about the radius area of effect
+        const json& area_effects = effects.at("area");
+        double range = area_effects.at("range").get<double>();
+        // Calculate modifiers from entity attributes
+        // TODO Modifiers from other attributes
+        double vitality_mod = 0;
+        if (area_effects.contains("vitality_mod")) {
+            vitality_mod = area_effects.at("vitality_mod").get<double>();
+        }
+        range = floor(vitality_mod * actor.stats.value().vitality + range);
+
+        // Radial effects don't use arguments.
+        // Find all entities within the actor's range
+        std::vector<std::list<Entity>::iterator> targets = ws.findEntities(std::vector<std::string>{}, actor.y, actor.x, range);
+        // Fill in the area_of_effect as well.
+        std::set<std::tuple<size_t, size_t>> area_of_effect;
+        for (size_t step = 0; step <= range; ++step) {
+            // For each distance in the range, find all combinations of y and x
+            for (size_t y_dist = 0; y_dist <= step; ++y_dist) {
+                size_t x_dist = step - y_dist;
+                for (int ydir = -1; ydir <= 1; ydir += 2) {
+                    for (int xdir = -1; xdir <= 1; xdir += 2) {
+                        // Don't insert a position that would have a negative coordinate.
+                        size_t target_y = actor.y + (ydir * y_dist);
+                        size_t target_x = actor.x + (xdir * x_dist);
+                        if ((1 == ydir or y_dist <= actor.y) and
+                            (1 == xdir or x_dist <= actor.x)) {
+                            area_of_effect.insert({target_y, target_x});
+                        }
+                    }
+                }
+            }
+        }
+        // Finally return whatever iterator locations were discovered.
+        return {targets, area_of_effect};
+    }
+
     // Find the target of a cone shaped skill or ability, or end iterator if there are no targets.
     // TODO FIXME multiple arguments are just members of an ability, just pass that here.
     // TODO FIXME Or maybe this should just be a member function of Ability?
-    std::tuple<std::vector<std::list<Entity>::iterator>, std::vector<std::tuple<size_t, size_t>>> findConeTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
+    std::tuple<std::vector<std::list<Entity>::iterator>, std::set<std::tuple<size_t, size_t>>> findConeTarget(WorldState& ws, Entity& actor, const std::map<std::string, nlohmann::json>& effects,
             const vector<string>& expected_args, const vector<string>& default_args, const vector<string>& args) {
         // Read in the information about the cone area of effect
         const json& area_effects = effects.at("area");
@@ -251,7 +292,7 @@ namespace Behavior {
 
         // Default to having no target.
         std::vector<std::list<Entity>::iterator> targets;
-        std::vector<std::tuple<size_t, size_t>> area_of_effect;
+        std::set<std::tuple<size_t, size_t>> area_of_effect;
         bool argument_consumed = false;
         // Are there argument options?
         if (0 < expected_args.size() and expected_args[0] == "or") {
@@ -283,7 +324,7 @@ namespace Behavior {
                             // Use the directions to calculate the point being searched.
                             size_t target_y = actor.y + distance * direction[0] + lateral * side_direction[0];
                             size_t target_x = actor.x + distance * direction[1] + lateral * side_direction[1];
-                            area_of_effect.push_back({target_y, target_x});
+                            area_of_effect.insert({target_y, target_x});
                             // Now find targets at that location if they exist.
                             std::list<Entity>::iterator target = ws.entities.begin();
                             while (target != ws.entities.end()) {
@@ -482,9 +523,8 @@ namespace Behavior {
                 y_dist = distances.at("y");
             }
             // Capture the distances by value, but reference the entity.
-            return [=,&entity](WorldState& ws, const vector<string>& args) {
-                // Ignoring the movement arguments
-                (args);
+            return [=,&entity](WorldState& ws, const vector<string>&) {
+                // Ignoring the movement arguments for now.
                 // If the entity has the stamina for the action take it, and then reduce the
                 // stamina cost from the entity's stamina if the action occurred.
                 if (stamina <= entity.stats.value().stamina) {
@@ -502,14 +542,13 @@ namespace Behavior {
 
             // Lambda functions do not capture member variables, so shadow stamina with a
             // local variable.
-            return [=,&entity,stamina=this->stamina](WorldState& ws, const vector<string>& args) {
+            return [=,&entity,stamina=this->stamina](WorldState& ws, const vector<string>&) {
                 // Ignoring the movement arguments
                 // Going to use one RNG for each lambda. This theoretically protects from
                 // some side channel shenanigans.
                 static std::mt19937 randgen{std::random_device{}()};
                 static std::uniform_int_distribution<> rand_direction(0, 1);
                 static std::uniform_int_distribution<> rand_distance(rand_min, rand_max);
-                (args);
                 int y_location = entity.y;
                 int x_location = entity.x;
                 // Chose a random movement
@@ -548,17 +587,21 @@ namespace Behavior {
     }
 
     void informationFunction(Entity& actor, const Ability& ability, std::vector<std::string> info_types, std::string event_string, std::string fail_string, WorldState& ws, const std::vector<std::string>& arguments) {
-        // Verify that this action could be taken.
-        if (not actionBoilerplateCheck(actor, ws, ability, arguments, 1, fail_string)) {
+        // Verify that this action can be taken.
+        // TODO FIXME Should have a better way to find the minimum arguments
+        size_t min_arguments = 1;
+        if (ability.arguments.empty()) {
+            min_arguments = 0;
+        }
+        if (not actionBoilerplateCheck(actor, ws, ability, arguments, min_arguments, fail_string)) {
             return;
         }
 
         // Keep track of detected entities and update them in the information section of the status
         // window.
-        // TODO FIXME World state needs an information section I guess.
 
         std::vector<std::list<Entity>::iterator> targets;
-        std::vector<std::tuple<size_t, size_t>> area_of_effect;
+        std::set<std::tuple<size_t, size_t>> area_of_effect;
         if (AbilityArea::single == ability.area) {
             auto [target, target_location] = findOneTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
 
@@ -568,6 +611,9 @@ namespace Behavior {
         }
         else if (AbilityArea::cone == ability.area) {
             std::tie(targets, area_of_effect) = findConeTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+        }
+        else if (AbilityArea::radius == ability.area) {
+            std::tie(targets, area_of_effect) = findRadiusTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
         }
 
         // Mark background colors for the area of effect

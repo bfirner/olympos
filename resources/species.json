@@ -50,7 +50,7 @@
         "description": {
             "visual": "A bipedal creature with forward facing eyes and dextrous hands.",
             "aural": "A biped that enjoys muttering to itself.",
-            "smell": "A warm, sweaty creature.",
+            "scent": "A warm, sweaty creature.",
             "tactile": "A soft, squishy creature with an internal skeleton."
         }
     },
@@ -63,7 +63,7 @@
             "vision": "high",
             "vibration": "low",
             "taste": "low",
-            "smell": "high",
+            "scent": "high",
             "inertial": "medium",
             "proprioception": "high"
         },
@@ -92,7 +92,7 @@
         "description": {
             "visual": "A bipedal creature with a broad face, forward facing eyes, and dextrous hands.",
             "aural": "A biped that hums happily to fill the silence.",
-            "smell": "A warm, sweaty creature that smells of honey and grass.",
+            "scent": "A warm, sweaty creature that smells of honey and grass.",
             "tactile": "A large and soft, squishy creature with an internal skeleton."
         }
     },
@@ -105,7 +105,7 @@
             "vision": "high",
             "vibration": "high",
             "taste": "medium",
-            "smell": "medium",
+            "scent": "medium",
             "inertial": "none",
             "proprioception": "medium"
         },
@@ -134,7 +134,7 @@
         "description": {
             "visual": "An eight-legged creature with multiple eyes and a wicked pair of fangs.",
             "aural": "A hunter, silent but for the pattering of its eight legs.",
-            "smell": "Little odor comes from this creature.",
+            "scent": "Little odor comes from this creature.",
             "tactile": "A creature whose exterior is hard and chitinous."
         }
     },
@@ -146,7 +146,7 @@
         "senses": {
             "vision": "low",
             "taste": "medium",
-            "smell": "medium",
+            "scent": "medium",
             "echolocation": "high",
             "inertial": "medium",
             "proprioception": "medium",
@@ -177,7 +177,7 @@
         "description": {
             "visual": "A bat looks like a mouse with wings as it flitters about.",
             "aural": "Fluttering sounds and high-pitched vocalizations identify this creature as a bat.",
-            "smell": "A creature that smells like burnt oranges with a hint of ammonia.",
+            "scent": "A creature that smells like burnt oranges with a hint of ammonia.",
             "tactile": "A creature that is small, soft, and has relatively large, leathery wings."
         }
     },
@@ -217,7 +217,7 @@
         "description": {
             "visual": "A large blob of liquid, seemingly held together by surface tension.",
             "aural": "A quiet scraping noise is the only sound this creature makes as it moves.",
-            "smell": "A creature whose unique smell can only be likened to swamp gas.",
+            "scent": "A creature whose unique aroma can only be likened to swamp gas.",
             "tactile": "It jiggles and squishes when you touch it."
         }
     }

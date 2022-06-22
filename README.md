@@ -12,22 +12,6 @@ C++ compiler that supports the C++20 standard.
 * Compartmentalize activities in main into separate functions
 * Fix the (s) at the end of words when entity is replaced by "You" (e.g. "You looks", "You kicks", etc)
 * * Should the word "You" or "you" be highlighted in a color?
-* Add skills for all of the basic senses (listen, taste, look, touch/feel, smell)
-* * look ["or", "north", "east", "south", "west", "<target>"]
-* * * Should bring up entity information in the status window
-* * * * Clean this up
-* * listen []
-* * * ???
-* * taste ["<target>"]
-* * * Should work with things in inventory
-* * touch ["<target>"]
-* * * Should work with things in inventory
-* * smell ["<target>"]
-* * * Should work with things in inventory, or in general
-* * Each sense should have a list of traits that can be picked up.
-* * If an entity has those traits then it will trigger that sense
-* * * e.g. if Orcs have the "rotten" trait then "smell" could detect them.
-* * * e.g. "smell" -> "You smell the rotten stench of an Orc."
 * Utility and tool commands
 * * Pick up
 * * Throw
@@ -82,6 +66,12 @@ C++ compiler that supports the C++20 standard.
 entity when it passes from one room to another.
 * Mouse stuff (click on things to use ability, add hotkeys, etc)
 * * See `curs_mouse`
+* More complicated senses
+* * Should work with things in inventory, or in general
+* Each sense should have a list of traits that can be picked up.
+* If an entity has those traits then it will trigger that sense
+* * e.g. if Orcs have the "rotten" trait then "smell" could detect them.
+* * e.g. "smell" -> "You smell the rotten stench of an Orc."
 
 * Elements and ability sets
 * * Want to have ability sets with broad themes

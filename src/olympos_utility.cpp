@@ -19,7 +19,7 @@ namespace OlymposUtility {
         // Find the number of characters for the sequence.
         std::size_t converted_len = mbsrtowcs(nullptr, &in_data, 0, &state);
         std::wstring converted(converted_len, L'\0');
-        std::size_t written = mbsrtowcs(&converted[0], &in_data, converted.size(), &state);
+        [[maybe_unused]] std::size_t written = mbsrtowcs(&converted[0], &in_data, converted.size(), &state);
         return converted;
     }
 }

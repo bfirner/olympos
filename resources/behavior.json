@@ -292,6 +292,117 @@
                 "description": "Look over a conical area to gain information about entities there. Distance increases with vitality.",
                 "prereqs": {},
                 "constraints": ["eye"]
+            },
+            "listen": {
+                "type": "utility",
+                "range": "close",
+                "area": "radius",
+                "stamina": 1,
+                "arguments": [],
+                "effects": {
+                    "area": {
+                        "range": 6,
+                        "vitality_mod": 0.05
+                    },
+                    "information": ["aural"]
+                },
+                "flavor": "<entity> [color:cyan](listens) to the sounds from <target>.",
+                "fail_flavor": "<entity> [color:cyan](listens), but hears nothing.",
+                "description": "Listen to your surroundings to gain information. Hearing range increases with vitality.",
+                "prereqs": {},
+                "constraints": ["ear"]
+            },
+            "taste": {
+                "type": "utility",
+                "range": "close",
+                "area": "single",
+                "stamina": 1,
+                "arguments": ["or", "north", "east", "south", "west", "<target>"],
+                "effects": {
+                    "north": {
+                        "distance": {
+                            "y": -1
+                        }
+                    },
+                    "south": {
+                        "distance": {
+                            "y": 1
+                        }
+                    },
+                    "east": {
+                        "distance": {
+                            "x": 1
+                        }
+                    },
+                    "west": {
+                        "distance": {
+                            "x": -1
+                        }
+                    },
+                    "range": 1,
+                    "information": ["taste"]
+                },
+                "flavor": "<entity> [color:cyan](tastes) <target>.",
+                "fail_flavor": "<entity> tries to [color:cyan](taste) something, but there is nothing there.",
+                "description": "Taste something.",
+                "prereqs": {},
+                "constraints": ["or", "tongue", "antenna"]
+            },
+            "smell": {
+                "type": "utility",
+                "range": "close",
+                "area": "radius",
+                "stamina": 1,
+                "arguments": [],
+                "effects": {
+                    "area": {
+                        "range": 2,
+                        "vitality_mod": 0.04
+                    },
+                    "information": ["scent"]
+                },
+                "flavor": "<entity> [color:cyan](smells) the scents wafting from <target>.",
+                "fail_flavor": "<entity> [color:cyan](smells) the air, but detects nothing.",
+                "description": "Smell the air and see what's cooking. Range increases with vitality.",
+                "prereqs": {},
+                "constraints": ["or", "nose", "antenna"]
+            },
+            "touch": {
+                "type": "utility",
+                "range": "close",
+                "area": "single",
+                "stamina": 1,
+                "arguments": ["or", "north", "east", "south", "west", "<target>"],
+                "default arguments": ["forward"],
+                "effects": {
+                    "north": {
+                        "distance": {
+                            "y": -1
+                        }
+                    },
+                    "south": {
+                        "distance": {
+                            "y": 1
+                        }
+                    },
+                    "east": {
+                        "distance": {
+                            "x": 1
+                        }
+                    },
+                    "west": {
+                        "distance": {
+                            "x": -1
+                        }
+                    },
+                    "range": 1,
+                    "information": ["tactile"]
+                },
+                "flavor": "<entity> [color:cyan](touches) <target>.",
+                "fail_flavor": "<entity> tries to [color:cyan](touch) something, but there is nothing there.",
+                "description": "Reach out and touch something.",
+                "prereqs": {},
+                "constraints": ["or", "hand", "tentacle", "tendril", "antenna", "pseudopod", "foot"]
             }
         }
     }
