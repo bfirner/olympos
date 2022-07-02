@@ -139,6 +139,7 @@ namespace Behavior {
         // Verify that the actor can take this action
         if (ability.stamina > actor.stats.value().stamina) {
             // TODO Should there be a generic low stamina failure string?
+            // TODO Prepend an exhausted string to the fail string.
             ws.logEvent({fail_string, actor.y, actor.x});
             return false;
         }
@@ -510,7 +511,15 @@ namespace Behavior {
         // Prepare a flavor string to go into the event log whenever this behavior occurs.
         // Fill in some fields in advance.
         std::string event_string = flavor;
-        replaceSubstring(event_string, "<entity>", entity.name);
+        std::string fail_string = fail_flavor;
+        if (entity.traits.contains("player")) {
+            replaceSubstring(event_string, "<entity>", "You");
+            replaceSubstring(fail_string, "<entity>", "You");
+        }
+        else {
+            replaceSubstring(event_string, "<entity>", entity.name);
+            replaceSubstring(fail_string, "<entity>", entity.name);
+        }
 
         auto& distances = effects.at("distance");
         if (distances.contains("x") or distances.contains("y")) {

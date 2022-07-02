@@ -13,8 +13,8 @@
                         "x": -1
                     }
                 },
-                "flavor": "<entity> moves West.",
-                "fail_flavor": "<entity> wiggles around aimlessly.",
+                "flavor": "<entity> moved West.",
+                "fail_flavor": "<entity> wiggled around aimlessly.",
                 "description": "Move one space west (to the left)",
                 "prereqs": {},
                 "constraints": []
@@ -30,8 +30,8 @@
                         "y": 1
                     }
                 },
-                "flavor": "<entity> moves South.",
-                "fail_flavor": "<entity> wiggles around aimlessly.",
+                "flavor": "<entity> moved South.",
+                "fail_flavor": "<entity> wiggled around aimlessly.",
                 "description": "Move one space south (down)",
                 "prereqs": {},
                 "constraints": []
@@ -47,8 +47,8 @@
                         "x": 1
                     }
                 },
-                "flavor": "<entity> moves East.",
-                "fail_flavor": "<entity> wiggles around aimlessly.",
+                "flavor": "<entity> moved East.",
+                "fail_flavor": "<entity> wiggled around aimlessly.",
                 "description": "Move one space east (to the right)",
                 "prereqs": {},
                 "constraints": []
@@ -64,8 +64,8 @@
                         "y": -1
                     }
                 },
-                "flavor": "<entity> moves North.",
-                "fail_flavor": "<entity> wiggles around aimlessly.",
+                "flavor": "<entity> moved North.",
+                "fail_flavor": "<entity> wiggled around aimlessly.",
                 "description": "Move one space north (to the north)",
                 "prereqs": {},
                 "constraints": []
@@ -82,8 +82,8 @@
                         "random_max": 1
                     }
                 },
-                "flavor": "<entity> wanders.",
-                "fail_flavor": "<entity> wiggles around aimlessly.",
+                "flavor": "<entity> wandered.",
+                "fail_flavor": "<entity> wiggled around aimlessly.",
                 "description": "Wander one space in a random direction.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -98,8 +98,8 @@
                     "minimize distance": {
                     }
                 },
-                "flavor": "<entity> [color:green](chases) after <target>.",
-                "fail_flavor": "<entity> focuses on <target> but remains still.",
+                "flavor": "<entity> [color:green](chased) after <target>.",
+                "fail_flavor": "<entity> focused on <target> but remained still.",
                 "description": "Chase an entity or object.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -114,8 +114,8 @@
                     "maximize distance": {
                     }
                 },
-                "flavor": "<entity> [color:green](flees) from <target>.",
-                "fail_flavor": "<entity> squirms away from <target> but doesn't move.",
+                "flavor": "<entity> [color:green](fled) from <target>.",
+                "fail_flavor": "<entity> squirmed away from <target> but didn't move.",
                 "description": "Flee an entity or object.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -130,8 +130,8 @@
                     "maintain distance": {
                     }
                 },
-                "flavor": "<entity> [color:green](kites) around <target>.",
-                "fail_flavor": "<entity> tries to kite around <target>, but fails.",
+                "flavor": "<entity> [color:green](kited) around <target>.",
+                "fail_flavor": "<entity> tried to kite around <target>, but failed.",
                 "description": "Try to maintain a desired distance from an entity or object.",
                 "prereqs": {},
                 "constraints": ["auto"]
@@ -171,8 +171,8 @@
                     },
                     "range": 1
                 },
-                "flavor": "<entity> [color:red](kicks) <target>.",
-                "fail_flavor": "<entity> aims a [color:red](kick), but doesn't connect.",
+                "flavor": "<entity> [color:red](kicked) <target>.",
+                "fail_flavor": "<entity> aimed a [color:red](kick), but didn't connect.",
                 "prereqs": {},
                 "constraints": ["or", "leg", "pseudopod"]
             },
@@ -211,8 +211,8 @@
                     },
                     "range": 1
                 },
-                "flavor": "<entity> [color:red](punches) <target>.",
-                "fail_flavor": "<entity> swings a [color:red](punch), but doesn't connect.",
+                "flavor": "<entity> [color:red](punched) <target>.",
+                "fail_flavor": "<entity> swung a [color:red](punch), but didn't connect.",
                 "prereqs": {},
                 "constraints": ["or", "hand", "pseudopod"]
             },
@@ -251,8 +251,8 @@
                     },
                     "range": 1
                 },
-                "flavor": "<entity> [color:red](bites) <target>.",
-                "fail_flavor": "<entity> [color:red](bites) the air.",
+                "flavor": "<entity> [color:red](bit) <target>.",
+                "fail_flavor": "<entity> [color:red](bit) the air.",
                 "prereqs": {},
                 "constraints": ["or", "tooth", "fang", "beak"]
             },
@@ -287,8 +287,8 @@
                     },
                     "information": ["visual"]
                 },
-                "flavor": "<entity> [color:cyan](looks) at <target>.",
-                "fail_flavor": "<entity> [color:cyan](looks) around, but nothing is there.",
+                "flavor": "<entity> [color:cyan](looked) at <target>.",
+                "fail_flavor": "<entity> [color:cyan](looked) around, but nothing was there.",
                 "description": "Look over a conical area to gain information about entities there. Distance increases with vitality.",
                 "prereqs": {},
                 "constraints": ["eye"]
@@ -306,8 +306,8 @@
                     },
                     "information": ["aural"]
                 },
-                "flavor": "<entity> [color:cyan](listens) to the sounds from <target>.",
-                "fail_flavor": "<entity> [color:cyan](listens), but hears nothing.",
+                "flavor": "<entity> [color:cyan](listened) to the sounds from <target>.",
+                "fail_flavor": "<entity> [color:cyan](listened), but heard nothing.",
                 "description": "Listen to your surroundings to gain information. Hearing range increases with vitality.",
                 "prereqs": {},
                 "constraints": ["ear"]
@@ -342,8 +342,8 @@
                     "range": 1,
                     "information": ["taste"]
                 },
-                "flavor": "<entity> [color:cyan](tastes) <target>.",
-                "fail_flavor": "<entity> tries to [color:cyan](taste) something, but there is nothing there.",
+                "flavor": "<entity> [color:cyan](tasted) <target>.",
+                "fail_flavor": "<entity> tried to [color:cyan](taste) something, but there is nothing there.",
                 "description": "Taste something.",
                 "prereqs": {},
                 "constraints": ["or", "tongue", "antenna"]
@@ -361,8 +361,8 @@
                     },
                     "information": ["scent"]
                 },
-                "flavor": "<entity> [color:cyan](smells) the scents wafting from <target>.",
-                "fail_flavor": "<entity> [color:cyan](smells) the air, but detects nothing.",
+                "flavor": "<entity> [color:cyan](smelled) the scents wafting from <target>.",
+                "fail_flavor": "<entity> [color:cyan](smelled) the air, but detected nothing.",
                 "description": "Smell the air and see what's cooking. Range increases with vitality.",
                 "prereqs": {},
                 "constraints": ["or", "nose", "antenna"]
@@ -398,8 +398,8 @@
                     "range": 1,
                     "information": ["tactile"]
                 },
-                "flavor": "<entity> [color:cyan](touches) <target>.",
-                "fail_flavor": "<entity> tries to [color:cyan](touch) something, but there is nothing there.",
+                "flavor": "<entity> [color:cyan](touched) <target>.",
+                "fail_flavor": "<entity> tried to [color:cyan](touch) something, but there was nothing there.",
                 "description": "Reach out and touch something.",
                 "prereqs": {},
                 "constraints": ["or", "hand", "tentacle", "tendril", "antenna", "pseudopod", "foot"]

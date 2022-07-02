@@ -15,8 +15,8 @@
                 "effects": {
                     "equip": "<item>"
                 },
-                "flavor": "<entity> [color:cyan](wields) <item>.",
-                "fail_flavor": "<entity> tries to [color:cyan](wield) <item>, but fails.",
+                "flavor": "<entity> [color:cyan](wielded) <item>.",
+                "fail_flavor": "<entity> tried to [color:cyan](wield) <item>, but failed.",
                 "prereqs": {}
             }
     },
@@ -62,8 +62,8 @@
                         "side_direction": [1, 0]
                     }
                 },
-                "flavor": "<entity> [color:red](swings) <item> at <target>.",
-                "fail_flavor": "<entity> [color:red](swings) <item>, but cuts only air.",
+                "flavor": "<entity> [color:red](swung) <item> at <target>.",
+                "fail_flavor": "<entity> [color:red](swung) <item>, but cut only air.",
                 "prereqs": {}
             }
         }
@@ -104,8 +104,8 @@
                         "direction": [0, -1]
                     }
                 },
-                "flavor": "<entity> [color:red](stabs) <item> at <target>.",
-                "fail_flavor": "<entity> [color:red](stabs) <item>, but pierces only air.",
+                "flavor": "<entity> [color:red](stabbed) <item> at <target>.",
+                "fail_flavor": "<entity> [color:red](stabbed) with <item>, but pierced only air.",
                 "prereqs": {}
             }
         }
