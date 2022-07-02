@@ -9,7 +9,6 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
-* Killed entities are not removed from the map and prevent future motion through those tiles.
 * Compartmentalize activities in main into separate functions
 * Fix the (s) at the end of words when entity is replaced by "You" (e.g. "You looks", "You kicks", etc)
 * * Should the word "You" or "you" be highlighted in a color?

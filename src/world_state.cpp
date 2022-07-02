@@ -31,7 +31,7 @@ bool isPassable(const Entity& entity) {
 }
 
 // TODO This may not be the way, but it will work out for now.
-void updatePassable(const std::list<Entity>& entities, vector<vector<bool>>& passable) {
+void initializePassable(const std::list<Entity>& entities, vector<vector<bool>>& passable) {
     // Set everything passable and then update things that are not.
     for (auto& row : passable) {
         row.assign(true, row.size());
@@ -83,6 +83,12 @@ bool passableOrNotPresent(size_t y, size_t x, const Entity& ent) {
     return ent.y != y or ent.x != x or isPassable(ent);
 }
 
+void WorldState::updatePassable(size_t y, size_t x) {
+    passable[y][x] = std::all_of(
+        std::execution::par_unseq, entities.begin(), entities.end(),
+        std::bind_front(passableOrNotPresent, y, x));
+}
+
 bool WorldState::moveEntity(Entity& entity, size_t y, size_t x) {
     // Out of bounds? Return false.
     if (y >= this->field_height or x >= this->field_height) {
@@ -100,15 +106,10 @@ bool WorldState::moveEntity(Entity& entity, size_t y, size_t x) {
     entity.x = x;
 
     // Update passable with this entity removed.
-    passable[old_y][old_x] = std::all_of(
-        std::execution::par_unseq, entities.begin(), entities.end(),
-        std::bind_front(passableOrNotPresent, old_y, old_x));
+    updatePassable(old_y, old_x);
 
-    // Now updated passable at the new location. Note that we are calling the function to prepare
-    // for the possibility more complex rules in the future.
-    passable[y][x] = std::all_of(
-        std::execution::par_unseq, entities.begin(), entities.end(),
-        std::bind_front(passableOrNotPresent, y, x));
+    // Now update passable at the new location.
+    updatePassable(y, x);
     return true;
 }
 
@@ -124,10 +125,14 @@ void WorldState::damageEntity(decltype(entities)::iterator entity_i, size_t dama
         if (damage >= stats.health) {
             stats.health = 0;
             // Remove the entity.
+            // Remember its location and update the passable information after the removal.
+            size_t entity_y = entity_i->y;
+            size_t entity_x = entity_i->x;
+            entities.erase(entity_i);
+            updatePassable(entity_y, entity_x);
             // TODO FIXME Remove all of its actions from the action queue.
             // That implies that the action queue should be part of the world model.
             // Makes sense, the action log should live in the world model as well.
-            entities.erase(entity_i);
         }
         else {
             stats.health -= damage;
@@ -199,7 +204,7 @@ void WorldState::initialize() {
         }
     }
 
-    updatePassable(entities, passable);
+    initializePassable(entities, passable);
 }
 
 void WorldState::logInformation(const std::vector<std::wstring>& information) {
