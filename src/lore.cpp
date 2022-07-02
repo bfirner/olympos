@@ -146,34 +146,49 @@ std::optional<Stats> OlymposLore::getStats(const Entity& entity) {
 //TODO FIXME These functions are all almost exactly the same, maybe provide a generic function to
 //fetch an entity from the json based upon a string.
 
-std::set<std::string> OlymposLore::getSpeciesField(const std::string species_name, const std::string& field) {
+std::set<std::string> OlymposLore::getLoreField(const std::string lore_name, const std::string& field) {
     json& species = getSpeciesLore();
-    // Don't try anything if there is no species name.
-    if ("" == species_name or not species.contains(species_name)) {
-        return std::set<std::string>{};
+    json& objects = getObjectLore();
+
+    // Prepare a return set
+    std::set<std::string> found_data;
+
+    // Search for this name in species and objects
+    if (species.contains(lore_name)) {
+        auto& json_data = species[lore_name][field];
+        found_data.insert(json_data.begin(), json_data.end());
     }
-    auto& json_data = species[species_name][field];
-    return std::set<std::string>(json_data.begin(), json_data.end());
+    if (objects.contains(lore_name)) {
+        auto& json_data = objects[lore_name][field];
+        found_data.insert(json_data.begin(), json_data.end());
+    }
+    // Now return whatever was found.
+    return found_data;
 }
 
-std::string OlymposLore::getSpeciesString(const std::string species_name, const std::string& field) {
+std::string OlymposLore::getLoreString(const std::string lore_name, const std::string& field) {
     json& species = getSpeciesLore();
-    // Don't try anything if there is no species name.
-    if ("" == species_name or not species.contains(species_name)) {
-        return "";
+    json& objects = getObjectLore();
+
+    // Search for this name in species and objects
+    if (species.contains(lore_name)) {
+        return species.at(lore_name).at(field).get<std::string>();
     }
-    return species.at(species_name).at(field).get<std::string>();
+    if (objects.contains(lore_name)) {
+        return objects.at(lore_name).at(field).get<std::string>();
+    }
+
+    // If nothing was found then return an empty string.
+    return "";
 }
 
 std::set<std::string> OlymposLore::getNamedEntry(const Entity& entity, const std::string& field) {
-    json& species = getSpeciesLore();
-    std::string species_name = entity.getSpecies();
-    // Don't try anything if there is no species name.
-    if ("" == species_name or not species.contains(species_name)) {
-        return std::set<std::string>{};
-    }
-    auto& json_data = species[species_name][field];
-    return std::set<std::string>(json_data.begin(), json_data.end());
+    std::set<std::string> species_fields = getLoreField(entity.getSpecies(), field);
+    std::set<std::string> object_fields = getLoreField(entity.getObjectType(), field);
+
+    species_fields.insert(object_fields.begin(), object_fields.end());
+
+    return species_fields;
 }
 
 // TODO Get other things like XP

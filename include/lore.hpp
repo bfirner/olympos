@@ -20,8 +20,8 @@ namespace OlymposLore {
     std::string getDescription(const Entity& entity);
     std::optional<Stats> getStats(const Entity& entity);
     std::set<std::string> getNamedEntry(const Entity& entity, const std::string& field);
-    std::set<std::string> getSpeciesField(const std::string species_name, const std::string& field);
-    std::string getSpeciesString(const std::string species_name, const std::string& field);
+    std::set<std::string> getLoreField(const std::string lore_name, const std::string& field);
+    std::string getLoreString(const std::string lore_name, const std::string& field);
     std::set<std::string> getSpecies(const std::string species_name, const std::string& field);
     // TODO Get other things like XP
 

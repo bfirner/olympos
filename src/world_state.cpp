@@ -181,12 +181,12 @@ void WorldState::initialize() {
     // Make the walls
     for (size_t x = 0; x < field_width; ++x) {
         addEntity(0, x, "Wall", {"wall", "impassable"});
-        addEntity(field_height-1, x, "Wall", {"wall", "impassable"});
+        addEntity(field_height-1, x, "Wall", {"object:wall"});
     }
     // Don't repeat the corners that were already filled in
     for (size_t y = 1; y < field_height-1; ++y) {
         addEntity(y, 0, "Wall", {"wall", "impassable"});
-        addEntity(y, field_width-1, "Wall", {"wall", "impassable"});
+        addEntity(y, field_width-1, "Wall", {"object:wall"});
     }
 
     // Initialize HP and Mana

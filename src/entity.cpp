@@ -89,7 +89,7 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     std::string species = getSpecies();
 
     // Get the character used to display this creature.
-    std::string repr = OlymposLore::getSpeciesString(species, "character");
+    std::string repr = OlymposLore::getLoreString(species, "character");
     if (0 == repr.size()) {
         repr = ".";
     }
@@ -102,19 +102,20 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
         description.insert(std::make_pair(sense, OlymposUtility::utf8ToWString(str)));
     }
 
+    // Do this for all of [species, object]
     // Get the "is a" and "has a" relationships to expand traits.
-    std::set<std::string> has_a = OlymposLore::getSpeciesField(species, "has a");
+    std::set<std::string> has_a = OlymposLore::getLoreField(species, "has a");
     this->traits.insert(has_a.begin(), has_a.end());
 
     // Get the traits of the groups of which this entity is a member.
-    std::set<std::string> is_a = OlymposLore::getSpeciesField(species, "is a");
+    std::set<std::string> is_a = OlymposLore::getLoreField(species, "is a");
     for (const std::string& group : is_a) {
         this->traits.insert(group);
-        std::set<std::string> has_a = OlymposLore::getSpeciesField(group, "has a");
+        std::set<std::string> has_a = OlymposLore::getLoreField(group, "has a");
         this->traits.insert(has_a.begin(), has_a.end());
     }
 
-    behavior_set_name = OlymposLore::getSpeciesString(species, "base behavior");
+    behavior_set_name = OlymposLore::getLoreString(species, "base behavior");
 }
 
 Entity::Entity(const Entity& other) : entity_id(other.entity_id), y(other.y), x(other.x), name(other.name), traits(other.traits), stats(other.stats), behavior_set_name(other.behavior_set_name), character(other.character), description(other.description) {

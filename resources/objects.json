@@ -1,4 +1,8 @@
 {
+    "wall" : {
+        "is a": ["indestructable", "obstacle", "impassable"],
+        "has a": ["surface"]
+    },
     "weapon" : {
         "actions" : {
             "wield" : {
