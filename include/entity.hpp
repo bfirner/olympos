@@ -60,7 +60,7 @@ struct Entity {
     // Every entity is created with a unique ID number.
     static std::atomic_size_t next_entity_id;
     size_t entity_id;
-    // Location of the entity
+    // Location of the entity (inside of some state object)
     size_t y = 0;
     size_t x = 0;
 
@@ -70,6 +70,13 @@ struct Entity {
     // Traits of this entity
     std::set<std::string> traits;
 
+    // Things that an entity may or may not have.
+    // Rather than using abstract base classes and inheritance we will be using multiple optional
+    // fields within the class. This allows for a more dynamic relationship between object. For
+    // example, a spell or ability can more easily make an inanimate object animate simply by
+    // creating stats, without having to change anything else about the object. Likewise, mixes of
+    // two things, for example a living item that can be wielded as an object or act on its own, are
+    // more easily implemented in this system.
     // Optional stats. Generally only for non-objects.
     std::optional<Stats> stats;
 
@@ -82,6 +89,7 @@ struct Entity {
     // Convenience function to find the species from the entity's traits
     // TODO Should this return optional<string> instead for safety?
     std::string getSpecies() const;
+    std::string getObjectType() const;
 
     // Rules that control how this entity should behave.
     std::string behavior_set_name;
@@ -99,7 +107,7 @@ struct Entity {
     std::map<std::string, double> command_mastery = {};
 
     // Commands written into the essence core of the entity, enhancing their effectiveness with the
-    // aura and domain attributes. Sometimes requires to achieve higher levels of master.
+    // aura and domain attributes. Sometimes required to achieve higher levels of master.
     std::vector<std::string> core_commands = {};
 
     // Constructors

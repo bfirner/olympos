@@ -31,9 +31,6 @@ namespace Behavior {
 #include <nlohmann/json.hpp>
 
 
-// TODO The commands generated from the behaviors need to affect entity states and the world state.
-// Should they do it directly, or put effects onto another event queue?
-
 namespace Behavior {
 
     // TODO FIXME Split behavior stuff and ability stuff into two different files.

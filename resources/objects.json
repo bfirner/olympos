@@ -1,0 +1,115 @@
+{
+    "weapon" : {
+        "actions" : {
+            "wield" : {
+                "requires" : [],
+                "type": "utility",
+                "range": "close",
+                "area": "radius",
+                "stamina": 1,
+                "arguments": ["<item>"],
+                "effects": {
+                    "equip": "<item>"
+                },
+                "flavor": "<entity> [color:cyan](wields) <item>.",
+                "fail_flavor": "<entity> tries to [color:cyan](wield) <item>, but fails.",
+                "prereqs": {}
+            }
+    },
+    "stick" : {
+        "attributes": {
+            "base damage": 2,
+            "base range": 1
+        },
+        "is a": ["weapon"],
+        "actions" : {
+            "swing" : {
+                "requires" : [["hand", "arm"], ["pseudopod"], ["tentacle"]],
+                "type": "attack",
+                "range": "close",
+                "area": "cone",
+                "stamina": 1,
+                "arguments": ["or", "north", "east", "south", "west", "<target>"],
+                "default arguments": ["forward"],
+                "effects": {
+                    "damage growth": {
+                        "strength": 1,
+                        "reflexes": 0.1
+                    },
+                    "area": {
+                        "range": [1, 1],
+                        "width_base": 1,
+                        "width_slope": 2
+                    },
+                    "north": {
+                        "direction": [-1, 0],
+                        "side_direction": [0, 1]
+                    },
+                    "south": {
+                        "direction": [1, 0],
+                        "side_direction": [0, 1]
+                    },
+                    "east": {
+                        "direction": [0, 1],
+                        "side_direction": [1, 0]
+                    },
+                    "west": {
+                        "direction": [0, -1],
+                        "side_direction": [1, 0]
+                    }
+                },
+                "flavor": "<entity> [color:red](swings) <item> at <target>.",
+                "fail_flavor": "<entity> [color:red](swings) <item>, but cuts only air.",
+                "prereqs": {}
+            }
+        }
+    },
+    "pointy stick" : {
+        "attributes": {
+            "base damage": 2,
+            "base range": 1
+        },
+        "is a": ["weapon"],
+        "actions" : {
+            "stab" : {
+                "requires" : [["hand", "arm"], ["pseudopod"], ["tentacle"]],
+                "type": "attack",
+                "range": "close",
+                "area": "line",
+                "stamina": 1,
+                "arguments": ["or", "north", "east", "south", "west", "<target>"],
+                "default arguments": ["forward"],
+                "effects": {
+                    "damage growth": {
+                        "strength": 1,
+                        "reflexes": 0.1
+                    },
+                    "area": {
+                        "range": [1, 1]
+                    },
+                    "north": {
+                        "direction": [-1, 0]
+                    },
+                    "south": {
+                        "direction": [1, 0]
+                    },
+                    "east": {
+                        "direction": [0, 1]
+                    },
+                    "west": {
+                        "direction": [0, -1]
+                    }
+                },
+                "flavor": "<entity> [color:red](stabs) <item> at <target>.",
+                "fail_flavor": "<entity> [color:red](stabs) <item>, but pierces only air.",
+                "prereqs": {}
+            }
+        }
+    },
+    "sword" : {
+        "attributes": {
+            "base damage": 10
+        },
+        "is a": ["stick", "pointy stick"]
+    }
+}

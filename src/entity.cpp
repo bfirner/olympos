@@ -65,6 +65,15 @@ std::string Entity::getSpecies() const {
     return species_location->substr(std::string("species:").size());
 }
 
+std::string Entity::getObjectType() const {
+    auto object_location = std::find_if(traits.begin(), traits.end(),
+            [](const std::string& entry){ return entry.starts_with("object:");});
+    if (object_location == traits.end()) {
+        return "";
+    }
+    return object_location->substr(std::string("object:").size());
+}
+
 // Constructor
 Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::string> traits) {
     // Assign the entity ID and increment the classwide variable to ensure the ID remains unique.

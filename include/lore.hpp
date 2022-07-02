@@ -26,6 +26,7 @@ namespace OlymposLore {
     // TODO Get other things like XP
 
     json& getSpeciesLore();
+    json& getObjectLore();
 
     template<typename T>
     T getSpeciesData(const std::string species_name, const std::string& field) {

@@ -12,6 +12,7 @@
 #include <fstream>
 #include <random>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "lore.hpp"
@@ -19,7 +20,10 @@
 
 using json = nlohmann::json;
 
+// Different species in the world.
 json species;
+// Objects in the world.
+json objects;
 
 std::mt19937 randgen{std::random_device{}()};
 
@@ -39,16 +43,57 @@ json& OlymposLore::getSpeciesLore() {
     return species;
 }
 
+json& OlymposLore::getObjectLore() {
+    // Read in the file if it hasn't already been done.
+    const std::filesystem::path object_path{"resources/objects.json"};
+    if (0 == species.size()) {
+        if (std::filesystem::exists(object_path)) {
+            std::ifstream istream(object_path.string(), std::ios::binary);
+            if (istream) {
+                std::string contents;
+                std::getline(istream, contents, '\0');
+                objects = json::parse(contents);
+            }
+        }
+    }
+    return objects;
+}
+
+std::tuple<json&, json&> getIsAHasA(const Entity& entity) {
+    // A static object to return when there is no match.
+    static json nothing{};
+    std::string species_name = entity.getSpecies();
+    std::string object_type = entity.getObjectType();
+    // Check for species resolution first, then object resolution. This prioritizes the species
+    // description of something that is both a creature and an object.
+    if (species.contains(species_name)) {
+        return {species.at(species_name).at("is a"), species.at(species_name).at("has a")};
+    }
+    else if (objects.contains(object_type)) {
+        return {objects.at(object_type).at("is a"), objects.at(object_type).at("has a")};
+    }
+    else {
+        return {nothing, nothing};
+    }
+}
+
 std::string OlymposLore::getDescription(const Entity& entity) {
     json& species = getSpeciesLore();
+    json& objects = getObjectLore();
     std::string species_name = entity.getSpecies();
-    // Don't try anything if there is no species name.
-    if ("" == species_name or not species.contains(species_name)) {
+    std::string object_type = entity.getObjectType();
+    // Search for objects if this doesn't seem to be a species type.
+    if (("" == species_name and "" == object_type) or
+            not (species.contains(species_name) or objects.contains(object_type))) {
         return "Unknown entity.";
     }
+    // Check for species resolution first, then object resolution. This prioritizes the species
+    // description of something that is both a creature and an object.
     std::string description = species_name + ": ";
-    auto& json_is_a = species.at(species_name).at("is a");
-    auto& json_has_a = species.at(species_name).at("has a");
+    if ("" == species_name) {
+        description = object_type + ": ";
+    }
+    auto [json_is_a, json_has_a] = getIsAHasA(entity);
     std::string is_a = "A mysterious entity";
     if (0 < json_is_a.size()) {
         std::uniform_int_distribution<int> uniform_dist(0, json_is_a.size()-1);

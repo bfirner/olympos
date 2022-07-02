@@ -17,6 +17,13 @@ C++ compiler that supports the C++20 standard.
 * * Throw
 * * Swing
 * * * This all implies having and wielding objects and an inventory
+* Objects
+* * Should have a list of actions that can be done with them
+* * Actions should list things that are required to do them
+* * E.g. to swing a sword an entity requires "hand" and "arm" or "pseudopod" or "tentacle"
+* * * "requirements": [["hand", "arm"], ["pseudopod"], ["tentacle"]]
+* * Take advantage of inheritence like with entities
+* Redo all "OR" options in the json files to be arrays of arrays.
 * Add visual effects
 * * Some kind of motion indicator?
 * * Some kind of attack indicator?
@@ -25,6 +32,7 @@ C++ compiler that supports the C++20 standard.
 * Prototype the following
 * * Essence gains (experience) from combat and actions.
 * * Skill gains
+* redo all "OR" options in the json files to be arrays of arrays.
 * * * Level from usage
 * * * Gain new skills by actions in event messages (e.g. throw something on fire to build xp towards
       firebolt)
