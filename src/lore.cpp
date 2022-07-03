@@ -46,7 +46,7 @@ json& OlymposLore::getSpeciesLore() {
 json& OlymposLore::getObjectLore() {
     // Read in the file if it hasn't already been done.
     const std::filesystem::path object_path{"resources/objects.json"};
-    if (0 == species.size()) {
+    if (0 == objects.size()) {
         if (std::filesystem::exists(object_path)) {
             std::ifstream istream(object_path.string(), std::ios::binary);
             if (istream) {
@@ -172,10 +172,14 @@ std::string OlymposLore::getLoreString(const std::string lore_name, const std::s
 
     // Search for this name in species and objects
     if (species.contains(lore_name)) {
-        return species.at(lore_name).at(field).get<std::string>();
+        if (species.at(lore_name).contains(field)) {
+            return species.at(lore_name).at(field).get<std::string>();
+        }
     }
     if (objects.contains(lore_name)) {
-        return objects.at(lore_name).at(field).get<std::string>();
+        if (objects.at(lore_name).contains(field)) {
+            return objects.at(lore_name).at(field).get<std::string>();
+        }
     }
 
     // If nothing was found then return an empty string.

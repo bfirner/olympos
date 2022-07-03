@@ -29,13 +29,24 @@ namespace OlymposLore {
     json& getObjectLore();
 
     template<typename T>
-    T getSpeciesData(const std::string species_name, const std::string& field) {
+    T getLoreData(const std::string lore_name, const std::string& field) {
         json& species = getSpeciesLore();
-        // Don't try anything if there is no species name.
-        if ("" == species_name or not species.contains(species_name)) {
-            return T{};
+        json& objects = getObjectLore();
+
+        // Search for this name in species and objects
+        if (species.contains(lore_name)) {
+            if (species.at(lore_name).contains(field)) {
+                return species.at(lore_name).at(field).get<T>();
+            }
         }
-        return species.at(species_name).at(field).get<T>();
+        if (objects.contains(lore_name)) {
+            if (objects.at(lore_name).contains(field)) {
+                return objects.at(lore_name).at(field).get<T>();
+            }
+        }
+
+        // If nothing was found then return an empty string.
+        return T{};
     }
 }
 

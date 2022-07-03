@@ -185,12 +185,12 @@ std::vector<std::list<Entity>::iterator> WorldState::findEntities(const std::vec
 void WorldState::initialize() {
     // Make the walls
     for (size_t x = 0; x < field_width; ++x) {
-        addEntity(0, x, "Wall", {"wall", "impassable"});
+        addEntity(0, x, "Wall", {"object:wall"});
         addEntity(field_height-1, x, "Wall", {"object:wall"});
     }
     // Don't repeat the corners that were already filled in
     for (size_t y = 1; y < field_height-1; ++y) {
-        addEntity(y, 0, "Wall", {"wall", "impassable"});
+        addEntity(y, 0, "Wall", {"object:wall"});
         addEntity(y, field_width-1, "Wall", {"object:wall"});
     }
 

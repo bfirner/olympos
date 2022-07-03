@@ -83,39 +83,48 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     this->name = name;
     this->traits = traits;
 
-    // If the traits defined a species then fill in stats. If there is no species then
+    // If the traits defined a species then fill in stats. If there is no species then there are not
+    // stats.
     stats = OlymposLore::getStats(*this);
 
-    std::string species = getSpecies();
+    // Search the lore entries for either a species name or object type, depending upon what traits
+    // this entity possesses.
+    std::string search_key = getSpecies();
+    if (0 == search_key.size()) {
+        search_key = getObjectType();
+    }
 
-    // Get the character used to display this creature.
-    std::string repr = OlymposLore::getLoreString(species, "character");
+    // Get the character used to display this entity.
+    std::string repr = OlymposLore::getLoreString(search_key, "character");
+    // Fall back for objects without specific display characters.
     if (0 == repr.size()) {
         repr = ".";
     }
     character = OlymposUtility::utf8ToWString(repr);
 
     std::map<std::string, std::string> str_description =
-        OlymposLore::getSpeciesData<std::map<std::string, std::string>>(species, "description");
+        OlymposLore::getLoreData<std::map<std::string, std::string>>(search_key, "description");
     // Convert the strings to wstring and insert into this entity's description.
     for (auto [sense, str] : str_description) {
         description.insert(std::make_pair(sense, OlymposUtility::utf8ToWString(str)));
     }
 
-    // Do this for all of [species, object]
+    // Do this for all of [search_key, object]
     // Get the "is a" and "has a" relationships to expand traits.
-    std::set<std::string> has_a = OlymposLore::getLoreField(species, "has a");
+    std::set<std::string> has_a = OlymposLore::getLoreField(search_key, "has a");
     this->traits.insert(has_a.begin(), has_a.end());
 
     // Get the traits of the groups of which this entity is a member.
-    std::set<std::string> is_a = OlymposLore::getLoreField(species, "is a");
+    std::set<std::string> is_a = OlymposLore::getLoreField(search_key, "is a");
     for (const std::string& group : is_a) {
         this->traits.insert(group);
         std::set<std::string> has_a = OlymposLore::getLoreField(group, "has a");
         this->traits.insert(has_a.begin(), has_a.end());
     }
 
-    behavior_set_name = OlymposLore::getLoreString(species, "base behavior");
+    behavior_set_name = OlymposLore::getLoreString(search_key, "base behavior");
+
+    // TODO Load the behaviors granted by items here as well.
 }
 
 Entity::Entity(const Entity& other) : entity_id(other.entity_id), y(other.y), x(other.x), name(other.name), traits(other.traits), stats(other.stats), behavior_set_name(other.behavior_set_name), character(other.character), description(other.description) {

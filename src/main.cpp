@@ -240,6 +240,9 @@ int main(int argc, char** argv) {
     ws.addEntity(17, 14, "Bat", {"species:bat", "mob", "aggro", "auto"});
     ws.addEntity(20, 20, "Spider", {"species:arachnid", "mob", "aggro", "auto"});
     ws.addEntity(30, 30, "Ralph", {"species:elf", "mob", "auto"});
+    ws.addEntity(12, 1, "stick", {"object:stick"});
+    ws.addEntity(14, 1, "improvised spear", {"object:pointy stick"});
+    ws.addEntity(16, 1, "crappy sword", {"object:sword"});
 
     // Add command handlers for all entities.
     for (const Behavior::AbilitySet& abset : abilities) {

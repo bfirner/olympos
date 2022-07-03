@@ -80,6 +80,9 @@ struct Entity {
     // Optional stats. Generally only for non-objects.
     std::optional<Stats> stats;
 
+    // Rules that control how this entity should behave.
+    std::string behavior_set_name;
+
     // The character to display for this entity.
     std::wstring character;
 
@@ -90,9 +93,6 @@ struct Entity {
     // TODO Should this return optional<string> instead for safety?
     std::string getSpecies() const;
     std::string getObjectType() const;
-
-    // Rules that control how this entity should behave.
-    std::string behavior_set_name;
 
     // The command handling functions of this entity.
     // The second argument, the argument list to the command, is documented in command_args.

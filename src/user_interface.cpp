@@ -88,9 +88,6 @@ std::wstring UserInterface::getEntityChar(const Entity& ent) {
     if (ent.traits.contains("player")) {
         return L"@";
     }
-    else if (ent.traits.contains("wall")) {
-        return L"#";
-    }
     else {
         return ent.character;
     }
@@ -100,7 +97,7 @@ attr_t UserInterface::getEntityAttr(const Entity& ent) {
     if (ent.traits.contains("player")) {
         return A_BOLD;
     }
-    else if (ent.traits.contains("wall")) {
+    else if (ent.traits.contains("impassable")) {
         return A_DIM;
     }
     else if (ent.traits.contains("aggro")) {
