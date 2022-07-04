@@ -4,8 +4,12 @@
  * Entity in the game. Has a position, a name, and some traits.
  */
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <set>
 #include <string>
@@ -14,8 +18,28 @@
 #include "lore.hpp"
 #include "olympos_utility.hpp"
 
+using json = nlohmann::json;
+
+// Get equipment slot information
+json _equipment_slots;
+json& getSlotInformation() {
+    // Read in the file if it hasn't already been done.
+    const std::filesystem::path equipment_slot_path{"resources/equipment_slots.json"};
+    if (0 == _equipment_slots.size()) {
+        if (std::filesystem::exists(equipment_slot_path)) {
+            std::ifstream istream(equipment_slot_path.string(), std::ios::binary);
+            if (istream) {
+                std::string contents;
+                std::getline(istream, contents, '\0');
+                _equipment_slots = json::parse(contents);
+            }
+        }
+    }
+    return _equipment_slots;
+}
+
 // Initialize the class-wide variable.
-std::atomic_size_t Entity::next_entity_id = 0;
+std::atomic_size_t Entity::next_entity_id = 1;
 
 size_t tickIncrease(double rate, size_t tick_num) {
     // Avoid storing any partial states by using the tick number to calculate if there are any whole
@@ -125,9 +149,29 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     behavior_set_name = OlymposLore::getLoreString(search_key, "base behavior");
 
     // TODO Load the behaviors granted by items here as well.
+
+    // Go through all "has a" properties to determine equipment slots.
+    json& slots = getSlotInformation();
+    // Slot information is an array of slot names, what kinds of equipment they hold, and the
+    // requirements to have that slot.
+    // For example:
+    //  {
+    //      "name": "head",
+    //      "requires": "head",
+    //      "types": ["hat", "helmet"]
+    //  },
+    for (auto& slot_info : slots) {
+        if (traits.contains(slot_info.at("requires").get<std::string>())) {
+            // Remember that this slot is supported by this entity
+            possible_slots.insert(slot_info.at("name").get<std::string>());
+            // The "types" field will need to be checked to verify that a piece of equipment is
+            // usable in a particular slot.
+        }
+    }
 }
 
-Entity::Entity(const Entity& other) : entity_id(other.entity_id), y(other.y), x(other.x), name(other.name), traits(other.traits), stats(other.stats), behavior_set_name(other.behavior_set_name), character(other.character), description(other.description) {
+Entity::Entity(Entity&& other) : entity_id(other.entity_id), y(other.y), x(other.x), name(std::move(other.name)), traits(std::move(other.traits)), stats(other.stats), behavior_set_name(other.behavior_set_name), character(other.character), description(std::move(other.description)) {
+    other.entity_id = 0;
 }
 
 std::string Entity::getDescription() const {

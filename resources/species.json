@@ -9,8 +9,11 @@
         "has a": ["eye", "mouth", "exoskeleton", "blood"]
     },
     "mammal": {
-        "has a": ["eye", "ear", "nose", "mouth", "tooth", "hair", "skeleton", "heart", "lung", "blood"],
+        "has a": ["eye", "ear", "nose", "mouth", "tooth", "hair", "skeleton", "heart", "lung", "blood", "head"],
         "innate": ["thermoregulation"]
+    },
+    "humanoid": {
+        "has a": ["arm", "hand", "finger", "torso", "face"]
     },
     "human": {
         "base physique": {
@@ -42,8 +45,8 @@
             "domain": 1
         },
         "base behavior": "persistent mob",
-        "has a": ["arm", "hand", "finger"],
-        "is a": ["medium", "omnivore", "mammal", "biped", "sentient"],
+        "has a": ["finger"],
+        "is a": ["humanoid", "medium", "omnivore", "mammal", "biped", "sentient"],
         "likes": ["caffeine", "sleep", "throwing", "art", "entertainment", "sunset", "sunrise", "tool", "fire"],
         "hates": ["poop", "corpse", "mosquito", "leech"],
         "character": "H",
@@ -84,8 +87,8 @@
             "domain": 0.5
         },
         "base behavior": "persistent mob",
-        "has a": ["arm", "hand", "finger"],
-        "is a": ["medium", "vegetarian", "mammal", "biped", "sentient"],
+        "has a": ["finger"],
+        "is a": ["humanoid", "medium", "vegetarian", "mammal", "biped", "sentient"],
         "likes": ["plant", "meditation", "art", "flower", "sunset", "sunrise", "stone"],
         "hates": ["poop", "corpse", "concrete", "iron", "mine"],
         "character": "E",

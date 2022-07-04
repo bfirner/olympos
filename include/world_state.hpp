@@ -22,7 +22,7 @@ struct WorldEvent {
     size_t x;
 };
 
-struct WorldState {
+class WorldState {
     private:
         void updatePassable(size_t y, size_t x);
 

@@ -70,6 +70,10 @@ struct Entity {
     // Traits of this entity
     std::set<std::string> traits;
 
+    // Equipment slots are determined by traits.
+    std::set<std::string> possible_slots;
+    std::map<std::string, Entity> occupied_slots;
+
     // Things that an entity may or may not have.
     // Rather than using abstract base classes and inheritance we will be using multiple optional
     // fields within the class. This allows for a more dynamic relationship between object. For
@@ -113,7 +117,9 @@ struct Entity {
     // Constructors
     Entity(size_t y, size_t x, const std::string& name, const std::set<std::string> traits);
 
-    Entity(const Entity&);
+    // Don't accidentally copy entities, only allow copying via destructive r-value reference.
+    Entity(const Entity&) = delete;
+    Entity(Entity&&);
 
     std::string getDescription() const;
 

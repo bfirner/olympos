@@ -11,7 +11,7 @@ C++ compiler that supports the C++20 standard.
 
 ### Event logging
 * Should the word "You" or "you" be highlighted in a color in the log?
-* Movement failures not being logged.
+* Movement failures aren't currently being logged.
 
 ### User Interface
 * Add visual effects
@@ -43,10 +43,15 @@ C++ compiler that supports the C++20 standard.
 * Redo all "OR" options in the json files to be arrays of arrays.
 
 ### New Features
+* Inventory and options for default or possible items in it
 * Utility and tool commands
-* * Pick up
-* * Throw
-* * Swing
+* * Get, grab, take
+* * Drop, throw, etc
+* * Wield
+* * * This should enable the actions and bonuses of that object
+* * Don or equip
+* * * This should enable actions and bonuses or armor
+* * Quaff or eat for food type things
 * * * This all implies having and wielding objects and an inventory
 * Objects
 * * Should have a list of actions that can be done with them

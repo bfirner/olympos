@@ -1,0 +1,62 @@
+[
+    {
+        "name": "head",
+        "requires": "head",
+        "types": ["hat", "helmet"]
+    },
+    {
+        "name": "neck",
+        "requires": "head",
+        "types": ["necklace", "choker"]
+    },
+    {
+        "name": "eye",
+        "requires": "eye",
+        "types": ["monocle"]
+    },
+    {
+        "name": "ears",
+        "requires": "ear",
+        "types": ["earrings"]
+    },
+    {
+        "name": "nose",
+        "requires": "nose",
+        "types": ["nosering"]
+    },
+    {
+        "name": "body",
+        "requires": "torso",
+        "types": ["coat", "suit", "shirt", "jerkin", "tunic", "cuirass", "jacket", "vest"]
+    },
+    {
+        "name": "forearm",
+        "requires": "arm",
+        "types": ["bracelet", "bracer", "vambrace", "shield"]
+    },
+    {
+        "name": "hand",
+        "requires": "hand",
+        "types": ["glove", "gauntlet", "shield"]
+    },
+    {
+        "name": "fingers",
+        "requires": "finger",
+        "types": ["ring"]
+    },
+    {
+        "name": "waist",
+        "requires": "leg",
+        "types": ["belt", "girdle", "pouch"]
+    },
+    {
+        "name": "legs",
+        "requires": "leg",
+        "types": ["pants", "leggings", "shorts", "greaves"]
+    },
+    {
+        "name": "feet",
+        "requires": "foot",
+        "types": ["boots", "shoes", "slippers"]
+    }
+]
