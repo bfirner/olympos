@@ -126,4 +126,13 @@ struct Entity {
     // Equality operator. Based upon the entity_id value.
     bool operator==(const Entity&) const;
     bool operator==(const size_t) const;
+
+
+    // Check if an item can be equiped to the given slot.
+    bool canEquip(const Entity& equipment, const std::string& slot);
+    // Attempt to insert an item into inventory. Returns swapped item of nullopt if the slot was
+    // empty. Upon successful insertion the original entity is no longer a valid object.
+    std::optional<Entity> equip(Entity& entity, const std::string& slot);
+    // Remove an item from inventory and return it or return nullopt of the slot is empty.
+    std::optional<Entity> unequip(const std::string& slot);
 };

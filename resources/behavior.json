@@ -403,6 +403,38 @@
                 "description": "Reach out and touch something.",
                 "prereqs": {},
                 "constraints": ["or", "hand", "tentacle", "tendril", "antenna", "pseudopod", "foot"]
+            },
+            "wield": {
+                "type": "utility",
+                "range": "close",
+                "area": "single",
+                "stamina": 0,
+                "arguments": ["<target>", "<slot>"],
+                "effects": {
+                    "equip": "weapon",
+                    "range": 1
+                },
+                "flavor": "<entity> [color:cyan](wields) <target>.",
+                "fail_flavor": "<entity> tried to [color:cyan](wield) <target>, but failed.",
+                "description": "Equip a weapon.",
+                "prereqs": {},
+                "constraints": []
+            },
+            "equip": {
+                "type": "utility",
+                "range": "close",
+                "area": "single",
+                "stamina": 0,
+                "arguments": ["<target>", "<slot>"],
+                "effects": {
+                    "equip": "item",
+                    "range": 1
+                },
+                "flavor": "<entity> [color:cyan](equips) <target>.",
+                "fail_flavor": "<entity> tried to [color:cyan](equip) <target>, but failed.",
+                "description": "Equip an item.",
+                "prereqs": {},
+                "constraints": []
             }
         }
     }

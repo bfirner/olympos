@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -160,10 +161,10 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     //      "requires": "head",
     //      "types": ["hat", "helmet"]
     //  },
-    for (auto& slot_info : slots) {
+    for (auto& [slot_name, slot_info] : slots.items()) {
         if (traits.contains(slot_info.at("requires").get<std::string>())) {
             // Remember that this slot is supported by this entity
-            possible_slots.insert(slot_info.at("name").get<std::string>());
+            possible_slots.insert(slot_name);
             // The "types" field will need to be checked to verify that a piece of equipment is
             // usable in a particular slot.
         }
@@ -184,4 +185,53 @@ bool Entity::operator==(const Entity& other) const {
 
 bool Entity::operator==(const size_t other) const {
     return this->entity_id == other;
+}
+
+// Check if an item can be equiped to the given slot.
+bool Entity::canEquip(const Entity& equipment, const std::string& slot) {
+    json& slots = getSlotInformation();
+
+    if (slots.contains(slot)) {
+        json& slot_info = slots.at(slot);
+        json& types = slot_info.at("types");
+        // Verify that there is a match in the equipment's 'is_a' and the slot's 'types' fields.
+        std::set<std::string> eq_is_a = OlymposLore::getLoreData<std::set<std::string>>(equipment.getObjectType(), "is_a");
+        // TODO verify
+        auto match = std::find_if(types.begin(), types.end(),
+                [&](const std::string& supported_type) {return eq_is_a.contains(supported_type);});
+        return match != types.end();
+    }
+    return false;
+}
+
+// Attempt to insert an item into inventory. Returns swapped item of nullopt if the slot was empty.
+std::optional<Entity> Entity::equip(Entity& equipment, const std::string& slot) {
+    if (not canEquip(equipment, slot)) {
+        return std::nullopt;
+    }
+
+    std::optional<Entity> leftover = std::nullopt;
+
+    // Remove the existing item if something is already in this slot.
+    if (occupied_slots.contains(slot)) {
+        auto eq_node = occupied_slots.extract(slot);
+        leftover.emplace(std::move(eq_node.mapped()));
+    }
+    // Insert the new equipment
+    occupied_slots.insert({slot, std::move(equipment)});
+
+    return leftover;
+}
+
+// Remove an item from inventory and return it or return nullopt of the slot is empty.
+std::optional<Entity> Entity::unequip(const std::string& slot) {
+    // Remove the existing item if something is already in this slot.
+    if (occupied_slots.contains(slot)) {
+        return std::nullopt;
+    }
+    else {
+        auto eq_node = occupied_slots.extract(slot);
+        std::optional<Entity> unequipped(std::move(eq_node.mapped()));
+        return unequipped;
+    }
 }

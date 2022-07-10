@@ -32,7 +32,7 @@ class Inventory {
         Inventory(const std::string& name, size_t capacity, std::set<std::string> restricted_traits);
 
         // Attempt to insert an item into inventory. Returns success.
-        // Upon successful insertion the original entity is no longer a value object.
+        // Upon successful insertion the original entity is no longer a valid object.
         bool insert(Entity& entity);
 
         // True if the container contains the specified object

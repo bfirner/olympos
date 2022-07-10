@@ -664,6 +664,121 @@ namespace Behavior {
         }
     }
 
+    void equipFunction(Entity& actor, const Ability& ability, const std::string& equip_type, std::string event_string, std::string fail_string, WorldState& ws, const std::vector<std::string>& arguments) {
+        // Verify that this action can be taken.
+        // TODO FIXME Should have a better way to find the minimum arguments
+        size_t min_arguments = 1;
+        if (ability.arguments.empty()) {
+            min_arguments = 0;
+        }
+        if (not actionBoilerplateCheck(actor, ws, ability, arguments, min_arguments, fail_string)) {
+            return;
+        }
+
+        // Keep track of detected entities and update them in the information section of the status
+        // window.
+
+        std::vector<std::list<Entity>::iterator> targets;
+        std::set<std::tuple<size_t, size_t>> area_of_effect;
+        // TODO The search functions should also search the world states contained by inventory on the user.
+        if (AbilityArea::single == ability.area) {
+            auto [target, target_location] = findOneTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+
+            if (ws.entities.end() != target) {
+                targets.push_back(target);
+            }
+        }
+        else if (AbilityArea::cone == ability.area) {
+            std::tie(targets, area_of_effect) = findConeTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+        }
+        else if (AbilityArea::radius == ability.area) {
+            std::tie(targets, area_of_effect) = findRadiusTarget(ws, actor, ability.effects, ability.arguments, ability.default_args, arguments);
+        }
+
+        // Mark background colors for the area of effect
+        for (auto& location : area_of_effect) {
+            if (std::get<0>(location) < ws.field_height and std::get<1>(location) < ws.field_width) {
+                // TODO Hard-coding the utility color to be cyan here.
+                ws.background_effects.insert({location, "cyan"});
+            }
+        }
+
+        // Handle targets if there are any.
+        if (not targets.empty()) {
+            // Subtract the ability's stamina cost and attempt to equip items.
+            actor.stats.value().stamina -= ability.stamina;
+            // Assign each item to a slot
+            for (std::list<Entity>::iterator equipment : targets) {
+                // This ability affects a slot, right? Was it provided, or will it be inferred?
+                std::string target_slot = "";
+                if (2 <= arguments.size() and 2 <= ability.arguments.size() and ability.arguments.at(1) == "<slot>") {
+                    target_slot = arguments.at(1);
+                }
+                else {
+                    // Find a slot to equip this item.
+                    // Check the entity.possible_slots to see where it could fit, and check
+                    // entity.occupid_slots to see if there is a free slot.
+                    auto possible_slot = actor.possible_slots.end();
+                    auto next_slot = actor.possible_slots.begin();
+                    while (next_slot != actor.possible_slots.end()) {
+                        next_slot = std::find_if(next_slot, actor.possible_slots.end(),
+                                [&](const std::string& slot) {return actor.canEquip(*equipment, slot);});
+                        // If a possible slot was found check its status
+                        if (actor.possible_slots.end() != next_slot) {
+                            // If this isn't occupied then a final slot has been found. Otherwise
+                            // set this as a possible slot, but don't top looping yet.
+                            possible_slot = next_slot;
+                            if (actor.occupied_slots.contains(*next_slot)) {
+                                // Check the rest of the slots
+                                std::advance(next_slot, 1);
+                            }
+                            else {
+                                // Done checking
+                                next_slot = actor.possible_slots.end();
+                            }
+                        }
+                    }
+
+                    // Check if this item can be equipped
+                    if (actor.possible_slots.end() != possible_slot) {
+                        // Create the message for this action
+                        std::string target_event_string = event_string;
+                        replaceSubstring(target_event_string, "<target>", equipment->name);
+                        replaceSubstring(target_event_string, "<slot>", *possible_slot);
+                        // Reset equipment's current location
+                        equipment->y = 0;
+                        equipment->x = 0;
+                        // Equip and remove from the world state
+                        std::optional<Entity> swapped = actor.equip(*equipment, *possible_slot);
+                        ws.entities.erase(equipment);
+                        // If we swapped equipment then this should be dropped into the same
+                        // location as the actor
+                        if (swapped) {
+                            // Put swapped equipment into actor's location
+                            swapped.value().y = actor.y;
+                            swapped.value().x = actor.x;
+                            std::string drop_string = actor.name + " drops " + swapped.value().name + ".";
+                            ws.logEvent({drop_string, actor.y, actor.x});
+                            ws.entities.push_back(std::move(swapped.value()));
+                        }
+                    }
+                    else {
+                        // Otherwise log the failure string
+                        std::string target_fail_string = fail_string;
+                        replaceSubstring(target_fail_string, "<target>", equipment->name);
+                        ws.logEvent({target_fail_string, actor.y, actor.x});
+                    }
+                }
+            }
+        }
+        else {
+            // Otherwise log the failure string
+            std::string target_fail_string = fail_string;
+            replaceSubstring(target_fail_string, "<target>", "something");
+            ws.logEvent({target_fail_string, actor.y, actor.x});
+        }
+    }
+
     std::function<void(WorldState&, const std::vector<std::string>&)> Ability::makeUtilityFunction(Entity& entity) const {
         // Prepare a flavor string to go into the event log whenever this behavior occurs.
         // Fill in some fields in advance.
@@ -687,6 +802,12 @@ namespace Behavior {
             // Information utility function.
             return std::bind_front(informationFunction, std::ref(entity), std::cref(*this), information_types, event_string, fail_string);
 
+        }
+        else if (effects.contains("equip")) {
+            std::string equip_type = effects.at("equip");
+
+            // Information utility function.
+            return std::bind_front(equipFunction, std::ref(entity), std::cref(*this), equip_type, event_string, fail_string);
         }
         // Otherwise return a nothing
         return noop_function;
