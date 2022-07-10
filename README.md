@@ -9,6 +9,9 @@ C++ compiler that supports the C++20 standard.
 
 ## TODOs
 
+### Bugs
+* Dropped items appear on top of the player. Need something to determine what gets rendered on top.
+
 ### Event logging
 * Should the word "You" or "you" be highlighted in a color in the log?
 * Movement failures aren't currently being logged.
@@ -39,8 +42,10 @@ C++ compiler that supports the C++20 standard.
 * * Need compound logic as well I suppose
 
 ### Code Cleanup
+* Equip type in equip behaviors is not used. Maybe remove?
 * Compartmentalize activities in main into separate functions
 * Redo all "OR" options in the json files to be arrays of arrays.
+* * This is for arguments and in other places
 
 ### New Features
 * Inventory and options for default or possible items in it

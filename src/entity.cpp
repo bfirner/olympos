@@ -140,9 +140,9 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     this->traits.insert(has_a.begin(), has_a.end());
 
     // Get the traits of the groups of which this entity is a member.
-    std::set<std::string> is_a = OlymposLore::getLoreField(search_key, "is a");
+    std::vector<std::string> is_a = OlymposLore::getLoreData<std::vector<std::string>>(search_key, "is a");
+    this->traits.insert(is_a.begin(), is_a.end());
     for (const std::string& group : is_a) {
-        this->traits.insert(group);
         std::set<std::string> has_a = OlymposLore::getLoreField(group, "has a");
         this->traits.insert(has_a.begin(), has_a.end());
     }
@@ -156,13 +156,12 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     // Slot information is an array of slot names, what kinds of equipment they hold, and the
     // requirements to have that slot.
     // For example:
-    //  {
-    //      "name": "head",
+    //  "head": {
     //      "requires": "head",
     //      "types": ["hat", "helmet"]
     //  },
     for (auto& [slot_name, slot_info] : slots.items()) {
-        if (traits.contains(slot_info.at("requires").get<std::string>())) {
+        if (this->traits.contains(slot_info.at("requires").get<std::string>())) {
             // Remember that this slot is supported by this entity
             possible_slots.insert(slot_name);
             // The "types" field will need to be checked to verify that a piece of equipment is
@@ -171,7 +170,7 @@ Entity::Entity(size_t y, size_t x, const std::string& name, const std::set<std::
     }
 }
 
-Entity::Entity(Entity&& other) : entity_id(other.entity_id), y(other.y), x(other.x), name(std::move(other.name)), traits(std::move(other.traits)), stats(other.stats), behavior_set_name(other.behavior_set_name), character(other.character), description(std::move(other.description)) {
+Entity::Entity(Entity&& other) : entity_id(other.entity_id), y(other.y), x(other.x), name(std::move(other.name)), traits(std::move(other.traits)), possible_slots(std::move(other.possible_slots)), occupied_slots(std::move(other.occupied_slots)), stats(other.stats), behavior_set_name(other.behavior_set_name), character(other.character), description(std::move(other.description)) {
     other.entity_id = 0;
 }
 
@@ -189,16 +188,19 @@ bool Entity::operator==(const size_t other) const {
 
 // Check if an item can be equiped to the given slot.
 bool Entity::canEquip(const Entity& equipment, const std::string& slot) {
+    // Verify that this entity has the named slot.
+    if (not possible_slots.contains(slot)) {
+        return false;
+    }
+
     json& slots = getSlotInformation();
 
     if (slots.contains(slot)) {
         json& slot_info = slots.at(slot);
         json& types = slot_info.at("types");
-        // Verify that there is a match in the equipment's 'is_a' and the slot's 'types' fields.
-        std::set<std::string> eq_is_a = OlymposLore::getLoreData<std::set<std::string>>(equipment.getObjectType(), "is_a");
-        // TODO verify
+        // Verify that there is a match between the equipment's traits and the slot's supported types.
         auto match = std::find_if(types.begin(), types.end(),
-                [&](const std::string& supported_type) {return eq_is_a.contains(supported_type);});
+                [&](const std::string& supported_type) {return equipment.traits.contains(supported_type);});
         return match != types.end();
     }
     return false;

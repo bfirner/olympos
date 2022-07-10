@@ -761,6 +761,8 @@ namespace Behavior {
                             ws.logEvent({drop_string, actor.y, actor.x});
                             ws.entities.push_back(std::move(swapped.value()));
                         }
+                        // Log the equip event.
+                        ws.logEvent({target_event_string, actor.y, actor.x});
                     }
                     else {
                         // Otherwise log the failure string
